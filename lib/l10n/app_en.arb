@@ -1,0 +1,67 @@
+{
+  "@@locale": "en",
+
+  "selectLanguage": "Select Language",
+  "english": "English",
+  "french": "French",
+  "arabic": "Arabic",
+  "spanish": "Spanish",
+  "german": "German",
+  "hausa": "Hausa",
+  "yoruba": "Yorùbá",
+  "igbo": "Igbo",
+  "continueButton": "Continue",
+
+ "skip": "Skip",
+"welcomeToRhicApp": "Welcome to The RHIC App",
+"rhicWelcomeDescription": "Enjoy access to all of RHIC’s contents and processes on the go",
+"rhicLiveDescription": "Watch live, connect with other members and leaders",
+"designedWithYouInMind": "Designed with You in mind",
+"rhicSecureDescription": "Your information is secure, let’s get started shall we?",
+"getStarted": "Get started",
+
+
+  "welcomeBack": "Welcome Back",
+  "email": "Email",
+  "enterEmail": "Enter Email",
+  "emailRequired": "Email is required",
+  "invalidEmail": "Please enter a valid email",
+  "password": "Password",
+  "enterPassword": "Enter Password",
+  "passwordRequired": "Password is required",
+  "passwordTooShort": "Password must be at least 6 characters",
+  "forgotPassword": "Forgot Password",
+  "login": "Login",
+  "dontHaveAccount": "Don't have an Account?",
+  "signUp": "Sign Up",
+
+    "createAccount": "Create Account",
+
+  "firstName": "First Name",
+  "enterFirstName": "Enter First Name",
+  "firstNameRequired": "First name is required",
+
+  "lastName": "Last Name",
+  "enterLastName": "Enter Last Name",
+  "lastNameRequired": "Last name is required",
+
+  "enterEmailAddress": "Enter Email Address",
+
+  "agreeToTerms": "I understand and agree to the",
+  "termsOfService": "Terms of Service",
+  "ofUsingRhicApp": "of Using the RHIC Global App",
+
+  "continueText": "Continue",
+
+  "alreadyHaveAccount": "Already have an Account?",
+
+  
+  "verifyYourEmail": "Verify Your Email",
+  "verificationDescription": "We've sent a verification link to your email address. Please check your inbox and verify your email to continue.",
+  "resendVerificationEmail": "Resend Verification Email",
+  "iHaveVerified": "I've Verified My Email",
+  "checkYourInbox": "Please check your inbox and spam folder for the verification email.",
+  "useAnotherAccount": "Use Another Account"
+
+
+}

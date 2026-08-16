@@ -1,0 +1,64 @@
+{
+  "@@locale": "ha",
+
+  "selectLanguage": "Zaɓi Harshe",
+  "english": "Turanci",
+  "french": "Faransanci",
+  "arabic": "Larabci",
+  "spanish": "Sifaniyanci",
+  "german": "Jamusanci",
+  "hausa": "Hausa",
+  "yoruba": "Yarbanci",
+  "igbo": "Igbo",
+  "continueButton": "Ci gaba",
+  
+  "skip": "Tsallake",
+  "welcomeToRhicApp": "Barka da zuwa manhajar RHIC",
+  "rhicWelcomeDescription": "Ji daɗin samun damar dukkan abubuwan RHIC da ayyukanta a kowane lokaci",
+  "rhicLiveDescription": "Kalli kai tsaye, kuma haɗu da sauran mambobi da shugabanni",
+  "designedWithYouInMind": "An tsara ta ne domin ku",
+  "rhicSecureDescription": "Bayananku suna cikin tsaro, mu fara ko?",
+  "getStarted": "Fara",
+
+
+  "welcomeBack": "Barka da dawowa ",
+  "email": "Imel",
+  "enterEmail": "Shigar da imel",
+  "emailRequired": "Ana buƙatar imel",
+  "invalidEmail": "Da fatan za a shigar da ingantaccen imel",
+  "password": "Kalmar sirri",
+  "enterPassword": "Shigar da kalmar sirri",
+  "passwordRequired": "Ana buƙatar kalmar sirri",
+  "passwordTooShort": "Kalmar sirri dole ta kasance aƙalla haruffa 6",
+  "forgotPassword": "An manta kalmar sirri?",
+  "login": "Shiga",
+  "dontHaveAccount": "Ba ku da asusu?",
+  "signUp": "Yi rajista",
+
+
+
+  "createAccount": "Ƙirƙiri Asusun",
+  "firstName": "Sunan Farko",
+  "enterFirstName": "Shigar da Sunan Farko",
+  "firstNameRequired": "Ana buƙatar sunan farko",
+  "lastName": "Sunan Ƙarshe",
+  "enterLastName": "Shigar da Sunan Ƙarshe",
+  "lastNameRequired": "Ana buƙatar sunan ƙarshe",
+  "enterEmailAddress": "Shigar da Adireshin Imel",
+  "agreeToTerms": "Na fahimta kuma na yarda da",
+  "termsOfService": "Sharuɗɗan Sabis",
+  "ofUsingRhicApp": "na amfani da RHIC Global App",
+  "continueText": "Ci gaba",
+  "alreadyHaveAccount": "Kana da Asusun?",
+
+
+  "verifyYourEmail": "Tabbatar da Imel ɗinka",
+  "verificationDescription": "Mun aika hanyar tabbatarwa zuwa imel ɗinka. Da fatan ka duba akwatin saƙonka kuma ka tabbatar da imel ɗinka don ci gaba.",
+  "resendVerificationEmail": "Sake Aika Imel na Tabbatarwa",
+  "iHaveVerified": "Na Tabbatar da Imel ɗina",
+  "checkYourInbox": "Da fatan ka duba akwatin saƙonka da babban fayil ɗin spam don imel na tabbatarwa.",
+  "useAnotherAccount": "Yi Amfani da Wani Asusun"
+
+
+
+}

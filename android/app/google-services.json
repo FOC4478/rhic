@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "321066089388",
+    "project_id": "rhic-ae1ed",
+    "storage_bucket": "rhic-ae1ed.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:321066089388:android:5f85a928b1b39edeb15809",
+        "android_client_info": {
+          "package_name": "com.example.church_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBU87U2qcWBBFufuI81lhAC67SZ5ilS--w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

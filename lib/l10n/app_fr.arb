@@ -1,0 +1,61 @@
+{
+  "@@locale": "fr",
+
+  "selectLanguage": "Sélectionner la langue",
+  "english": "Anglais",
+  "french": "Français",
+  "arabic": "Arabe",
+  "spanish": "Espagnol",
+  "german": "Allemand",
+  "hausa": "Haoussa",
+  "yoruba": "Yorùbá",
+  "igbo": "Igbo",
+  "continueButton": "Continuer",
+
+  "skip": "Passer",
+  "welcomeToRhicApp": "Bienvenue sur l’application RHIC",
+  "rhicWelcomeDescription": "Profitez de tous les contenus et services de RHIC où que vous soyez",
+  "rhicLiveDescription": "Regardez en direct et connectez-vous avec les autres membres et responsables",
+  "designedWithYouInMind": "Conçue pour vous",
+  "rhicSecureDescription": "Vos informations sont sécurisées. Commençons, voulez-vous ?",
+  "getStarted": "Commencer",
+
+  "welcomeBack": "Bon retour ",
+  "email": "E-mail",
+  "enterEmail": "Entrez votre e-mail",
+  "emailRequired": "L’e-mail est requis",
+  "invalidEmail": "Veuillez entrer une adresse e-mail valide",
+  "password": "Mot de passe",
+  "enterPassword": "Entrez votre mot de passe",
+  "passwordRequired": "Le mot de passe est requis",
+  "passwordTooShort": "Le mot de passe doit comporter au moins 6 caractères",
+  "forgotPassword": "Mot de passe oublié",
+  "login": "Se connecter",
+  "dontHaveAccount": "Vous n’avez pas de compte ?",
+  "signUp": "S’inscrire",
+
+   "createAccount": "Créer un compte",
+  "firstName": "Prénom",
+  "enterFirstName": "Entrez votre prénom",
+  "firstNameRequired": "Le prénom est requis",
+  "lastName": "Nom",
+  "enterLastName": "Entrez votre nom",
+  "lastNameRequired": "Le nom est requis",
+  "enterEmailAddress": "Entrez votre adresse e-mail",
+  "agreeToTerms": "J'accepte les",
+  "termsOfService": "Conditions d'utilisation",
+  "ofUsingRhicApp": "de l'utilisation de l'application RHIC",
+  "continueText": "Continuer",
+  "alreadyHaveAccount": "Vous avez déjà un compte ?",
+  "login": "Se connecter",
+
+  
+  "verifyYourEmail": "Vérifiez votre adresse e-mail",
+  "verificationDescription": "Nous avons envoyé un lien de vérification à votre adresse e-mail. Veuillez consulter votre boîte de réception et vérifier votre adresse e-mail pour continuer.",
+  "resendVerificationEmail": "Renvoyer l'e-mail de vérification",
+  "iHaveVerified": "J'ai vérifié mon e-mail",
+  "checkYourInbox": "Veuillez vérifier votre boîte de réception et votre dossier spam pour trouver l'e-mail de vérification.",
+  "useAnotherAccount": "Utiliser un autre compte"
+
+
+}

@@ -1,0 +1,69 @@
+{
+  "@@locale": "yo",
+
+  "selectLanguage": "Yan Èdè",
+  "english": "Gẹ̀ẹ́sì",
+  "french": "Faranse",
+  "arabic": "Lárúbáwá",
+  "spanish": "Sípáníìṣì",
+  "german": "Jámánì",
+  "hausa": "Hausa",
+  "yoruba": "Yorùbá",
+  "igbo": "Ìgbò",
+  "continueButton": "Tẹ̀síwájú",
+
+  
+  "skip": "Foju kọ́",
+  "welcomeToRhicApp": "Káàbọ̀ sí Àpù RHIC",
+  "rhicWelcomeDescription": "Gbadun iraye si gbogbo akoonu ati awọn iṣẹ RHIC nibikibi ati nigbakugba",
+  "rhicLiveDescription": "Wo eto laaye, ki o si sopọ pẹlu awọn ọmọ ẹgbẹ ati awọn olori miiran",
+  "designedWithYouInMind": "A ṣe apẹrẹ rẹ̀ pẹ̀lú rẹ ní èrò",
+  "rhicSecureDescription": "Alaye rẹ wa ni aabo, ẹ jẹ́ ká bẹ̀rẹ̀, àbí?",
+  "getStarted": "Bẹ̀rẹ̀",
+
+   "welcomeBack": "Kaabo lẹ́ẹ̀kansi ",
+  "email": "Imeeli",
+  "enterEmail": "Tẹ imeeli rẹ sii",
+  "emailRequired": "A nilo imeeli",
+  "invalidEmail": "Jọwọ tẹ imeeli tó tọ sii",
+  "password": "Ọ̀rọ̀ aṣínà",
+  "enterPassword": "Tẹ ọ̀rọ̀ aṣínà rẹ sii",
+  "passwordRequired": "A nilo ọ̀rọ̀ aṣínà",
+  "passwordTooShort": "Ọ̀rọ̀ aṣínà gbọdọ̀ ní o kere ju àwọn ohun kikọ 6",
+  "forgotPassword": "Ṣe o gbàgbé ọ̀rọ̀ aṣínà?",
+  "login": "Wọlé",
+  "dontHaveAccount": "Ṣe o kò ní àkọọ́lẹ̀?",
+  "signUp": "Forúkọ sílẹ̀",
+
+
+  "createAccount": "Ṣẹda Akọọlẹ",
+
+  "firstName": "Orúkọ Àkọ́kọ́",
+  "enterFirstName": "Tẹ Orúkọ Àkọ́kọ́ sí",
+  "firstNameRequired": "A nílò orúkọ àkọ́kọ́",
+
+  "lastName": "Orúkọ Ìdílé",
+  "enterLastName": "Tẹ Orúkọ Ìdílé sí",
+  "lastNameRequired": "A nílò orúkọ ìdílé",
+
+  "enterEmailAddress": "Tẹ Àdírẹ́sì Imeeli sí",
+
+  "agreeToTerms": "Mo lóye mo sì gba",
+  "termsOfService": "Àwọn Ofin Iṣẹ́",
+  "ofUsingRhicApp": "ti lílo RHIC Global App",
+
+  "continueText": "Tẹ̀síwájú",
+
+  "alreadyHaveAccount": "Ṣe o ti ní Akọọlẹ kan?",
+
+
+  "verifyYourEmail": "Jẹ́rìí Imeeli Rẹ",
+  "verificationDescription": "A ti fi ọna asopọ ìjẹ́rìí ranṣẹ́ sí imeeli rẹ. Jọwọ ṣayẹwo apo-iwọle rẹ ki o jẹ́rìí imeeli rẹ lati tẹsiwaju.",
+  "resendVerificationEmail": "Tun Firanṣẹ́ Imeeli Ìjẹ́rìí",
+  "iHaveVerified": "Mo Ti Jẹ́rìí Imeeli Mi",
+  "checkYourInbox": "Jọwọ ṣayẹwo apo-iwọle rẹ àti folda spam fun imeeli ìjẹ́rìí.",
+  "useAnotherAccount": "Lo Akọọlẹ Miiran"
+
+
+
+}

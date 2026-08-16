@@ -1,0 +1,64 @@
+{
+  "@@locale": "ar",
+
+  "selectLanguage": "اختر اللغة",
+  "english": "الإنجليزية",
+  "french": "الفرنسية",
+  "arabic": "العربية",
+  "spanish": "الإسبانية",
+  "german": "الألمانية",
+  "hausa": "الهوسا",
+  "yoruba": "اليوروبا",
+  "igbo": "الإيغبو",
+  "continueButton": "متابعة",
+
+ 
+  "skip": "تخطي",
+  "welcomeToRhicApp": "مرحبًا بك في تطبيق RHIC",
+  "rhicWelcomeDescription": "استمتع بالوصول إلى جميع محتويات وخدمات RHIC أثناء تنقلك",
+  "rhicLiveDescription": "شاهد البث المباشر وتواصل مع الأعضاء والقادة الآخرين",
+  "designedWithYouInMind": "صُمم خصيصًا من أجلك",
+  "rhicSecureDescription": "معلوماتك آمنة، لنبدأ، أليس كذلك؟",
+  "getStarted": "ابدأ الآن",
+
+
+  "welcomeBack": "مرحبًا بعودتك ",
+  "email": "البريد الإلكتروني",
+  "enterEmail": "أدخل بريدك الإلكتروني",
+  "emailRequired": "البريد الإلكتروني مطلوب",
+  "invalidEmail": "يرجى إدخال بريد إلكتروني صالح",
+  "password": "كلمة المرور",
+  "enterPassword": "أدخل كلمة المرور",
+  "passwordRequired": "كلمة المرور مطلوبة",
+  "passwordTooShort": "يجب أن تتكون كلمة المرور من 6 أحرف على الأقل",
+  "forgotPassword": "نسيت كلمة المرور؟",
+  "login": "تسجيل الدخول",
+  "dontHaveAccount": "ليس لديك حساب؟",
+  "signUp": "إنشاء حساب",
+
+  "createAccount": "إنشاء حساب",
+  "firstName": "الاسم الأول",
+  "enterFirstName": "أدخل اسمك الأول",
+  "firstNameRequired": "الاسم الأول مطلوب",
+  "lastName": "اسم العائلة",
+  "enterLastName": "أدخل اسم عائلتك",
+  "lastNameRequired": "اسم العائلة مطلوب",
+  "enterEmailAddress": "أدخل عنوان بريدك الإلكتروني",
+  "agreeToTerms": "أوافق على",
+  "termsOfService": "شروط الخدمة",
+  "ofUsingRhicApp": "لاستخدام تطبيق RHIC",
+  "continueText": "متابعة",
+  "alreadyHaveAccount": "لديك حساب بالفعل؟",
+  "login": "تسجيل الدخول",
+
+  
+  "verifyYourEmail": "تحقق من بريدك الإلكتروني",
+  "verificationDescription": "لقد أرسلنا رابط تحقق إلى بريدك الإلكتروني. يرجى التحقق من صندوق الوارد وتأكيد بريدك الإلكتروني للمتابعة.",
+  "resendVerificationEmail": "إعادة إرسال رسالة التحقق",
+  "iHaveVerified": "لقد تحققت من بريدي الإلكتروني",
+  "checkYourInbox": "يرجى التحقق من صندوق الوارد ومجلد الرسائل غير المرغوب فيها للعثور على رسالة التحقق.",
+  "useAnotherAccount": "استخدام حساب آخر"
+
+
+
+}

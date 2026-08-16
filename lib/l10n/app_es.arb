@@ -1,0 +1,61 @@
+{
+  "@@locale": "es",
+
+  "selectLanguage": "Seleccionar idioma",
+  "english": "Inglés",
+  "french": "Francés",
+  "arabic": "Árabe",
+  "spanish": "Español",
+  "german": "Alemán",
+  "hausa": "Hausa",
+  "yoruba": "Yorùbá",
+  "igbo": "Igbo",
+  "continueButton": "Continuar",
+  "skip": "Omitir",
+  "welcomeToRhicApp": "Bienvenido a la aplicación RHIC",
+  "rhicWelcomeDescription": "Disfruta de todo el contenido y los servicios de RHIC estés donde estés",
+  "rhicLiveDescription": "Mira en vivo y conecta con otros miembros y líderes",
+  "designedWithYouInMind": "Diseñada pensando en ti",
+  "rhicSecureDescription": "Tu información está segura. Comencemos, ¿de acuerdo?",
+  "getStarted": "Comenzar",
+
+ "welcomeBack": "Bienvenido de nuevo ",
+  "email": "Correo electrónico",
+  "enterEmail": "Ingresa tu correo electrónico",
+  "emailRequired": "El correo electrónico es obligatorio",
+  "invalidEmail": "Ingresa un correo electrónico válido",
+  "password": "Contraseña",
+  "enterPassword": "Ingresa tu contraseña",
+  "passwordRequired": "La contraseña es obligatoria",
+  "passwordTooShort": "La contraseña debe tener al menos 6 caracteres",
+  "forgotPassword": "¿Olvidaste tu contraseña?",
+  "login": "Iniciar sesión",
+  "dontHaveAccount": "¿No tienes una cuenta?",
+  "signUp": "Registrarse",
+
+   "createAccount": "Crear una cuenta",
+  "firstName": "Nombre",
+  "enterFirstName": "Introduce tu nombre",
+  "firstNameRequired": "El nombre es obligatorio",
+  "lastName": "Apellido",
+  "enterLastName": "Introduce tu apellido",
+  "lastNameRequired": "El apellido es obligatorio",
+  "enterEmailAddress": "Introduce tu dirección de correo electrónico",
+  "agreeToTerms": "Acepto los",
+  "termsOfService": "Términos de servicio",
+  "ofUsingRhicApp": "del uso de la aplicación RHIC",
+  "continueText": "Continuar",
+  "alreadyHaveAccount": "¿Ya tienes una cuenta?",
+  "login": "Iniciar sesión",
+
+  
+  "verifyYourEmail": "Verifica tu correo electrónico",
+  "verificationDescription": "Hemos enviado un enlace de verificación a tu dirección de correo electrónico. Revisa tu bandeja de entrada y verifica tu correo para continuar.",
+  "resendVerificationEmail": "Reenviar correo de verificación",
+  "iHaveVerified": "He verificado mi correo electrónico",
+  "checkYourInbox": "Revisa tu bandeja de entrada y la carpeta de spam para encontrar el correo de verificación.",
+  "useAnotherAccount": "Usar otra cuenta"
+
+
+
+}

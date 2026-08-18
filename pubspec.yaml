@@ -18,6 +18,9 @@ dependencies:
   shared_preferences: ^2.5.5
   country_flags: ^4.1.2
 
+  just_audio: ^0.10.5
+  video_player: ^2.10.0
+
   firebase_core: ^4.13.0
   firebase_auth: ^6.5.7
   cloud_firestore: ^6.8.0

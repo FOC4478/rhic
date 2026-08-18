@@ -252,19 +252,16 @@ class _HomeScreenState extends State<HomeScreen>
                   sliver: SliverGrid(
                     delegate: SliverChildListDelegate(
                       [
-                        _FeatureTile(
-                          icon: Icons.record_voice_over,
-                          title: l10n.teachings,
-                          onTap: () {
-                            _showComingSoon(
-                              context,
-                              l10n.teachings,
-                              l10n.comingSoon(
-                                l10n.teachings,
-                              ),
-                            );
-                          },
-                        ),
+                       _FeatureTile(
+                     icon: Icons.record_voice_over,
+                     title: l10n.teachings,
+                     onTap: () {
+                    Navigator.pushNamed(
+                       context,
+                     '/teachings',
+                    );
+                      },
+                    ),
                         _FeatureTile(
                           icon: Icons.groups,
                           title: l10n.rhicCommunity,

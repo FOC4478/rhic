@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+import '../models/teaching_model.dart';
 import '../models/event_model.dart';
 import '../models/featured_event_model.dart';
 import '../models/gallery_model.dart';
@@ -53,6 +53,23 @@ class ContentRepository {
       .toList(),
 );
   }
+
+  // ============================================================
+// TEACHINGS
+// ============================================================
+
+Stream<List<TeachingModel>> teachingsStream() {
+  return _firestore
+      .collection('teachings')
+      .where('isPublished', isEqualTo: true)
+      .orderBy('createdAt', descending: true)
+      .snapshots()
+      .map(
+        (snapshot) => snapshot.docs
+            .map(TeachingModel.fromFirestore)
+            .toList(),
+      );
+}
 
   // ============================================================
   // GALLERY

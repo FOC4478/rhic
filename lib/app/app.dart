@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:church_app/l10n/app_localizations.dart';
 import 'package:church_app/app/locale_controller.dart';
-
+import 'package:church_app/screens/teachings/teachings_screen.dart';
 import 'package:church_app/screens/splash/splash_screen.dart';
 import 'package:church_app/screens/languages/language_screen.dart';
 import 'package:church_app/screens/onboarding/onboarding_screen.dart';
@@ -60,6 +60,9 @@ class ChurchApp extends StatelessWidget {
 
                 '/events': (context) =>
                  const EventsScreen(),
+
+                 '/teachings': (context)
+                  => const TeachingsScreen(),
           },
         );
       },

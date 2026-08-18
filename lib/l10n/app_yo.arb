@@ -62,7 +62,38 @@
   "resendVerificationEmail": "Tun Firanṣẹ́ Imeeli Ìjẹ́rìí",
   "iHaveVerified": "Mo Ti Jẹ́rìí Imeeli Mi",
   "checkYourInbox": "Jọwọ ṣayẹwo apo-iwọle rẹ àti folda spam fun imeeli ìjẹ́rìí.",
-  "useAnotherAccount": "Lo Akọọlẹ Miiran"
+  "useAnotherAccount": "Lo Akọọlẹ Miiran",
+
+  "hello": "Pẹ̀lẹ́",
+  "friend": "Ọ̀rẹ́",
+  "give": "Fúnni",
+  "supportRhic": "Ṣe àtìlẹ́yìn fún RHIC",
+  "ourChurches": "Àwọn ṣọ́ọ̀ṣì wa",
+  "findALocation": "Wa ibi kan",
+  "exploreRhic": "Ṣàwárí RHIC",
+  "teachings": "Àwọn ẹ̀kọ́",
+  "rhicCommunity": "Àwùjọ RHIC",
+  "family": "Ìdílé",
+  "events": "Àwọn ìṣẹ̀lẹ̀",
+  "gallery": "Àwòrán",
+  "live": "Taara",
+  "home": "Ilé",
+  "myLibrary": "Ilé-ìkàwé mi",
+  "resources": "Àwọn ohun àmúlò",
+  "account": "Àkọọ́lẹ̀",
+  "notifications": "Àwọn ìfitónilétí",
+  "giving": "Ìtọrẹ",
+  "churchLocations": "Àwọn ibi ṣọ́ọ̀ṣì",
+  "close": "Pa",
+
+  "comingSoon": "{title} yóò wà láìpẹ́.",
+   "@comingSoon": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  }
 
 
 

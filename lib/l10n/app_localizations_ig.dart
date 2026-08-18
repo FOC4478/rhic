@@ -160,4 +160,72 @@ class AppLocalizationsIg extends AppLocalizations {
 
   @override
   String get useAnotherAccount => 'Jiri Akaụntụ Ọzọ';
+
+  @override
+  String get hello => 'Nnọọ';
+
+  @override
+  String get friend => 'Enyi';
+
+  @override
+  String get give => 'Nye';
+
+  @override
+  String get supportRhic => 'Kwado RHIC';
+
+  @override
+  String get ourChurches => 'Ụka anyị';
+
+  @override
+  String get findALocation => 'Chọta ebe';
+
+  @override
+  String get exploreRhic => 'Chọpụta RHIC';
+
+  @override
+  String get teachings => 'Ozizi';
+
+  @override
+  String get rhicCommunity => 'Obodo RHIC';
+
+  @override
+  String get family => 'Ezinụlọ';
+
+  @override
+  String get events => 'Ihe omume';
+
+  @override
+  String get gallery => 'Foto';
+
+  @override
+  String get live => 'Ndụ';
+
+  @override
+  String get home => 'Ụlọ';
+
+  @override
+  String get myLibrary => 'Ọbá akwụkwọ m';
+
+  @override
+  String get resources => 'Akụrụngwa';
+
+  @override
+  String get account => 'Akaụntụ';
+
+  @override
+  String get notifications => 'Ọkwa';
+
+  @override
+  String get giving => 'Inye onyinye';
+
+  @override
+  String get churchLocations => 'Ebe ụka dị';
+
+  @override
+  String get close => 'Mechie';
+
+  @override
+  String comingSoon(String title) {
+    return '$title ga-abịa n\'oge na-adịghị anya.';
+  }
 }

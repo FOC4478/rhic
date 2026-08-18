@@ -160,4 +160,72 @@ class AppLocalizationsYo extends AppLocalizations {
 
   @override
   String get useAnotherAccount => 'Lo Akọọlẹ Miiran';
+
+  @override
+  String get hello => 'Pẹ̀lẹ́';
+
+  @override
+  String get friend => 'Ọ̀rẹ́';
+
+  @override
+  String get give => 'Fúnni';
+
+  @override
+  String get supportRhic => 'Ṣe àtìlẹ́yìn fún RHIC';
+
+  @override
+  String get ourChurches => 'Àwọn ṣọ́ọ̀ṣì wa';
+
+  @override
+  String get findALocation => 'Wa ibi kan';
+
+  @override
+  String get exploreRhic => 'Ṣàwárí RHIC';
+
+  @override
+  String get teachings => 'Àwọn ẹ̀kọ́';
+
+  @override
+  String get rhicCommunity => 'Àwùjọ RHIC';
+
+  @override
+  String get family => 'Ìdílé';
+
+  @override
+  String get events => 'Àwọn ìṣẹ̀lẹ̀';
+
+  @override
+  String get gallery => 'Àwòrán';
+
+  @override
+  String get live => 'Taara';
+
+  @override
+  String get home => 'Ilé';
+
+  @override
+  String get myLibrary => 'Ilé-ìkàwé mi';
+
+  @override
+  String get resources => 'Àwọn ohun àmúlò';
+
+  @override
+  String get account => 'Àkọọ́lẹ̀';
+
+  @override
+  String get notifications => 'Àwọn ìfitónilétí';
+
+  @override
+  String get giving => 'Ìtọrẹ';
+
+  @override
+  String get churchLocations => 'Àwọn ibi ṣọ́ọ̀ṣì';
+
+  @override
+  String get close => 'Pa';
+
+  @override
+  String comingSoon(String title) {
+    return '$title yóò wà láìpẹ́.';
+  }
 }

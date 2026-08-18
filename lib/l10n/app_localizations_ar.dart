@@ -46,29 +46,29 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get rhicWelcomeDescription =>
-      'استمتع بالوصول إلى جميع محتويات وخدمات RHIC أثناء تنقلك';
+      'استمتع بالوصول إلى جميع محتويات وخدمات RHIC أثناء التنقل';
 
   @override
   String get rhicLiveDescription =>
       'شاهد البث المباشر وتواصل مع الأعضاء والقادة الآخرين';
 
   @override
-  String get designedWithYouInMind => 'صُمم خصيصًا من أجلك';
+  String get designedWithYouInMind => 'صُمم التطبيق مع وضعك في الاعتبار';
 
   @override
-  String get rhicSecureDescription => 'معلوماتك آمنة، لنبدأ، أليس كذلك؟';
+  String get rhicSecureDescription => 'معلوماتك آمنة، فلنبدأ الآن';
 
   @override
-  String get getStarted => 'ابدأ الآن';
+  String get getStarted => 'ابدأ';
 
   @override
-  String get welcomeBack => 'مرحبًا بعودتك ';
+  String get welcomeBack => 'مرحبًا بعودتك';
 
   @override
   String get email => 'البريد الإلكتروني';
 
   @override
-  String get enterEmail => 'أدخل بريدك الإلكتروني';
+  String get enterEmail => 'أدخل البريد الإلكتروني';
 
   @override
   String get emailRequired => 'البريد الإلكتروني مطلوب';
@@ -89,7 +89,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get passwordTooShort => 'يجب أن تتكون كلمة المرور من 6 أحرف على الأقل';
 
   @override
-  String get forgotPassword => 'نسيت كلمة المرور؟';
+  String get forgotPassword => 'هل نسيت كلمة المرور؟';
 
   @override
   String get login => 'تسجيل الدخول';
@@ -107,7 +107,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get firstName => 'الاسم الأول';
 
   @override
-  String get enterFirstName => 'أدخل اسمك الأول';
+  String get enterFirstName => 'أدخل الاسم الأول';
 
   @override
   String get firstNameRequired => 'الاسم الأول مطلوب';
@@ -116,22 +116,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get lastName => 'اسم العائلة';
 
   @override
-  String get enterLastName => 'أدخل اسم عائلتك';
+  String get enterLastName => 'أدخل اسم العائلة';
 
   @override
   String get lastNameRequired => 'اسم العائلة مطلوب';
 
   @override
-  String get enterEmailAddress => 'أدخل عنوان بريدك الإلكتروني';
+  String get enterEmailAddress => 'أدخل عنوان البريد الإلكتروني';
 
   @override
-  String get agreeToTerms => 'أوافق على';
+  String get agreeToTerms => 'أفهم وأوافق على';
 
   @override
   String get termsOfService => 'شروط الخدمة';
 
   @override
-  String get ofUsingRhicApp => 'لاستخدام تطبيق RHIC';
+  String get ofUsingRhicApp => 'لاستخدام تطبيق RHIC العالمي';
 
   @override
   String get continueText => 'متابعة';
@@ -144,7 +144,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get verificationDescription =>
-      'لقد أرسلنا رابط تحقق إلى بريدك الإلكتروني. يرجى التحقق من صندوق الوارد وتأكيد بريدك الإلكتروني للمتابعة.';
+      'لقد أرسلنا رابط التحقق إلى بريدك الإلكتروني. يرجى التحقق من صندوق الوارد وتأكيد بريدك الإلكتروني للمتابعة.';
 
   @override
   String get resendVerificationEmail => 'إعادة إرسال رسالة التحقق';
@@ -158,4 +158,72 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get useAnotherAccount => 'استخدام حساب آخر';
+
+  @override
+  String get hello => 'مرحبًا';
+
+  @override
+  String get friend => 'صديق';
+
+  @override
+  String get give => 'تبرع';
+
+  @override
+  String get supportRhic => 'ادعم RHIC';
+
+  @override
+  String get ourChurches => 'كنائسنا';
+
+  @override
+  String get findALocation => 'العثور على موقع';
+
+  @override
+  String get exploreRhic => 'استكشف RHIC';
+
+  @override
+  String get teachings => 'التعاليم';
+
+  @override
+  String get rhicCommunity => 'مجتمع RHIC';
+
+  @override
+  String get family => 'العائلة';
+
+  @override
+  String get events => 'الفعاليات';
+
+  @override
+  String get gallery => 'المعرض';
+
+  @override
+  String get live => 'مباشر';
+
+  @override
+  String get home => 'الرئيسية';
+
+  @override
+  String get myLibrary => 'مكتبتي';
+
+  @override
+  String get resources => 'المصادر';
+
+  @override
+  String get account => 'الحساب';
+
+  @override
+  String get notifications => 'الإشعارات';
+
+  @override
+  String get giving => 'التبرعات';
+
+  @override
+  String get churchLocations => 'مواقع الكنائس';
+
+  @override
+  String get close => 'إغلاق';
+
+  @override
+  String comingSoon(String title) {
+    return '$title قادم قريبًا.';
+  }
 }

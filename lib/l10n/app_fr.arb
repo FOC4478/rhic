@@ -55,7 +55,39 @@
   "resendVerificationEmail": "Renvoyer l'e-mail de vérification",
   "iHaveVerified": "J'ai vérifié mon e-mail",
   "checkYourInbox": "Veuillez vérifier votre boîte de réception et votre dossier spam pour trouver l'e-mail de vérification.",
-  "useAnotherAccount": "Utiliser un autre compte"
+  "useAnotherAccount": "Utiliser un autre compte",
+
+
+  "hello": "Bonjour",
+  "friend": "Ami",
+  "give": "Donner",
+  "supportRhic": "Soutenir RHIC",
+  "ourChurches": "Nos églises",
+  "findALocation": "Trouver un lieu",
+  "exploreRhic": "Découvrir RHIC",
+  "teachings": "Enseignements",
+  "rhicCommunity": "Communauté RHIC",
+  "family": "Famille",
+  "events": "Événements",
+  "gallery": "Galerie",
+  "live": "En direct",
+  "home": "Accueil",
+  "myLibrary": "Ma bibliothèque",
+  "resources": "Ressources",
+  "account": "Compte",
+  "notifications": "Notifications",
+  "giving": "Dons",
+  "churchLocations": "Lieux des églises",
+  "close": "Fermer",
+
+  "comingSoon": "{title} sera bientôt disponible.",
+  "@comingSoon": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  }
 
 
 }

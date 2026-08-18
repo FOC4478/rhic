@@ -403,6 +403,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Use Another Account'**
   String get useAnotherAccount;
+
+  /// No description provided for @hello.
+  ///
+  /// In en, this message translates to:
+  /// **'Hello'**
+  String get hello;
+
+  /// No description provided for @friend.
+  ///
+  /// In en, this message translates to:
+  /// **'Friend'**
+  String get friend;
+
+  /// No description provided for @give.
+  ///
+  /// In en, this message translates to:
+  /// **'Give'**
+  String get give;
+
+  /// No description provided for @supportRhic.
+  ///
+  /// In en, this message translates to:
+  /// **'Support RHIC'**
+  String get supportRhic;
+
+  /// No description provided for @ourChurches.
+  ///
+  /// In en, this message translates to:
+  /// **'Our Churches'**
+  String get ourChurches;
+
+  /// No description provided for @findALocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Find a location'**
+  String get findALocation;
+
+  /// No description provided for @exploreRhic.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore RHIC'**
+  String get exploreRhic;
+
+  /// No description provided for @teachings.
+  ///
+  /// In en, this message translates to:
+  /// **'Teachings'**
+  String get teachings;
+
+  /// No description provided for @rhicCommunity.
+  ///
+  /// In en, this message translates to:
+  /// **'RHIC Community'**
+  String get rhicCommunity;
+
+  /// No description provided for @family.
+  ///
+  /// In en, this message translates to:
+  /// **'Family'**
+  String get family;
+
+  /// No description provided for @events.
+  ///
+  /// In en, this message translates to:
+  /// **'Events'**
+  String get events;
+
+  /// No description provided for @gallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Gallery'**
+  String get gallery;
+
+  /// No description provided for @live.
+  ///
+  /// In en, this message translates to:
+  /// **'Live'**
+  String get live;
+
+  /// No description provided for @home.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get home;
+
+  /// No description provided for @myLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'My Library'**
+  String get myLibrary;
+
+  /// No description provided for @resources.
+  ///
+  /// In en, this message translates to:
+  /// **'Resources'**
+  String get resources;
+
+  /// No description provided for @account.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get account;
+
+  /// No description provided for @notifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notifications;
+
+  /// No description provided for @giving.
+  ///
+  /// In en, this message translates to:
+  /// **'Giving'**
+  String get giving;
+
+  /// No description provided for @churchLocations.
+  ///
+  /// In en, this message translates to:
+  /// **'Church Locations'**
+  String get churchLocations;
+
+  /// No description provided for @close.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get close;
+
+  /// No description provided for @comingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'{title} is coming soon.'**
+  String comingSoon(String title);
 }
 
 class _AppLocalizationsDelegate

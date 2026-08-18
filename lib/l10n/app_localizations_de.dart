@@ -160,4 +160,72 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get useAnotherAccount => 'Anderes Konto verwenden';
+
+  @override
+  String get hello => 'Hallo';
+
+  @override
+  String get friend => 'Freund';
+
+  @override
+  String get give => 'Spenden';
+
+  @override
+  String get supportRhic => 'RHIC unterstützen';
+
+  @override
+  String get ourChurches => 'Unsere Kirchen';
+
+  @override
+  String get findALocation => 'Standort finden';
+
+  @override
+  String get exploreRhic => 'RHIC entdecken';
+
+  @override
+  String get teachings => 'Lehren';
+
+  @override
+  String get rhicCommunity => 'RHIC-Gemeinschaft';
+
+  @override
+  String get family => 'Familie';
+
+  @override
+  String get events => 'Veranstaltungen';
+
+  @override
+  String get gallery => 'Galerie';
+
+  @override
+  String get live => 'Live';
+
+  @override
+  String get home => 'Startseite';
+
+  @override
+  String get myLibrary => 'Meine Bibliothek';
+
+  @override
+  String get resources => 'Ressourcen';
+
+  @override
+  String get account => 'Konto';
+
+  @override
+  String get notifications => 'Benachrichtigungen';
+
+  @override
+  String get giving => 'Spenden';
+
+  @override
+  String get churchLocations => 'Kirchenstandorte';
+
+  @override
+  String get close => 'Schließen';
+
+  @override
+  String comingSoon(String title) {
+    return '$title ist bald verfügbar.';
+  }
 }

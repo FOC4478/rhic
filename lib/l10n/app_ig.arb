@@ -54,7 +54,40 @@
   "resendVerificationEmail": "Zipụkwa Email Nkwenye",
   "iHaveVerified": "Ekwenyela M Email M",
   "checkYourInbox": "Biko lelee igbe ozi gị na folda spam maka email nkwenye.",
-  "useAnotherAccount": "Jiri Akaụntụ Ọzọ"
+  "useAnotherAccount": "Jiri Akaụntụ Ọzọ",
+
+
+  
+  "hello": "Nnọọ",
+  "friend": "Enyi",
+  "give": "Nye",
+  "supportRhic": "Kwado RHIC",
+  "ourChurches": "Ụka anyị",
+  "findALocation": "Chọta ebe",
+  "exploreRhic": "Chọpụta RHIC",
+  "teachings": "Ozizi",
+  "rhicCommunity": "Obodo RHIC",
+  "family": "Ezinụlọ",
+  "events": "Ihe omume",
+  "gallery": "Foto",
+  "live": "Ndụ",
+  "home": "Ụlọ",
+  "myLibrary": "Ọbá akwụkwọ m",
+  "resources": "Akụrụngwa",
+  "account": "Akaụntụ",
+  "notifications": "Ọkwa",
+  "giving": "Inye onyinye",
+  "churchLocations": "Ebe ụka dị",
+  "close": "Mechie",
+
+  "comingSoon": "{title} ga-abịa n'oge na-adịghị anya.",
+  "@comingSoon": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  }
 
 
 }

@@ -10,6 +10,7 @@ import 'package:church_app/screens/home/home_screen.dart';
 import 'package:church_app/screens/auth/login_screen.dart';
 import 'package:church_app/screens/auth/registration_screen.dart';
 import 'package:church_app/screens/auth/verification_screen.dart';
+import 'package:church_app/screens/events/events_screen.dart';
 
 class ChurchApp extends StatelessWidget {
   const ChurchApp({super.key});
@@ -54,7 +55,11 @@ class ChurchApp extends StatelessWidget {
             '/verification': (context) =>
                 const VerificationScreen(),
 
-                '/home': (context) => const HomeScreen(),
+                '/home': (context) => 
+                const HomeScreen(),
+
+                '/events': (context) =>
+                 const EventsScreen(),
           },
         );
       },

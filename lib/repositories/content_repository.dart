@@ -41,17 +41,17 @@ class ContentRepository {
   // EVENTS
   // ============================================================
 
-  Stream<List<ChurchEvent>> eventsStream() {
+ Stream<List<EventModel>> eventsStream() {
     return _firestore
         .collection('events')
         .where('isPublished', isEqualTo: true)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map(ChurchEvent.fromFirestore)
-              .toList(),
-        );
+       .map(
+  (snapshot) => snapshot.docs
+      .map(EventModel.fromFirestore)
+      .toList(),
+);
   }
 
   // ============================================================

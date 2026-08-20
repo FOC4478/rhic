@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 
 import '../../models/community_group_model.dart';
 import '../../repositories/content_repository.dart';
+import 'community_group_members_screen.dart';
+import 'create_community_post_screen.dart';
 import 'widgets/community_post_feed.dart';
 
 class CommunityGroupDetailsScreen extends StatefulWidget {
@@ -81,7 +83,7 @@ class _CommunityGroupDetailsScreenState
 
     final shouldLeave = await showDialog<bool>(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
         return AlertDialog(
           title: const Text(
             'Leave group?',
@@ -92,7 +94,10 @@ class _CommunityGroupDetailsScreenState
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context, false);
+                Navigator.pop(
+                  dialogContext,
+                  false,
+                );
               },
               child: const Text(
                 'Cancel',
@@ -100,7 +105,10 @@ class _CommunityGroupDetailsScreenState
             ),
             TextButton(
               onPressed: () {
-                Navigator.pop(context, true);
+                Navigator.pop(
+                  dialogContext,
+                  true,
+                );
               },
               child: const Text(
                 'Leave',
@@ -159,6 +167,56 @@ class _CommunityGroupDetailsScreenState
   }
 
   // ============================================================
+  // OPEN CREATE POST
+  // ============================================================
+
+  Future<void> _openCreatePost(
+    CommunityGroupModel group,
+  ) async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      _showMessage(
+        'Please sign in before creating a post.',
+      );
+      return;
+    }
+
+    try {
+      final isMember = await ContentRepository.instance
+          .isCommunityGroupMember(
+            groupId: group.id,
+            uid: user.uid,
+          )
+          .first;
+
+      if (!mounted) return;
+
+      if (!isMember) {
+        _showMessage(
+          'Join this group before creating a post.',
+        );
+        return;
+      }
+
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => CreateCommunityPostScreen(
+            groupId: group.id,
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      _showMessage(
+        'Unable to open post creator.',
+      );
+    }
+  }
+
+  // ============================================================
   // BUILD
   // ============================================================
 
@@ -170,7 +228,8 @@ class _CommunityGroupDetailsScreenState
       backgroundColor: Colors.white,
       body: SafeArea(
         child: StreamBuilder<CommunityGroupModel?>(
-          stream: ContentRepository.instance.communityGroupStream(
+          stream: ContentRepository.instance
+              .communityGroupStream(
             widget.groupId,
           ),
           builder: (context, snapshot) {
@@ -208,17 +267,17 @@ class _CommunityGroupDetailsScreenState
             return CustomScrollView(
               physics: const BouncingScrollPhysics(),
               slivers: [
-                // ==================================================
+                // ==============================================
                 // GROUP HEADER
-                // ==================================================
+                // ==============================================
 
                 SliverToBoxAdapter(
                   child: _buildHeader(group),
                 ),
 
-                // ==================================================
+                // ==============================================
                 // GROUP INFORMATION
-                // ==================================================
+                // ==============================================
 
                 SliverToBoxAdapter(
                   child: Padding(
@@ -228,13 +287,15 @@ class _CommunityGroupDetailsScreenState
                       20,
                       0,
                     ),
-                    child: _buildGroupInformation(group),
+                    child: _buildGroupInformation(
+                      group,
+                    ),
                   ),
                 ),
 
-                // ==================================================
+                // ==============================================
                 // MEMBERSHIP
-                // ==================================================
+                // ==============================================
 
                 if (user != null)
                   SliverToBoxAdapter(
@@ -266,9 +327,9 @@ class _CommunityGroupDetailsScreenState
                     ),
                   ),
 
-                // ==================================================
+                // ==============================================
                 // COMMUNITY HEADER
-                // ==================================================
+                // ==============================================
 
                 SliverToBoxAdapter(
                   child: Padding(
@@ -291,9 +352,18 @@ class _CommunityGroupDetailsScreenState
                           ),
                         ),
 
+                        // MEMBERS
                         TextButton(
                           onPressed: () {
-                            // Members screen will be connected here.
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    CommunityGroupMembersScreen(
+                                  groupId: group.id,
+                                ),
+                              ),
+                            );
                           },
                           child: const Text(
                             'Members',
@@ -303,14 +373,28 @@ class _CommunityGroupDetailsScreenState
                             ),
                           ),
                         ),
+
+                        const SizedBox(width: 4),
+
+                        // CREATE POST
+                        IconButton(
+                          tooltip: 'Create post',
+                          onPressed: () {
+                            _openCreatePost(group);
+                          },
+                          icon: const Icon(
+                            Icons.add_circle_outline,
+                            color: Color(0xFF6B1FA2),
+                          ),
+                        ),
                       ],
                     ),
                   ),
                 ),
 
-                // ==================================================
+                // ==============================================
                 // COMMUNITY POST FEED
-                // ==================================================
+                // ==============================================
 
                 SliverToBoxAdapter(
                   child: CommunityPostFeed(
@@ -319,7 +403,9 @@ class _CommunityGroupDetailsScreenState
                 ),
 
                 const SliverToBoxAdapter(
-                  child: SizedBox(height: 40),
+                  child: SizedBox(
+                    height: 40,
+                  ),
                 ),
               ],
             );
@@ -340,10 +426,6 @@ class _CommunityGroupDetailsScreenState
       height: 270,
       child: Stack(
         children: [
-          // ======================================================
-          // COVER IMAGE
-          // ======================================================
-
           Positioned.fill(
             child: group.coverImageUrl.isNotEmpty
                 ? Image.network(
@@ -355,10 +437,6 @@ class _CommunityGroupDetailsScreenState
                   )
                 : _buildHeaderFallback(),
           ),
-
-          // ======================================================
-          // DARK OVERLAY
-          // ======================================================
 
           Positioned.fill(
             child: DecoratedBox(
@@ -378,10 +456,6 @@ class _CommunityGroupDetailsScreenState
               ),
             ),
           ),
-
-          // ======================================================
-          // BACK BUTTON
-          // ======================================================
 
           Positioned(
             top: 16,
@@ -407,10 +481,6 @@ class _CommunityGroupDetailsScreenState
             ),
           ),
 
-          // ======================================================
-          // GROUP TITLE
-          // ======================================================
-
           Positioned(
             left: 20,
             right: 20,
@@ -421,7 +491,8 @@ class _CommunityGroupDetailsScreenState
               children: [
                 if (group.department.isNotEmpty)
                   Container(
-                    padding: const EdgeInsets.symmetric(
+                    padding:
+                        const EdgeInsets.symmetric(
                       horizontal: 10,
                       vertical: 5,
                     ),
@@ -499,10 +570,6 @@ class _CommunityGroupDetailsScreenState
       crossAxisAlignment:
           CrossAxisAlignment.start,
       children: [
-        // ========================================================
-        // MEMBER COUNT
-        // ========================================================
-
         Row(
           children: [
             const Icon(
@@ -522,10 +589,6 @@ class _CommunityGroupDetailsScreenState
             ),
           ],
         ),
-
-        // ========================================================
-        // DESCRIPTION
-        // ========================================================
 
         if (group.description.isNotEmpty) ...[
           const SizedBox(height: 15),
@@ -678,7 +741,8 @@ class _CommunityGroupDetailsScreenState
                 Navigator.pop(context);
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6B1FA2),
+                backgroundColor:
+                    const Color(0xFF6B1FA2),
                 foregroundColor: Colors.white,
               ),
               child: const Text(

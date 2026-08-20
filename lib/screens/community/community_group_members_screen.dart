@@ -1,8 +1,8 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../models/community_group_model.dart';
+import '../../models/community_member_model.dart';
 import '../../repositories/content_repository.dart';
 
 class CommunityGroupMembersScreen extends StatelessWidget {
@@ -15,8 +15,7 @@ class CommunityGroupMembersScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currentUser =
-        FirebaseAuth.instance.currentUser;
+    final currentUser = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9F6FA),
@@ -71,12 +70,9 @@ class CommunityGroupMembersScreen extends StatelessWidget {
               // ==================================================
 
               Expanded(
-                child: StreamBuilder<
-                    QuerySnapshot<Map<String, dynamic>>>(
+                child: StreamBuilder<List<CommunityMemberModel>>(
                   stream: ContentRepository.instance
-                      .communityGroupMembersStream(
-                    groupId,
-                  ),
+                      .communityGroupMembersStream(groupId),
                   builder: (
                     context,
                     membersSnapshot,
@@ -94,10 +90,10 @@ class CommunityGroupMembersScreen extends StatelessWidget {
                       return _buildError();
                     }
 
-                    final documents =
-                        membersSnapshot.data?.docs ?? [];
+                    final members =
+                        membersSnapshot.data ?? [];
 
-                    if (documents.isEmpty) {
+                    if (members.isEmpty) {
                       return _buildEmptyMembers();
                     }
 
@@ -110,13 +106,12 @@ class CommunityGroupMembersScreen extends StatelessWidget {
                         20,
                         30,
                       ),
-                      itemCount: documents.length,
+                      itemCount: members.length,
                       itemBuilder: (
                         context,
                         index,
                       ) {
-                        final member =
-                            documents[index];
+                        final member = members[index];
 
                         return _MemberTile(
                           member: member,
@@ -158,8 +153,7 @@ class CommunityGroupMembersScreen extends StatelessWidget {
             height: 50,
             decoration: BoxDecoration(
               color: const Color(0xFFF1D9F7),
-              borderRadius:
-                  BorderRadius.circular(15),
+              borderRadius: BorderRadius.circular(15),
             ),
             child: const Icon(
               Icons.people_alt_outlined,
@@ -259,6 +253,15 @@ class CommunityGroupMembersScreen extends StatelessWidget {
                 fontWeight: FontWeight.w800,
               ),
             ),
+            const SizedBox(height: 7),
+            Text(
+              'Something went wrong while loading the members.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.grey.shade600,
+              ),
+            ),
           ],
         ),
       ),
@@ -290,9 +293,7 @@ class CommunityGroupMembersScreen extends StatelessWidget {
 // ============================================================
 
 class _MemberTile extends StatelessWidget {
-  final QueryDocumentSnapshot<
-      Map<String, dynamic>> member;
-
+  final CommunityMemberModel member;
   final CommunityGroupModel group;
   final bool isAdmin;
 
@@ -304,20 +305,9 @@ class _MemberTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final data = member.data();
-
-    final uid =
-        data['uid']?.toString() ?? member.id;
-
-    final name =
-        data['name']?.toString() ??
-        data['displayName']?.toString() ??
-        'RHIC Member';
-
-    final photoUrl =
-        data['photoUrl']?.toString() ??
-        data['photoURL']?.toString() ??
-        '';
+    final uid = member.uid;
+    final name = member.name;
+    final photoUrl = member.photoUrl;
 
     final memberIsAdmin =
         uid == group.adminId;
@@ -401,6 +391,10 @@ class _MemberTile extends StatelessWidget {
             ],
           ],
         ),
+
+        // ======================================================
+        // SUBTITLE
+        // ======================================================
 
         subtitle: Padding(
           padding:

@@ -5,7 +5,7 @@ import '../models/event_model.dart';
 import '../models/featured_event_model.dart';
 import '../models/gallery_model.dart';
 import '../models/community_group_model.dart';
-
+import '../models/community_member_model.dart';
 import '../models/community_comment_model.dart';
 
 
@@ -274,17 +274,24 @@ class ContentRepository {
   // GET GROUP MEMBERS
   // ------------------------------------------------------------
 
-  Stream<QuerySnapshot<Map<String, dynamic>>>
-      communityGroupMembersStream(
-    String groupId,
-  ) {
-    return _firestore
-        .collection('community_groups')
-        .doc(groupId)
-        .collection('members')
-        .orderBy('joinedAt', descending: false)
-        .snapshots();
-  }
+  Stream<List<CommunityMemberModel>>
+    communityGroupMembersStream(
+  String groupId,
+) {
+  return _firestore
+      .collection('community_groups')
+      .doc(groupId)
+      .collection('members')
+      .orderBy('joinedAt', descending: false)
+      .snapshots()
+      .map(
+        (snapshot) => snapshot.docs
+            .map(
+              CommunityMemberModel.fromFirestore,
+            )
+            .toList(),
+      );
+}
 
 
 

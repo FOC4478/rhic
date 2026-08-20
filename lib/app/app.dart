@@ -2,16 +2,20 @@ import 'package:flutter/material.dart';
 
 import 'package:church_app/l10n/app_localizations.dart';
 import 'package:church_app/app/locale_controller.dart';
+
 import 'package:church_app/screens/teachings/teachings_screen.dart';
 import 'package:church_app/screens/splash/splash_screen.dart';
 import 'package:church_app/screens/languages/language_screen.dart';
 import 'package:church_app/screens/onboarding/onboarding_screen.dart';
 import 'package:church_app/screens/home/home_screen.dart';
+
 import 'package:church_app/screens/auth/login_screen.dart';
 import 'package:church_app/screens/auth/registration_screen.dart';
 import 'package:church_app/screens/auth/verification_screen.dart';
+
 import 'package:church_app/screens/events/events_screen.dart';
 import 'package:church_app/screens/gallery/gallery_screen.dart';
+
 import 'package:church_app/screens/community/community_screen.dart';
 import 'package:church_app/screens/community/community_group_details_screen.dart';
 import 'package:church_app/screens/community/community_group_members_screen.dart';
@@ -40,16 +44,31 @@ class ChurchApp extends StatelessWidget {
           initialRoute: '/splash',
 
           routes: {
+            // ====================================================
+            // SPLASH
+            // ====================================================
+
             '/splash': (context) =>
                 const SplashScreen(),
+
+            // ====================================================
+            // LANGUAGE
+            // ====================================================
 
             '/language': (context) =>
                 const LanguageScreen(),
 
+            // ====================================================
+            // ONBOARDING
+            // ====================================================
+
             '/onboarding': (context) =>
                 const OnboardingScreen(),
 
+            // ====================================================
             // AUTH
+            // ====================================================
+
             '/login': (context) =>
                 const LoginScreen(),
 
@@ -59,39 +78,84 @@ class ChurchApp extends StatelessWidget {
             '/verification': (context) =>
                 const VerificationScreen(),
 
-                '/home': (context) => 
+            // ====================================================
+            // MAIN APP
+            // ====================================================
+
+            '/home': (context) =>
                 const HomeScreen(),
 
-                '/events': (context) =>
-                 const EventsScreen(),
+            '/events': (context) =>
+                const EventsScreen(),
 
-                 '/teachings': (context)
-                  => const TeachingsScreen(),
+            '/teachings': (context) =>
+                const TeachingsScreen(),
 
-                   '/gallery': (context)
-                  => const GalleryScreen(),
+            '/gallery': (context) =>
+                const GalleryScreen(),
 
-                  '/community': (context) =>
-                   const CommunityScreen(),
+            '/community': (context) =>
+                const CommunityScreen(),
 
-                   '/community-group-members': (context) {
-  final groupId =
-      ModalRoute.of(context)!.settings.arguments
-          as String;
+            // ====================================================
+            // COMMUNITY GROUP MEMBERS
+            // ====================================================
 
-  return CommunityGroupMembersScreen(
-    groupId: groupId,
-  );
-},
+            '/community-group-members': (context) {
+              final arguments =
+                  ModalRoute.of(context)
+                      ?.settings
+                      .arguments;
 
-                   '/community-group': (context) {
-                  final groupId =
-                  ModalRoute.of(context)!.settings.arguments as String;
+              if (arguments is! String ||
+                  arguments.isEmpty) {
+                return const Scaffold(
+                  body: Center(
+                    child: Text(
+                      'Community group ID is missing.',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                );
+              }
 
-                         return CommunityGroupDetailsScreen(
-                    groupId: groupId,
-                      );
-                 },
+              return CommunityGroupMembersScreen(
+                groupId: arguments,
+              );
+            },
+
+            // ====================================================
+            // COMMUNITY GROUP DETAILS
+            // ====================================================
+
+            '/community-group': (context) {
+              final arguments =
+                  ModalRoute.of(context)
+                      ?.settings
+                      .arguments;
+
+              if (arguments is! String ||
+                  arguments.isEmpty) {
+                return const Scaffold(
+                  body: Center(
+                    child: Text(
+                      'Community group ID is missing.',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                );
+              }
+
+              return CommunityGroupDetailsScreen(
+                groupId: arguments,
+              );
+            },
           },
         );
       },

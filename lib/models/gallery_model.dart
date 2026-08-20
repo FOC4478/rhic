@@ -2,22 +2,26 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class GalleryItem {
   final String id;
+  final String title;
+  final String description;
   final String imageUrl;
-  final String caption;
-  final String category;
   final bool isPublished;
-  final DateTime? createdAt;
-  final DateTime? updatedAt;
+  final Timestamp? createdAt;
+  final Timestamp? updatedAt;
 
   const GalleryItem({
     required this.id,
+    required this.title,
+    required this.description,
     required this.imageUrl,
-    required this.caption,
-    required this.category,
     required this.isPublished,
-    this.createdAt,
-    this.updatedAt,
+    required this.createdAt,
+    required this.updatedAt,
   });
+
+  // ============================================================
+  // FIRESTORE → MODEL
+  // ============================================================
 
   factory GalleryItem.fromFirestore(
     DocumentSnapshot<Map<String, dynamic>> snapshot,
@@ -26,31 +30,27 @@ class GalleryItem {
 
     return GalleryItem(
       id: snapshot.id,
-      imageUrl: data['imageUrl'] as String? ?? '',
-      caption: data['caption'] as String? ?? '',
-      category: data['category'] as String? ?? '',
-      isPublished: data['isPublished'] as bool? ?? false,
-      createdAt: _timestampToDate(data['createdAt']),
-      updatedAt: _timestampToDate(data['updatedAt']),
+      title: data['title']?.toString() ?? '',
+      description: data['description']?.toString() ?? '',
+      imageUrl: data['imageUrl']?.toString() ?? '',
+      isPublished: data['isPublished'] == true,
+      createdAt: data['createdAt'] as Timestamp?,
+      updatedAt: data['updatedAt'] as Timestamp?,
     );
   }
 
+  // ============================================================
+  // MODEL → FIRESTORE
+  // ============================================================
+
   Map<String, dynamic> toFirestore() {
     return {
+      'title': title,
+      'description': description,
       'imageUrl': imageUrl,
-      'caption': caption,
-      'category': category,
       'isPublished': isPublished,
-      'createdAt': createdAt,
-      'updatedAt': updatedAt,
+      'createdAt': createdAt ?? FieldValue.serverTimestamp(),
+      'updatedAt': updatedAt ?? FieldValue.serverTimestamp(),
     };
-  }
-
-  static DateTime? _timestampToDate(dynamic value) {
-    if (value is Timestamp) {
-      return value.toDate();
-    }
-
-    return null;
   }
 }

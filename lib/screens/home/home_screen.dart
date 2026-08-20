@@ -262,19 +262,17 @@ class _HomeScreenState extends State<HomeScreen>
                     );
                       },
                     ),
-                        _FeatureTile(
-                          icon: Icons.groups,
-                          title: l10n.rhicCommunity,
-                          onTap: () {
-                            _showComingSoon(
-                              context,
-                              l10n.rhicCommunity,
-                              l10n.comingSoon(
-                                l10n.rhicCommunity,
-                              ),
-                            );
-                          },
-                        ),
+                       _FeatureTile(
+                      icon: Icons.groups,
+                    title: l10n.rhicCommunity,
+                       onTap: () {
+                    Navigator.pushNamed(
+                      context,
+                    '/community',
+                    );
+                      },
+                   ),
+                   
                         _FeatureTile(
                           icon: Icons.family_restroom,
                           title: l10n.family,
@@ -292,26 +290,21 @@ class _HomeScreenState extends State<HomeScreen>
                           icon: Icons.calendar_month,
                           title: l10n.events,
                           onTap: () {
-                            _showComingSoon(
-                              context,
-                              l10n.events,
-                              l10n.comingSoon(
-                                l10n.events,
-                              ),
-                            );
+                         Navigator.pushNamed(
+                             context,
+                     '/events',
+                    );
                           },
                         ),
                         _FeatureTile(
                           icon: Icons.photo_library,
                           title: l10n.gallery,
                           onTap: () {
-                            _showComingSoon(
-                              context,
-                              l10n.gallery,
-                              l10n.comingSoon(
-                                l10n.gallery,
-                              ),
-                            );
+                             Navigator.pushNamed(
+                       context,
+                     '/gallery',
+                    );
+                      
                           },
                         ),
                         _FeatureTile(

@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 
 import 'package:church_app/l10n/app_localizations.dart';
 import 'package:church_app/app/locale_controller.dart';
-
+import 'package:church_app/screens/giving/giving_screen.dart';
+import 'package:church_app/screens/giving/giving_currency_screen.dart';
+import 'package:church_app/screens/giving/giving_payment_details_screen.dart';
+import 'package:church_app/screens/giving/giving_confirmation_screen.dart';
 import 'package:church_app/screens/teachings/teachings_screen.dart';
 import 'package:church_app/screens/splash/splash_screen.dart';
 import 'package:church_app/screens/languages/language_screen.dart';
@@ -93,6 +96,40 @@ class ChurchApp extends StatelessWidget {
 
             '/gallery': (context) =>
                 const GalleryScreen(),
+
+                '/giving': (context) =>
+    const GivingScreen(),
+
+'/giving-currency': (context) {
+  final givingType =
+      ModalRoute.of(context)!.settings.arguments as String;
+
+  return GivingCurrencyScreen(
+    givingType: givingType,
+  );
+},
+
+'/giving-payment-details': (context) {
+  final args =
+      ModalRoute.of(context)!.settings.arguments
+          as Map<String, dynamic>;
+
+  return GivingPaymentDetailsScreen(
+    givingType: args['givingType'] as String,
+    currency: args['currency'] as String,
+  );
+},
+
+'/giving-confirmation': (context) {
+  final args =
+      ModalRoute.of(context)!.settings.arguments
+          as Map<String, dynamic>;
+
+  return GivingConfirmationScreen(
+    givingType: args['givingType'] as String,
+    currency: args['currency'] as String,
+  );
+},
 
             '/community': (context) =>
                 const CommunityScreen(),

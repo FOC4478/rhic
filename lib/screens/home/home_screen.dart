@@ -182,7 +182,7 @@ class _HomeScreenState extends State<HomeScreen>
                             onTap: () {
                         Navigator.pushNamed(
                         context,
-                        '/events',
+                        '/giving',
                       );
                       },
                           ),
@@ -198,13 +198,10 @@ class _HomeScreenState extends State<HomeScreen>
                               Color(0xFFFF8A45),
                             ],
                             onTap: () {
-                              _showComingSoon(
-                                context,
-                                l10n.churchLocations,
-                                l10n.comingSoon(
-                                  l10n.churchLocations,
-                                ),
-                              );
+                               Navigator.pushNamed(
+                           context,
+                          '/churches',
+                      );
                             },
                           ),
                         ),
@@ -273,19 +270,7 @@ class _HomeScreenState extends State<HomeScreen>
                       },
                    ),
                    
-                        _FeatureTile(
-                          icon: Icons.family_restroom,
-                          title: l10n.family,
-                          onTap: () {
-                            _showComingSoon(
-                              context,
-                              l10n.family,
-                              l10n.comingSoon(
-                                l10n.family,
-                              ),
-                            );
-                          },
-                        ),
+                      
                         _FeatureTile(
                           icon: Icons.calendar_month,
                           title: l10n.events,
@@ -307,19 +292,7 @@ class _HomeScreenState extends State<HomeScreen>
                       
                           },
                         ),
-                        _FeatureTile(
-                          icon: Icons.live_tv,
-                          title: l10n.live,
-                          onTap: () {
-                            _showComingSoon(
-                              context,
-                              l10n.live,
-                              l10n.comingSoon(
-                                l10n.live,
-                              ),
-                            );
-                          },
-                        ),
+                     
                       ],
                     ),
                     gridDelegate:

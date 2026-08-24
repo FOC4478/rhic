@@ -1,3 +1,4 @@
+import 'package:church_app/screens/resources/sermons_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:church_app/l10n/app_localizations.dart';
@@ -253,10 +254,13 @@ class _HomeScreenState extends State<HomeScreen>
                      icon: Icons.record_voice_over,
                      title: l10n.teachings,
                      onTap: () {
-                    Navigator.pushNamed(
-                       context,
-                     '/teachings',
-                    );
+                    Navigator.push(
+                        context,
+                     MaterialPageRoute(
+                          builder: (_) =>
+                    const SermonsScreen(),
+                  ),
+);
                       },
                     ),
                        _FeatureTile(

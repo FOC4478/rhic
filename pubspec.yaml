@@ -20,6 +20,9 @@ dependencies:
 
   just_audio: ^0.10.5
   video_player: ^2.10.0
+  dio: ^5.9.0
+
+  path_provider: ^2.1.5
 
   firebase_core: ^4.13.0
   firebase_auth: ^6.5.7

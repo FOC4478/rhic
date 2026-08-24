@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import '../models/teaching_model.dart';
+import '../models/sermon_model.dart';
 
 class LibraryRepository {
   LibraryRepository._();
@@ -12,11 +12,13 @@ class LibraryRepository {
       FirebaseFirestore.instance;
 
   // ============================================================
-  // DOWNLOADS COLLECTION
+  // USER DOWNLOADS
+  // users/{userId}/downloads/{sermonId}
   // ============================================================
 
-  CollectionReference<Map<String, dynamic>>
-      _downloadsCollection(String userId) {
+  CollectionReference<Map<String, dynamic>> _downloadsCollection(
+    String userId,
+  ) {
     return _firestore
         .collection('users')
         .doc(userId)
@@ -29,23 +31,24 @@ class LibraryRepository {
 
   Future<void> saveDownload({
     required String userId,
-    required TeachingModel teaching,
+    required SermonModel sermon,
     required String downloadType,
   }) async {
     await _downloadsCollection(userId)
-        .doc(teaching.id)
+        .doc(sermon.id)
         .set(
       {
-        'teachingId': teaching.id,
-        'title': teaching.title,
-        'description': teaching.description,
-        'speaker': teaching.speaker,
-        'category': teaching.category,
-        'imageUrl': teaching.imageUrl,
-        'audioUrl': teaching.audioUrl,
-        'videoUrl': teaching.videoUrl,
-        'date': teaching.date,
-        'duration': teaching.duration,
+        'sermonId': sermon.id,
+        'title': sermon.title,
+        'description': sermon.description,
+        'speaker': sermon.speaker,
+        'category': sermon.category,
+        'imageUrl': sermon.imageUrl,
+        'videoUrl': sermon.videoUrl,
+        'audioUrl': sermon.audioUrl,
+        'ebookUrl': sermon.ebookUrl,
+        'date': sermon.date,
+        'duration': sermon.duration,
         'downloadType': downloadType,
         'downloadedAt': FieldValue.serverTimestamp(),
       },
@@ -57,7 +60,7 @@ class LibraryRepository {
   // ALL DOWNLOADS
   // ============================================================
 
-  Stream<List<TeachingModel>> downloadsStream(
+  Stream<List<SermonModel>> downloadsStream(
     String userId,
   ) {
     return _downloadsCollection(userId)
@@ -67,23 +70,19 @@ class LibraryRepository {
         )
         .snapshots()
         .map(
-      (snapshot) {
-        return snapshot.docs
-            .map(
-              (doc) => _teachingFromDownload(
-                doc,
-              ),
-            )
-            .toList();
-      },
-    );
+          (snapshot) {
+            return snapshot.docs
+                .map(_sermonFromDownload)
+                .toList();
+          },
+        );
   }
 
   // ============================================================
   // VIDEO DOWNLOADS
   // ============================================================
 
-  Stream<List<TeachingModel>> videoDownloadsStream(
+  Stream<List<SermonModel>> videoDownloadsStream(
     String userId,
   ) {
     return _downloadsCollection(userId)
@@ -97,23 +96,19 @@ class LibraryRepository {
         )
         .snapshots()
         .map(
-      (snapshot) {
-        return snapshot.docs
-            .map(
-              (doc) => _teachingFromDownload(
-                doc,
-              ),
-            )
-            .toList();
-      },
-    );
+          (snapshot) {
+            return snapshot.docs
+                .map(_sermonFromDownload)
+                .toList();
+          },
+        );
   }
 
   // ============================================================
   // AUDIO DOWNLOADS
   // ============================================================
 
-  Stream<List<TeachingModel>> audioDownloadsStream(
+  Stream<List<SermonModel>> audioDownloadsStream(
     String userId,
   ) {
     return _downloadsCollection(userId)
@@ -127,52 +122,39 @@ class LibraryRepository {
         )
         .snapshots()
         .map(
-      (snapshot) {
-        return snapshot.docs
-            .map(
-              (doc) => _teachingFromDownload(
-                doc,
-              ),
-            )
-            .toList();
-      },
-    );
+          (snapshot) {
+            return snapshot.docs
+                .map(_sermonFromDownload)
+                .toList();
+          },
+        );
   }
 
   // ============================================================
-  // CONVERT DOWNLOAD DOCUMENT → TEACHING MODEL
+  // CONVERT DOWNLOAD DOCUMENT → SERMON MODEL
   // ============================================================
 
-  TeachingModel _teachingFromDownload(
+  SermonModel _sermonFromDownload(
     DocumentSnapshot<Map<String, dynamic>> doc,
   ) {
     final data = doc.data() ?? {};
 
-    return TeachingModel(
-      id: data['teachingId']?.toString() ?? doc.id,
+    return SermonModel(
+      id: data['sermonId']?.toString() ?? doc.id,
       title: data['title']?.toString() ?? '',
-      description:
-          data['description']?.toString() ?? '',
-      speaker:
-          data['speaker']?.toString() ?? '',
-      category:
-          data['category']?.toString() ?? '',
-      imageUrl:
-          data['imageUrl']?.toString() ?? '',
-      audioUrl:
-          data['audioUrl']?.toString() ?? '',
-      videoUrl:
-          data['videoUrl']?.toString() ?? '',
-      date:
-          data['date']?.toString() ?? '',
-      duration:
-          data['duration']?.toString() ?? '',
+      description: data['description']?.toString() ?? '',
+      speaker: data['speaker']?.toString() ?? '',
+      category: data['category']?.toString() ?? 'General',
+      imageUrl: data['imageUrl']?.toString() ?? '',
+      videoUrl: data['videoUrl']?.toString() ?? '',
+      audioUrl: data['audioUrl']?.toString() ?? '',
+      ebookUrl: data['ebookUrl']?.toString() ?? '',
+      date: data['date']?.toString() ?? '',
+      duration: data['duration']?.toString() ?? '',
       isPublished: true,
-      createdAt:
-          data['downloadedAt'] is Timestamp
-              ? data['downloadedAt']
-                  as Timestamp
-              : null,
+      createdAt: data['downloadedAt'] is Timestamp
+          ? data['downloadedAt'] as Timestamp
+          : null,
     );
   }
 
@@ -182,10 +164,10 @@ class LibraryRepository {
 
   Future<void> removeDownload({
     required String userId,
-    required String teachingId,
+    required String sermonId,
   }) async {
     await _downloadsCollection(userId)
-        .doc(teachingId)
+        .doc(sermonId)
         .delete();
   }
 
@@ -195,32 +177,32 @@ class LibraryRepository {
 
   Stream<bool> isDownloaded({
     required String userId,
-    required String teachingId,
+    required String sermonId,
   }) {
     return _downloadsCollection(userId)
-        .doc(teachingId)
+        .doc(sermonId)
         .snapshots()
         .map(
-      (snapshot) => snapshot.exists,
-    );
+          (snapshot) => snapshot.exists,
+        );
   }
 
   // ============================================================
-  // GET ONE DOWNLOADED TEACHING
+  // GET ONE DOWNLOADED SERMON
   // ============================================================
 
-  Future<TeachingModel?> getDownloadedTeaching({
+  Future<SermonModel?> getDownloadedSermon({
     required String userId,
-    required String teachingId,
+    required String sermonId,
   }) async {
     final doc = await _downloadsCollection(userId)
-        .doc(teachingId)
+        .doc(sermonId)
         .get();
 
     if (!doc.exists) {
       return null;
     }
 
-    return _teachingFromDownload(doc);
+    return _sermonFromDownload(doc);
   }
 }

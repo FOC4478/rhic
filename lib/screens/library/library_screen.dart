@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-import '../../models/teaching_model.dart';
+import '../../models/sermon_model.dart';
 import '../../repositories/library_repository.dart';
 
 class LibraryScreen extends StatefulWidget {
@@ -14,10 +14,6 @@ class LibraryScreen extends StatefulWidget {
 
 class _LibraryScreenState
     extends State<LibraryScreen> {
-  // ============================================================
-  // COLORS
-  // ============================================================
-
   static const Color primaryColor =
       Color(0xFF6B1FA2);
 
@@ -27,10 +23,6 @@ class _LibraryScreenState
   static const Color orangeColor =
       Color(0xFFF7931E);
 
-  // ============================================================
-  // STATE
-  // ============================================================
-
   int _selectedTab = 0;
 
   final List<String> _tabs = const [
@@ -39,27 +31,14 @@ class _LibraryScreenState
     'Audio',
   ];
 
-  // ============================================================
-  // CURRENT USER
-  // ============================================================
-
-  User? get _currentUser {
-    return FirebaseAuth.instance.currentUser;
-  }
-
-  // ============================================================
-  // TAB
-  // ============================================================
+  User? get _currentUser =>
+      FirebaseAuth.instance.currentUser;
 
   void _onTabChanged(int index) {
     setState(() {
       _selectedTab = index;
     });
   }
-
-  // ============================================================
-  // BOTTOM NAVIGATION
-  // ============================================================
 
   void _onNavigationTapped(int index) {
     switch (index) {
@@ -71,13 +50,13 @@ class _LibraryScreenState
         break;
 
       case 1:
-        Navigator.pushReplacementNamed(
-          context,
-          '/library',
-        );
         break;
 
       case 2:
+       Navigator.pushReplacementNamed(
+          context,
+          '/resources',
+        );
         break;
 
       case 3:
@@ -89,28 +68,21 @@ class _LibraryScreenState
     }
   }
 
-  // ============================================================
-  // BUILD
-  // ============================================================
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-
       body: SafeArea(
         child: Column(
           children: [
             _buildHeader(),
             _buildTabs(),
-
             Expanded(
               child: _buildSelectedContent(),
             ),
           ],
         ),
       ),
-
       bottomNavigationBar:
           _buildBottomNavigation(),
     );
@@ -150,15 +122,13 @@ class _LibraryScreenState
     return SizedBox(
       height: 62,
       child: SingleChildScrollView(
-        scrollDirection:
-            Axis.horizontal,
+        scrollDirection: Axis.horizontal,
         padding:
             const EdgeInsets.symmetric(
           horizontal: 20,
         ),
         child: Row(
-          children:
-              List.generate(
+          children: List.generate(
             _tabs.length,
             (index) {
               final selected =
@@ -167,18 +137,14 @@ class _LibraryScreenState
               return GestureDetector(
                 behavior:
                     HitTestBehavior.opaque,
-                onTap: () {
-                  _onTabChanged(index);
-                },
+                onTap: () =>
+                    _onTabChanged(index),
                 child: Container(
-                  margin:
-                      EdgeInsets.only(
-                    right:
-                        index ==
-                                _tabs.length -
-                                    1
-                            ? 0
-                            : 30,
+                  margin: EdgeInsets.only(
+                    right: index ==
+                            _tabs.length - 1
+                        ? 0
+                        : 30,
                   ),
                   padding:
                       const EdgeInsets.only(
@@ -186,29 +152,22 @@ class _LibraryScreenState
                   ),
                   decoration:
                       BoxDecoration(
-                    border:
-                        Border(
-                      bottom:
-                          BorderSide(
+                    border: Border(
+                      bottom: BorderSide(
                         color: selected
                             ? orangeColor
-                            : Colors
-                                .transparent,
+                            : Colors.transparent,
                         width: 4,
                       ),
                     ),
                   ),
                   child: Text(
                     _tabs[index],
-                    style:
-                        TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
-                      fontWeight:
-                          selected
-                              ? FontWeight
-                                  .w700
-                              : FontWeight
-                                  .w400,
+                      fontWeight: selected
+                          ? FontWeight.w700
+                          : FontWeight.w400,
                       color: selected
                           ? const Color(
                               0xFF3D174A,
@@ -240,7 +199,7 @@ class _LibraryScreenState
         title:
             'Sign in to view your resources',
         subtitle:
-            'Your downloaded teachings will appear here',
+            'Your downloaded sermons will appear here',
       );
     }
 
@@ -263,46 +222,58 @@ class _LibraryScreenState
   // ALL DOWNLOADS
   // ============================================================
 
-  Widget _buildDownloads(String userId) {
-    return StreamBuilder<List<TeachingModel>>(
+  Widget _buildDownloads(
+    String userId,
+  ) {
+    return StreamBuilder<List<SermonModel>>(
       stream:
           LibraryRepository.instance
               .downloadsStream(userId),
-      builder: (
-        context,
-        snapshot,
-      ) {
+      builder:
+          (context, snapshot) {
         if (snapshot.connectionState ==
             ConnectionState.waiting) {
           return const _ResourceLoading();
         }
 
         if (snapshot.hasError) {
+          debugPrint(
+            '🔥 DOWNLOADS ERROR: '
+            '${snapshot.error}',
+          );
+
+          debugPrint(
+            '🔥 DOWNLOADS STACK: '
+            '${snapshot.stackTrace}',
+          );
+
           return _ResourceError(
             message:
                 'Unable to load your downloads.',
+            error:
+                snapshot.error.toString(),
             onRetry: () {
               setState(() {});
             },
           );
         }
 
-        final teachings =
+        final sermons =
             snapshot.data ?? [];
 
-        if (teachings.isEmpty) {
+        if (sermons.isEmpty) {
           return const _EmptyResourceState(
             icon:
                 Icons.download_done_rounded,
             title:
                 'No downloaded resources yet',
             subtitle:
-                'Downloaded videos and audio will appear here',
+                'Downloaded sermons will appear here',
           );
         }
 
-        return _buildTeachingList(
-          teachings,
+        return _buildSermonList(
+          sermons,
         );
       },
     );
@@ -312,34 +283,48 @@ class _LibraryScreenState
   // VIDEO DOWNLOADS
   // ============================================================
 
-  Widget _buildVideos(String userId) {
-    return StreamBuilder<List<TeachingModel>>(
+  Widget _buildVideos(
+    String userId,
+  ) {
+    return StreamBuilder<List<SermonModel>>(
       stream:
           LibraryRepository.instance
-              .videoDownloadsStream(userId),
-      builder: (
-        context,
-        snapshot,
-      ) {
+              .videoDownloadsStream(
+        userId,
+      ),
+      builder:
+          (context, snapshot) {
         if (snapshot.connectionState ==
             ConnectionState.waiting) {
           return const _ResourceLoading();
         }
 
         if (snapshot.hasError) {
+          debugPrint(
+            '🔥 VIDEO DOWNLOADS ERROR: '
+            '${snapshot.error}',
+          );
+
+          debugPrint(
+            '🔥 VIDEO DOWNLOADS STACK: '
+            '${snapshot.stackTrace}',
+          );
+
           return _ResourceError(
             message:
                 'Unable to load your videos.',
+            error:
+                snapshot.error.toString(),
             onRetry: () {
               setState(() {});
             },
           );
         }
 
-        final teachings =
+        final sermons =
             snapshot.data ?? [];
 
-        if (teachings.isEmpty) {
+        if (sermons.isEmpty) {
           return const _EmptyResourceState(
             icon:
                 Icons.video_library_outlined,
@@ -350,8 +335,8 @@ class _LibraryScreenState
           );
         }
 
-        return _buildTeachingList(
-          teachings,
+        return _buildSermonList(
+          sermons,
         );
       },
     );
@@ -361,34 +346,48 @@ class _LibraryScreenState
   // AUDIO DOWNLOADS
   // ============================================================
 
-  Widget _buildAudio(String userId) {
-    return StreamBuilder<List<TeachingModel>>(
+  Widget _buildAudio(
+    String userId,
+  ) {
+    return StreamBuilder<List<SermonModel>>(
       stream:
           LibraryRepository.instance
-              .audioDownloadsStream(userId),
-      builder: (
-        context,
-        snapshot,
-      ) {
+              .audioDownloadsStream(
+        userId,
+      ),
+      builder:
+          (context, snapshot) {
         if (snapshot.connectionState ==
             ConnectionState.waiting) {
           return const _ResourceLoading();
         }
 
         if (snapshot.hasError) {
+          debugPrint(
+            '🔥 AUDIO DOWNLOADS ERROR: '
+            '${snapshot.error}',
+          );
+
+          debugPrint(
+            '🔥 AUDIO DOWNLOADS STACK: '
+            '${snapshot.stackTrace}',
+          );
+
           return _ResourceError(
             message:
                 'Unable to load your audio.',
+            error:
+                snapshot.error.toString(),
             onRetry: () {
               setState(() {});
             },
           );
         }
 
-        final teachings =
+        final sermons =
             snapshot.data ?? [];
 
-        if (teachings.isEmpty) {
+        if (sermons.isEmpty) {
           return const _EmptyResourceState(
             icon:
                 Icons.headphones_outlined,
@@ -399,23 +398,22 @@ class _LibraryScreenState
           );
         }
 
-        return _buildTeachingList(
-          teachings,
+        return _buildSermonList(
+          sermons,
         );
       },
     );
   }
 
   // ============================================================
-  // TEACHING LIST
+  // SERMON LIST
   // ============================================================
 
-  Widget _buildTeachingList(
-    List<TeachingModel> teachings,
+  Widget _buildSermonList(
+    List<SermonModel> sermons,
   ) {
     return RefreshIndicator(
       color: primaryColor,
-
       onRefresh: () async {
         await Future.delayed(
           const Duration(
@@ -427,11 +425,9 @@ class _LibraryScreenState
           setState(() {});
         }
       },
-
       child: ListView.separated(
         physics:
             const AlwaysScrollableScrollPhysics(),
-
         padding:
             const EdgeInsets.fromLTRB(
           20,
@@ -439,27 +435,22 @@ class _LibraryScreenState
           20,
           30,
         ),
-
-        itemCount:
-            teachings.length,
-
+        itemCount: sermons.length,
         separatorBuilder:
-            (context, index) {
-          return const SizedBox(
-            height: 14,
-          );
-        },
-
+            (context, index) =>
+                const SizedBox(
+          height: 14,
+        ),
         itemBuilder:
             (context, index) {
-          final teaching =
-              teachings[index];
+          final sermon =
+              sermons[index];
 
-          return _TeachingCard(
-            teaching: teaching,
+          return _SermonCard(
+            sermon: sermon,
             onTap: () {
-              _showTeachingDetails(
-                teaching,
+              _showSermonDetails(
+                sermon,
               );
             },
           );
@@ -469,11 +460,11 @@ class _LibraryScreenState
   }
 
   // ============================================================
-  // TEACHING DETAILS
+  // SERMON DETAILS
   // ============================================================
 
-  void _showTeachingDetails(
-    TeachingModel teaching,
+  void _showSermonDetails(
+    SermonModel sermon,
   ) {
     final user = _currentUser;
 
@@ -503,8 +494,6 @@ class _LibraryScreenState
                 crossAxisAlignment:
                     CrossAxisAlignment.start,
                 children: [
-                  // HANDLE
-
                   Center(
                     child: Container(
                       width: 45,
@@ -512,11 +501,9 @@ class _LibraryScreenState
                       decoration:
                           BoxDecoration(
                         color:
-                            Colors.grey
-                                .shade300,
+                            Colors.grey.shade300,
                         borderRadius:
-                            BorderRadius
-                                .circular(
+                            BorderRadius.circular(
                           10,
                         ),
                       ),
@@ -527,28 +514,23 @@ class _LibraryScreenState
                     height: 22,
                   ),
 
-                  // IMAGE
-
                   _buildDetailsImage(
-                    teaching,
+                    sermon,
                   ),
 
                   const SizedBox(
                     height: 20,
                   ),
 
-                  // CATEGORY
-
                   Text(
-                    teaching.category
+                    sermon.category
                         .toUpperCase(),
                     style:
                         const TextStyle(
                       fontSize: 12,
                       fontWeight:
                           FontWeight.w800,
-                      color:
-                          primaryColor,
+                      color: primaryColor,
                       letterSpacing: 1,
                     ),
                   ),
@@ -557,41 +539,33 @@ class _LibraryScreenState
                     height: 7,
                   ),
 
-                  // TITLE
-
                   Text(
-                    teaching.title,
+                    sermon.title,
                     style:
                         const TextStyle(
                       fontSize: 24,
                       fontWeight:
                           FontWeight.w800,
-                      color:
-                          darkPurple,
+                      color: darkPurple,
                     ),
                   ),
 
-                  // SPEAKER
-
-                  if (teaching.speaker
+                  if (sermon.speaker
                       .isNotEmpty) ...[
                     const SizedBox(
                       height: 8,
                     ),
                     Text(
-                      teaching.speaker,
+                      sermon.speaker,
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors
-                            .grey
-                            .shade600,
+                        color:
+                            Colors.grey.shade600,
                       ),
                     ),
                   ],
 
-                  // DURATION
-
-                  if (teaching.duration
+                  if (sermon.duration
                       .isNotEmpty) ...[
                     const SizedBox(
                       height: 8,
@@ -602,14 +576,13 @@ class _LibraryScreenState
                           Icons
                               .access_time_outlined,
                           size: 17,
-                          color:
-                              primaryColor,
+                          color: primaryColor,
                         ),
                         const SizedBox(
                           width: 6,
                         ),
                         Text(
-                          teaching.duration,
+                          sermon.duration,
                           style:
                               TextStyle(
                             fontSize: 13,
@@ -622,21 +595,18 @@ class _LibraryScreenState
                     ),
                   ],
 
-                  // DESCRIPTION
-
-                  if (teaching.description
+                  if (sermon.description
                       .isNotEmpty) ...[
                     const SizedBox(
                       height: 18,
                     ),
                     Text(
-                      teaching.description,
+                      sermon.description,
                       style: TextStyle(
                         fontSize: 14,
                         height: 1.6,
                         color: Colors
-                            .grey
-                            .shade700,
+                            .grey.shade700,
                       ),
                     ),
                   ],
@@ -644,8 +614,6 @@ class _LibraryScreenState
                   const SizedBox(
                     height: 25,
                   ),
-
-                  // REMOVE DOWNLOAD
 
                   if (user != null)
                     SizedBox(
@@ -655,17 +623,15 @@ class _LibraryScreenState
                       child:
                           ElevatedButton
                               .icon(
-                        onPressed:
-                            () async {
+                        onPressed: () async {
                           try {
                             await LibraryRepository
                                 .instance
                                 .removeDownload(
                               userId:
                                   user.uid,
-                              teachingId:
-                                  teaching
-                                      .id,
+                              sermonId:
+                                  sermon.id,
                             );
 
                             if (!sheetContext
@@ -677,10 +643,13 @@ class _LibraryScreenState
                               sheetContext,
                             );
 
+                            if (!mounted) {
+                              return;
+                            }
+
                             ScaffoldMessenger
-                                .of(
-                              sheetContext,
-                            ).showSnackBar(
+                                .of(context)
+                                .showSnackBar(
                               const SnackBar(
                                 content: Text(
                                   'Removed from your resources.',
@@ -697,9 +666,8 @@ class _LibraryScreenState
                             }
 
                             ScaffoldMessenger
-                                .of(
-                              sheetContext,
-                            ).showSnackBar(
+                                .of(sheetContext)
+                                .showSnackBar(
                               const SnackBar(
                                 content: Text(
                                   'Unable to remove resource.',
@@ -722,8 +690,7 @@ class _LibraryScreenState
                               TextStyle(
                             fontSize: 15,
                             fontWeight:
-                                FontWeight
-                                    .w800,
+                                FontWeight.w800,
                           ),
                         ),
                         style:
@@ -739,8 +706,7 @@ class _LibraryScreenState
                           shape:
                               RoundedRectangleBorder(
                             borderRadius:
-                                BorderRadius
-                                    .circular(
+                                BorderRadius.circular(
                               26,
                             ),
                           ),
@@ -751,8 +717,6 @@ class _LibraryScreenState
                   const SizedBox(
                     height: 10,
                   ),
-
-                  // CLOSE
 
                   SizedBox(
                     width:
@@ -780,8 +744,7 @@ class _LibraryScreenState
                         shape:
                             RoundedRectangleBorder(
                           borderRadius:
-                              BorderRadius
-                                  .circular(
+                              BorderRadius.circular(
                             26,
                           ),
                         ),
@@ -792,8 +755,7 @@ class _LibraryScreenState
                         style:
                             TextStyle(
                           fontWeight:
-                              FontWeight
-                                  .w700,
+                              FontWeight.w700,
                         ),
                       ),
                     ),
@@ -807,16 +769,12 @@ class _LibraryScreenState
     );
   }
 
-  // ============================================================
-  // DETAILS IMAGE
-  // ============================================================
-
   Widget _buildDetailsImage(
-    TeachingModel teaching,
+    SermonModel sermon,
   ) {
-    if (teaching.imageUrl.isEmpty) {
+    if (sermon.imageUrl.isEmpty) {
       return _imagePlaceholder(
-        teaching,
+        sermon,
         height: 180,
       );
     }
@@ -827,16 +785,12 @@ class _LibraryScreenState
       child: AspectRatio(
         aspectRatio: 16 / 9,
         child: Image.network(
-          teaching.imageUrl,
+          sermon.imageUrl,
           fit: BoxFit.cover,
           errorBuilder:
-              (
-            context,
-            error,
-            stackTrace,
-          ) {
+              (context, error, stackTrace) {
             return _imagePlaceholder(
-              teaching,
+              sermon,
               height: 180,
             );
           },
@@ -845,22 +799,19 @@ class _LibraryScreenState
     );
   }
 
-  // ============================================================
-  // IMAGE PLACEHOLDER
-  // ============================================================
-
   Widget _imagePlaceholder(
-    TeachingModel teaching, {
+    SermonModel sermon, {
     double height = 120,
   }) {
     final isAudio =
-        teaching.audioUrl.isNotEmpty &&
-        teaching.videoUrl.isEmpty;
+        sermon.hasAudio &&
+        !sermon.hasVideo;
 
     return Container(
       height: height,
       width: double.infinity,
-      decoration: BoxDecoration(
+      decoration:
+          BoxDecoration(
         color:
             const Color(0xFFF5EDF7),
         borderRadius:
@@ -889,7 +840,8 @@ class _LibraryScreenState
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(
+            color:
+                Colors.black.withValues(
               alpha: .06,
             ),
             blurRadius: 15,
@@ -907,8 +859,7 @@ class _LibraryScreenState
           ),
           child: Row(
             mainAxisAlignment:
-                MainAxisAlignment
-                    .spaceAround,
+                MainAxisAlignment.spaceAround,
             children: [
               _BottomNavItem(
                 icon:
@@ -921,31 +872,28 @@ class _LibraryScreenState
                   );
                 },
               ),
-
               _BottomNavItem(
                 icon: Icons
                     .library_books_outlined,
                 label: 'My Library',
-                selected: false,
+                selected: true,
                 onTap: () {
                   _onNavigationTapped(
                     1,
                   );
                 },
               ),
-
               _BottomNavItem(
-                icon:
-                    Icons.podcasts_outlined,
+                icon: Icons
+                    .podcasts_outlined,
                 label: 'Resources',
-                selected: true,
+                selected: false,
                 onTap: () {
                   _onNavigationTapped(
                     2,
                   );
                 },
               ),
-
               _BottomNavItem(
                 icon:
                     Icons.person_outline,
@@ -966,24 +914,24 @@ class _LibraryScreenState
 }
 
 // ==================================================================
-// TEACHING CARD
+// SERMON CARD
 // ==================================================================
 
-class _TeachingCard
+class _SermonCard
     extends StatelessWidget {
-  final TeachingModel teaching;
+  final SermonModel sermon;
   final VoidCallback onTap;
 
-  const _TeachingCard({
-    required this.teaching,
+  const _SermonCard({
+    required this.sermon,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final bool isAudio =
-        teaching.audioUrl.isNotEmpty &&
-        teaching.videoUrl.isEmpty;
+        sermon.hasAudio &&
+        !sermon.hasVideo;
 
     return GestureDetector(
       onTap: onTap,
@@ -994,14 +942,10 @@ class _TeachingCard
             BoxDecoration(
           color: Colors.white,
           borderRadius:
-              BorderRadius.circular(
-            18,
-          ),
+              BorderRadius.circular(18),
           border: Border.all(
             color:
-                const Color(
-              0xFFEDE3F0,
-            ),
+                const Color(0xFFEDE3F0),
           ),
           boxShadow: [
             BoxShadow(
@@ -1017,8 +961,6 @@ class _TeachingCard
         ),
         child: Row(
           children: [
-            // THUMBNAIL
-
             ClipRRect(
               borderRadius:
                   BorderRadius.circular(
@@ -1028,11 +970,10 @@ class _TeachingCard
                 width: 95,
                 height: 85,
                 child:
-                    teaching.imageUrl
+                    sermon.imageUrl
                             .isNotEmpty
                         ? Image.network(
-                            teaching
-                                .imageUrl,
+                            sermon.imageUrl,
                             fit: BoxFit.cover,
                             errorBuilder:
                                 (
@@ -1055,13 +996,10 @@ class _TeachingCard
               width: 13,
             ),
 
-            // CONTENT
-
             Expanded(
               child: Column(
                 crossAxisAlignment:
-                    CrossAxisAlignment
-                        .start,
+                    CrossAxisAlignment.start,
                 children: [
                   Text(
                     isAudio
@@ -1071,14 +1009,10 @@ class _TeachingCard
                         const TextStyle(
                       fontSize: 10,
                       fontWeight:
-                          FontWeight
-                              .w800,
+                          FontWeight.w800,
                       color:
-                          Color(
-                        0xFF6B1FA2,
-                      ),
-                      letterSpacing:
-                          .7,
+                          Color(0xFF6B1FA2),
+                      letterSpacing: .7,
                     ),
                   ),
 
@@ -1087,48 +1021,41 @@ class _TeachingCard
                   ),
 
                   Text(
-                    teaching.title,
+                    sermon.title,
                     maxLines: 2,
                     overflow:
-                        TextOverflow
-                            .ellipsis,
+                        TextOverflow.ellipsis,
                     style:
                         const TextStyle(
                       fontSize: 15,
                       fontWeight:
-                          FontWeight
-                              .w800,
+                          FontWeight.w800,
                       color:
-                          Color(
-                        0xFF3D004D,
-                      ),
+                          Color(0xFF3D004D),
                     ),
                   ),
 
-                  if (teaching
-                      .speaker
+                  if (sermon.speaker
                       .isNotEmpty) ...[
                     const SizedBox(
                       height: 5,
                     ),
                     Text(
-                      teaching.speaker,
+                      sermon.speaker,
                       maxLines: 1,
                       overflow:
-                          TextOverflow
-                              .ellipsis,
+                          TextOverflow.ellipsis,
                       style:
                           TextStyle(
                         fontSize: 11,
-                        color: Colors
-                            .grey
-                            .shade600,
+                        color:
+                            Colors.grey
+                                .shade600,
                       ),
                     ),
                   ],
 
-                  if (teaching
-                      .duration
+                  if (sermon.duration
                       .isNotEmpty) ...[
                     const SizedBox(
                       height: 5,
@@ -1140,16 +1067,13 @@ class _TeachingCard
                               .access_time_outlined,
                           size: 13,
                           color:
-                              Color(
-                            0xFF9E9E9E,
-                          ),
+                              Color(0xFF9E9E9E),
                         ),
                         const SizedBox(
                           width: 4,
                         ),
                         Text(
-                          teaching
-                              .duration,
+                          sermon.duration,
                           style:
                               TextStyle(
                             fontSize: 11,
@@ -1229,15 +1153,11 @@ class _EmptyResourceState
               icon,
               size: 58,
               color:
-                  const Color(
-                0xFFD9D9D9,
-              ),
+                  const Color(0xFFD9D9D9),
             ),
-
             const SizedBox(
               height: 22,
             ),
-
             Text(
               title,
               textAlign:
@@ -1251,11 +1171,9 @@ class _EmptyResourceState
                     Color(0xFF8D8D8D),
               ),
             ),
-
             const SizedBox(
               height: 10,
             ),
-
             Text(
               subtitle,
               textAlign:
@@ -1301,10 +1219,12 @@ class _ResourceLoading
 class _ResourceError
     extends StatelessWidget {
   final String message;
+  final String error;
   final VoidCallback onRetry;
 
   const _ResourceError({
     required this.message,
+    required this.error,
     required this.onRetry,
   });
 
@@ -1345,15 +1265,29 @@ class _ResourceError
             ),
 
             const SizedBox(
+              height: 12,
+            ),
+
+            Text(
+              error,
+              textAlign:
+                  TextAlign.center,
+              style:
+                  const TextStyle(
+                fontSize: 11,
+                color:
+                    Color(0xFFAAAAAA),
+              ),
+            ),
+
+            const SizedBox(
               height: 18,
             ),
 
             OutlinedButton(
               onPressed: onRetry,
               child:
-                  const Text(
-                'Retry',
-              ),
+                  const Text('Retry'),
             ),
           ],
         ),
@@ -1413,21 +1347,16 @@ class _BottomNavItem
                       ),
               ),
             ),
-
             const SizedBox(
               height: 4,
             ),
-
             Text(
               label,
               style: TextStyle(
                 fontSize: 11,
-                fontWeight:
-                    selected
-                        ? FontWeight
-                            .w700
-                        : FontWeight
-                            .w500,
+                fontWeight: selected
+                    ? FontWeight.w700
+                    : FontWeight.w500,
                 color: selected
                     ? const Color(
                         0xFF6B1FA2,

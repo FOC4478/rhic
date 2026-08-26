@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import '../shop/shop_screen.dart';
 import '../resources/sermons_screen.dart';
 
 class ResourcesScreen extends StatelessWidget {
@@ -215,9 +215,14 @@ class ResourcesScreen extends StatelessWidget {
                               .shopping_bag_rounded,
                       tag:
                           'SHOP RHIC',
-                      onTap: () {
-                        // Connect Store screen here.
-                      },
+                     onTap: () {
+                    Navigator.push(
+                     context,
+                   MaterialPageRoute(
+                builder: (_) => const ShopScreen(),
+            ),
+                 );
+                  },
                     ),
 
                     const SizedBox(

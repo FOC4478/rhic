@@ -22,6 +22,8 @@ import 'package:church_app/screens/library/library_screen.dart';
 import 'package:church_app/screens/events/events_screen.dart';
 import 'package:church_app/screens/gallery/gallery_screen.dart';
 import 'package:church_app/screens/resources/resources_screen.dart';
+import 'package:church_app/screens/shop/shop_screen.dart';
+import 'package:church_app/screens/shop/cart_screen.dart';
 
 import 'package:church_app/screens/community/community_screen.dart';
 import 'package:church_app/screens/community/community_group_details_screen.dart';
@@ -113,6 +115,11 @@ class ChurchApp extends StatelessWidget {
 
             '/resources': (context) =>
                 const ResourcesScreen(),
+             '/shop': (context) =>
+    const ShopScreen(),
+
+'/cart': (context) =>
+    const CartScreen(),    
 
             // ====================================================
             // GIVING

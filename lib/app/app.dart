@@ -7,7 +7,7 @@ import 'package:church_app/screens/giving/giving_screen.dart';
 import 'package:church_app/screens/giving/giving_currency_screen.dart';
 import 'package:church_app/screens/giving/giving_payment_details_screen.dart';
 import 'package:church_app/screens/giving/giving_confirmation_screen.dart';
-
+import 'package:church_app/screens/profile/profile_screen.dart';
 import 'package:church_app/screens/teachings/teachings_screen.dart';
 import 'package:church_app/screens/splash/splash_screen.dart';
 import 'package:church_app/screens/languages/language_screen.dart';
@@ -120,6 +120,9 @@ class ChurchApp extends StatelessWidget {
 
 '/cart': (context) =>
     const CartScreen(),    
+
+         '/account': (context) => 
+         const AccountScreen(),
 
             // ====================================================
             // GIVING

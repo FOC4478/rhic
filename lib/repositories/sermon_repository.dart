@@ -11,16 +11,14 @@ class SermonRepository {
   final FirebaseFirestore _firestore =
       FirebaseFirestore.instance;
 
-  CollectionReference<Map<String, dynamic>>
-      get _sermons =>
-          _firestore.collection('sermons');
+  CollectionReference<Map<String, dynamic>> get _sermons =>
+      _firestore.collection('sermons');
 
-  CollectionReference<Map<String, dynamic>>
-      get _categories =>
-          _firestore.collection('sermon_categories');
+  CollectionReference<Map<String, dynamic>> get _categories =>
+      _firestore.collection('sermon_categories');
 
   // ============================================================
-  // ALL PUBLISHED SERMONS
+  // PUBLIC: ALL PUBLISHED SERMONS
   // ============================================================
 
   Stream<List<SermonModel>> sermonsStream() {
@@ -37,9 +35,29 @@ class SermonRepository {
         .map(
           (snapshot) {
             return snapshot.docs
-                .map(
-                  SermonModel.fromFirestore,
-                )
+                .map(SermonModel.fromFirestore)
+                .toList();
+          },
+        );
+  }
+
+  // ============================================================
+  // ADMIN: ALL SERMONS
+  //
+  // This includes both published and unpublished sermons.
+  // ============================================================
+
+  Stream<List<SermonModel>> allSermonsStream() {
+    return _sermons
+        .orderBy(
+          'createdAt',
+          descending: true,
+        )
+        .snapshots()
+        .map(
+          (snapshot) {
+            return snapshot.docs
+                .map(SermonModel.fromFirestore)
                 .toList();
           },
         );
@@ -52,8 +70,7 @@ class SermonRepository {
   Stream<List<SermonModel>> sermonsByCategory(
     String category,
   ) {
-    Query<Map<String, dynamic>> query =
-        _sermons.where(
+    Query<Map<String, dynamic>> query = _sermons.where(
       'isPublished',
       isEqualTo: true,
     );
@@ -74,9 +91,7 @@ class SermonRepository {
         .map(
           (snapshot) {
             return snapshot.docs
-                .map(
-                  SermonModel.fromFirestore,
-                )
+                .map(SermonModel.fromFirestore)
                 .toList();
           },
         );
@@ -89,8 +104,7 @@ class SermonRepository {
   Stream<List<SermonModel>> searchSermons(
     String search,
   ) {
-    final keyword =
-        search.trim().toLowerCase();
+    final keyword = search.trim().toLowerCase();
 
     if (keyword.isEmpty) {
       return sermonsStream();
@@ -119,27 +133,24 @@ class SermonRepository {
   // CATEGORIES
   // ============================================================
 
-  Stream<List<String>>
-      categoriesStream() {
+  Stream<List<String>> categoriesStream() {
     return _categories
         .orderBy('name')
         .snapshots()
         .map(
           (snapshot) {
-            final categories =
-                snapshot.docs
-                    .map(
-                      (doc) =>
-                          doc.data()['name']
-                              ?.toString()
-                              .trim() ??
-                          '',
-                    )
-                    .where(
-                      (name) =>
-                          name.isNotEmpty,
-                    )
-                    .toList();
+            final categories = snapshot.docs
+                .map(
+                  (doc) =>
+                      doc.data()['name']
+                          ?.toString()
+                          .trim() ??
+                      '',
+                )
+                .where(
+                  (name) => name.isNotEmpty,
+                )
+                .toList();
 
             return [
               'All',
@@ -149,6 +160,15 @@ class SermonRepository {
         );
   }
 
+// ADMIN: CATEGORIES COLLECTION
+  //
+  // Exposed so the admin category screen can directly listen
+  // to category documents when needed.
+  // ============================================================
+
+  CollectionReference<Map<String, dynamic>>
+      get categoriesCollection => _categories;
+
   // ============================================================
   // ADMIN: CREATE CATEGORY
   // ============================================================
@@ -156,8 +176,7 @@ class SermonRepository {
   Future<void> createCategory(
     String name,
   ) async {
-    final cleaned =
-        name.trim();
+    final cleaned = name.trim();
 
     if (cleaned.isEmpty ||
         cleaned.toLowerCase() == 'all') {
@@ -166,8 +185,7 @@ class SermonRepository {
 
     await _categories.add({
       'name': cleaned,
-      'createdAt':
-          FieldValue.serverTimestamp(),
+      'createdAt': FieldValue.serverTimestamp(),
     });
   }
 
@@ -179,20 +197,16 @@ class SermonRepository {
     required String categoryId,
     required String name,
   }) async {
-    final cleaned =
-        name.trim();
+    final cleaned = name.trim();
 
     if (cleaned.isEmpty ||
         cleaned.toLowerCase() == 'all') {
       return;
     }
 
-    await _categories
-        .doc(categoryId)
-        .update({
+    await _categories.doc(categoryId).update({
       'name': cleaned,
-      'updatedAt':
-          FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
     });
   }
 
@@ -203,9 +217,7 @@ class SermonRepository {
   Future<void> deleteCategory(
     String categoryId,
   ) async {
-    await _categories
-        .doc(categoryId)
-        .delete();
+    await _categories.doc(categoryId).delete();
   }
 
   // ============================================================
@@ -227,9 +239,7 @@ class SermonRepository {
   Future<void> updateSermon(
     SermonModel sermon,
   ) async {
-    await _sermons
-        .doc(sermon.id)
-        .update(
+    await _sermons.doc(sermon.id).update(
           sermon.toFirestore(),
         );
   }
@@ -241,8 +251,20 @@ class SermonRepository {
   Future<void> deleteSermon(
     String sermonId,
   ) async {
-    await _sermons
-        .doc(sermonId)
-        .delete();
+    await _sermons.doc(sermonId).delete();
+  }
+
+  // ============================================================
+  // ADMIN: PUBLISH / UNPUBLISH SERMON
+  // ============================================================
+
+  Future<void> setPublished({
+    required String sermonId,
+    required bool isPublished,
+  }) async {
+    await _sermons.doc(sermonId).update({
+      'isPublished': isPublished,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 }

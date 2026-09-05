@@ -176,7 +176,7 @@ class ShopRepository {
   }
 
   // ============================================================
-  // ADMIN - PUBLISH
+  // ADMIN - PUBLISH / UNPUBLISH
   // ============================================================
 
   Future<void> setPublished({
@@ -188,4 +188,19 @@ class ShopRepository {
       'updatedAt': FieldValue.serverTimestamp(),
     });
   }
+
+  // ============================================================
+  // ADMIN - FEATURE / UNFEATURE
+  // ============================================================
+
+  Future<void> setFeatured({
+    required String bookId,
+    required bool featured,
+  }) async {
+    await _books.doc(bookId).update({
+      'isFeatured': featured,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
 }
+

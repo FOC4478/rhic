@@ -374,6 +374,39 @@ class AuthService {
   }
 
   // ============================================================
+// CHECK ADMIN ROLE
+// ============================================================
+
+Future<bool> isAdmin() async {
+  final User? user = _auth.currentUser;
+
+  if (user == null) {
+    return false;
+  }
+
+  try {
+    final DocumentSnapshot<Map<String, dynamic>> document =
+        await _firestore
+            .collection('users')
+            .doc(user.uid)
+            .get();
+
+    if (!document.exists) {
+      return false;
+    }
+
+    final Map<String, dynamic>? data = document.data();
+
+    return data?['role'] == 'admin';
+  } on FirebaseException catch (e) {
+    throw AuthException(
+      _handleFirestoreException(e),
+      code: e.code,
+    );
+  }
+}
+
+  // ============================================================
   // UPDATE LANGUAGE
   // ============================================================
 

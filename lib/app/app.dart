@@ -3,31 +3,32 @@ import 'package:flutter/material.dart';
 import 'package:church_app/l10n/app_localizations.dart';
 import 'package:church_app/app/locale_controller.dart';
 
-import 'package:church_app/screens/giving/giving_screen.dart';
-import 'package:church_app/screens/giving/giving_currency_screen.dart';
-import 'package:church_app/screens/giving/giving_payment_details_screen.dart';
-import 'package:church_app/screens/giving/giving_confirmation_screen.dart';
-import 'package:church_app/screens/profile/profile_screen.dart';
-import 'package:church_app/screens/teachings/teachings_screen.dart';
-import 'package:church_app/screens/splash/splash_screen.dart';
-import 'package:church_app/screens/languages/language_screen.dart';
-import 'package:church_app/screens/onboarding/onboarding_screen.dart';
-import 'package:church_app/screens/home/home_screen.dart';
+import 'package:church_app/screens/members/giving/giving_screen.dart';
+import 'package:church_app/screens/members/giving/giving_currency_screen.dart';
+import 'package:church_app/screens/members/giving/giving_payment_details_screen.dart';
+import 'package:church_app/screens/members/giving/giving_confirmation_screen.dart';
+import 'package:church_app/screens/members/profile/profile_screen.dart';
+import 'package:church_app/screens/members/teachings/teachings_screen.dart';
+import 'package:church_app/screens/members/splash/splash_screen.dart';
+import 'package:church_app/screens/members/languages/language_screen.dart';
+import 'package:church_app/screens/members/onboarding/onboarding_screen.dart';
+import 'package:church_app/screens/members/home/home_screen.dart';
+import 'package:church_app/screens/admin/auth/admin_login_screen.dart';
+import 'package:church_app/screens/admin/dashboard/admin_dashboard_screen.dart';
+import 'package:church_app/screens/members/auth/login_screen.dart';
+import 'package:church_app/screens/members/auth/registration_screen.dart';
+import 'package:church_app/screens/members/auth/verification_screen.dart';
 
-import 'package:church_app/screens/auth/login_screen.dart';
-import 'package:church_app/screens/auth/registration_screen.dart';
-import 'package:church_app/screens/auth/verification_screen.dart';
+import 'package:church_app/screens/members/library/library_screen.dart';
+import 'package:church_app/screens/members/events/events_screen.dart';
+import 'package:church_app/screens/members/gallery/gallery_screen.dart';
+import 'package:church_app/screens/members/resources/resources_screen.dart';
+import 'package:church_app/screens/members/shop/shop_screen.dart';
+import 'package:church_app/screens/members/shop/cart_screen.dart';
 
-import 'package:church_app/screens/library/library_screen.dart';
-import 'package:church_app/screens/events/events_screen.dart';
-import 'package:church_app/screens/gallery/gallery_screen.dart';
-import 'package:church_app/screens/resources/resources_screen.dart';
-import 'package:church_app/screens/shop/shop_screen.dart';
-import 'package:church_app/screens/shop/cart_screen.dart';
-
-import 'package:church_app/screens/community/community_screen.dart';
-import 'package:church_app/screens/community/community_group_details_screen.dart';
-import 'package:church_app/screens/community/community_group_members_screen.dart';
+import 'package:church_app/screens/members/community/community_screen.dart';
+import 'package:church_app/screens/members/community/community_group_details_screen.dart';
+import 'package:church_app/screens/members/community/community_group_members_screen.dart';
 
 class ChurchApp extends StatelessWidget {
   const ChurchApp({super.key});
@@ -207,6 +208,8 @@ class ChurchApp extends StatelessWidget {
               );
             },
 
+            
+
             // ====================================================
             // COMMUNITY GROUP DETAILS
             // ====================================================
@@ -236,6 +239,18 @@ class ChurchApp extends StatelessWidget {
                 groupId: arguments,
               );
             },
+
+            // ====================================================
+        // ADMIN
+
+
+         '/admin/login': (context) =>
+           const AdminLoginScreen(),
+
+         '/admin/dashboard': (context) =>
+          const AdminDashboardScreen(),
+
+
           },
         );
       },

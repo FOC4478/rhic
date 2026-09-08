@@ -1,23 +1,30 @@
-import 'dart:convert';
-
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:just_audio/just_audio.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../models/sermon_model.dart';
-// import '../../../repositories/library_repository.dart';
+import '../../../services/b2_upload_service.dart';
 
-class SermonDetailsScreen
-    extends StatelessWidget {
+class SermonDetailsScreen extends StatefulWidget {
   final SermonModel sermon;
+  final bool autoPlay;
+  final String initialMediaType;
 
   const SermonDetailsScreen({
     super.key,
     required this.sermon,
+    this.autoPlay = false,
+    this.initialMediaType = 'video',
   });
 
+  @override
+  State<SermonDetailsScreen> createState() =>
+      _SermonDetailsScreenState();
+}
+
+class _SermonDetailsScreenState
+    extends State<SermonDetailsScreen> {
   static const Color primaryColor =
       Color(0xFF6B1FA2);
 
@@ -27,151 +34,381 @@ class SermonDetailsScreen
   static const Color orangeColor =
       Color(0xFFF7931E);
 
+  VideoPlayerController? _videoController;
+
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
+  bool _videoLoading = false;
+  bool _audioLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (widget.autoPlay) {
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) {
+          if (!mounted) {
+            return;
+          }
+
+          if (widget.initialMediaType == 'video') {
+            _playVideo();
+          } else if (widget.initialMediaType == 'audio') {
+            _playAudio();
+          }
+        },
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _videoController?.dispose();
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
   // ============================================================
-  // B2 BACKEND
+  // VIDEO
   // ============================================================
 
-  // Your current local backend.
-  //
-  // When the backend is deployed, change this to:
-  //
-  // https://your-deployed-backend-url
-  //
-  static const String b2BackendUrl =
-      'http://localhost:3000';
+  Future<void> _playVideo() async {
+    final objectKey =
+        widget.sermon.videoStoragePath.trim();
+
+    final legacyUrl =
+        widget.sermon.videoUrl.trim();
+
+    if (objectKey.isEmpty && legacyUrl.isEmpty) {
+      _showMessage(
+        'No video is available for this sermon.',
+      );
+      return;
+    }
+
+    if (mounted) {
+      setState(() {
+        _videoLoading = true;
+      });
+    }
+
+    try {
+      String url;
+
+      if (objectKey.isNotEmpty) {
+        // Get temporary signed URL from B2 backend.
+        url = await B2UploadService.instance
+            .getDownloadUrl(
+          objectKey: objectKey,
+        );
+      } else {
+        // Legacy support.
+        url = legacyUrl;
+      }
+
+      await _videoController?.dispose();
+
+      final controller =
+          VideoPlayerController.networkUrl(
+        Uri.parse(url),
+      );
+
+      _videoController = controller;
+
+      await controller.initialize();
+
+      if (!mounted) {
+        await controller.dispose();
+        return;
+      }
+
+      setState(() {
+        _videoLoading = false;
+      });
+
+      // Start playing immediately.
+      await controller.play();
+
+      await _openVideoPlayer();
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _videoLoading = false;
+      });
+
+      _showMessage(
+        'Unable to open video: $e',
+      );
+    }
+  }
+
+  Future<void> _openVideoPlayer() async {
+    final controller = _videoController;
+
+    if (controller == null ||
+        !controller.value.isInitialized) {
+      return;
+    }
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => _VideoPlayerScreen(
+          controller: controller,
+          title: widget.sermon.title,
+        ),
+      ),
+    );
+
+    if (controller.value.isPlaying) {
+      await controller.pause();
+    }
+  }
+
+  // ============================================================
+  // AUDIO
+  // ============================================================
+
+  Future<void> _playAudio() async {
+    final objectKey =
+        widget.sermon.audioStoragePath.trim();
+
+    final legacyUrl =
+        widget.sermon.audioUrl.trim();
+
+    if (objectKey.isEmpty && legacyUrl.isEmpty) {
+      _showMessage(
+        'No audio is available for this sermon.',
+      );
+      return;
+    }
+
+    if (mounted) {
+      setState(() {
+        _audioLoading = true;
+      });
+    }
+
+    try {
+      String url;
+
+      if (objectKey.isNotEmpty) {
+        // Get temporary signed URL from B2 backend.
+        url = await B2UploadService.instance
+            .getDownloadUrl(
+          objectKey: objectKey,
+        );
+      } else {
+        // Legacy support.
+        url = legacyUrl;
+      }
+
+      await _audioPlayer.stop();
+
+      await _audioPlayer.setUrl(url);
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _audioLoading = false;
+      });
+
+      // Start playing immediately.
+      await _audioPlayer.play();
+
+      await _openAudioPlayer();
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _audioLoading = false;
+      });
+
+      _showMessage(
+        'Unable to open audio: $e',
+      );
+    }
+  }
+
+  Future<void> _openAudioPlayer() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => _AudioPlayerScreen(
+          player: _audioPlayer,
+          sermon: widget.sermon,
+        ),
+      ),
+    );
+
+    if (_audioPlayer.playing) {
+      await _audioPlayer.pause();
+    }
+  }
+
+  // ============================================================
+  // EBOOK
+  // ============================================================
+
+  Future<void> _openEbook() async {
+    final objectKey =
+        widget.sermon.ebookStoragePath.trim();
+
+    final legacyUrl =
+        widget.sermon.ebookUrl.trim();
+
+    if (objectKey.isEmpty && legacyUrl.isEmpty) {
+      _showMessage(
+        'No ebook is available for this sermon.',
+      );
+      return;
+    }
+
+    try {
+      String url;
+
+      if (objectKey.isNotEmpty) {
+        // Get temporary signed URL from B2 backend.
+        url = await B2UploadService.instance
+            .getDownloadUrl(
+          objectKey: objectKey,
+        );
+      } else {
+        // Legacy support.
+        url = legacyUrl;
+      }
+
+      final uri = Uri.parse(url);
+
+      final launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+
+      if (!launched) {
+        throw Exception(
+          'Could not open ebook.',
+        );
+      }
+    } catch (e) {
+      _showMessage(
+        'Unable to open ebook: $e',
+      );
+    }
+  }
+
+  // ============================================================
+  // MESSAGE
+  // ============================================================
+
+  void _showMessage(String message) {
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
 
   // ============================================================
   // BUILD
   // ============================================================
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
+  Widget build(BuildContext context) {
+    final sermon = widget.sermon;
+
     return Scaffold(
       backgroundColor: Colors.white,
-
       appBar: AppBar(
-        backgroundColor:
-            Colors.white,
-
-        surfaceTintColor:
-            Colors.white,
-
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
         elevation: 0,
-
         leading: IconButton(
           icon: const Icon(
-            Icons
-                .arrow_back_ios_new_rounded,
-
-            color:
-                Colors.black,
+            Icons.arrow_back_ios_new_rounded,
+            color: Colors.black,
           ),
-
           onPressed: () {
-            Navigator.pop(
-              context,
-            );
+            Navigator.pop(context);
           },
         ),
-
         title: const Text(
           'Sermon',
-
-          style:
-              TextStyle(
+          style: TextStyle(
             fontSize: 20,
-            fontWeight:
-                FontWeight.w700,
-            color:
-                darkPurple,
+            fontWeight: FontWeight.w700,
+            color: darkPurple,
           ),
         ),
       ),
-
-      body:
-          SingleChildScrollView(
-        padding:
-            const EdgeInsets.fromLTRB(
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(
           20,
           10,
           20,
           35,
         ),
-
         child: Column(
           crossAxisAlignment:
               CrossAxisAlignment.start,
-
           children: [
             // ====================================================
-            // IMAGE
+            // COVER IMAGE
             // ====================================================
 
             ClipRRect(
               borderRadius:
-                  BorderRadius.circular(
-                20,
-              ),
-
+                  BorderRadius.circular(20),
               child: AspectRatio(
-                aspectRatio:
-                    16 / 9,
-
-                child:
-                    sermon.imageUrl
-                            .trim()
-                            .isNotEmpty
-                        ? Image.network(
-                            sermon.imageUrl,
-
-                            fit:
-                                BoxFit.cover,
-
-                            errorBuilder:
-                                (
-                              context,
-                              error,
-                              stackTrace,
-                            ) {
-                              return _imagePlaceholder();
-                            },
-                          )
-                        : _imagePlaceholder(),
+                aspectRatio: 16 / 9,
+                child: sermon.imageUrl
+                        .trim()
+                        .isNotEmpty
+                    ? Image.network(
+                        sermon.imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (
+                          context,
+                          error,
+                          stackTrace,
+                        ) {
+                          return _imagePlaceholder();
+                        },
+                      )
+                    : _imagePlaceholder(),
               ),
             ),
 
-            const SizedBox(
-              height: 22,
-            ),
+            const SizedBox(height: 20),
 
             // ====================================================
-            // CATEGORY
+            // SERMON
             // ====================================================
 
-            if (sermon.category
-                .trim()
-                .isNotEmpty)
-              Text(
-                sermon.category
-                    .toUpperCase(),
-
-                style:
-                    const TextStyle(
-                  fontSize: 12,
-                  fontWeight:
-                      FontWeight.w800,
-                  color:
-                      orangeColor,
-                  letterSpacing:
-                      1,
-                ),
+            const Text(
+              'SERMON',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: orangeColor,
+                letterSpacing: 1,
               ),
-
-            const SizedBox(
-              height: 7,
             ),
+
+            const SizedBox(height: 7),
 
             // ====================================================
             // TITLE
@@ -179,20 +416,14 @@ class SermonDetailsScreen
 
             Text(
               sermon.title,
-
-              style:
-                  const TextStyle(
+              style: const TextStyle(
                 fontSize: 25,
-                fontWeight:
-                    FontWeight.w800,
-                color:
-                    darkPurple,
+                fontWeight: FontWeight.w800,
+                color: darkPurple,
               ),
             ),
 
-            const SizedBox(
-              height: 8,
-            ),
+            const SizedBox(height: 8),
 
             // ====================================================
             // SPEAKER
@@ -200,16 +431,27 @@ class SermonDetailsScreen
 
             Text(
               sermon.speaker,
-
-              style:
-                  const TextStyle(
+              style: const TextStyle(
                 fontSize: 15,
-                fontWeight:
-                    FontWeight.w600,
-                color:
-                    orangeColor,
+                fontWeight: FontWeight.w600,
+                color: orangeColor,
               ),
             ),
+
+            // ====================================================
+            // DATE
+            // ====================================================
+
+            if (sermon.date.trim().isNotEmpty) ...[
+              const SizedBox(height: 7),
+              Text(
+                sermon.date,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey.shade500,
+                ),
+              ),
+            ],
 
             // ====================================================
             // DESCRIPTION
@@ -218,46 +460,33 @@ class SermonDetailsScreen
             if (sermon.description
                 .trim()
                 .isNotEmpty) ...[
-              const SizedBox(
-                height: 18,
-              ),
-
+              const SizedBox(height: 18),
               Text(
                 sermon.description,
-
                 style: TextStyle(
                   fontSize: 14,
                   height: 1.6,
-                  color:
-                      Colors.grey.shade700,
+                  color: Colors.grey.shade700,
                 ),
               ),
             ],
 
-            const SizedBox(
-              height: 28,
-            ),
+            const SizedBox(height: 28),
 
             // ====================================================
-            // AVAILABLE RESOURCES
+            // RESOURCES
             // ====================================================
 
             const Text(
               'Available Resources',
-
-              style:
-                  TextStyle(
+              style: TextStyle(
                 fontSize: 19,
-                fontWeight:
-                    FontWeight.w800,
-                color:
-                    darkPurple,
+                fontWeight: FontWeight.w800,
+                color: darkPurple,
               ),
             ),
 
-            const SizedBox(
-              height: 14,
-            ),
+            const SizedBox(height: 14),
 
             // ====================================================
             // VIDEO
@@ -265,26 +494,14 @@ class SermonDetailsScreen
 
             if (sermon.hasVideo)
               _ResourceOption(
-                icon: Icons
-                    .play_circle_outline_rounded,
-
+                icon: Icons.play_circle_outline_rounded,
                 title: 'Video',
-
-                subtitle:
-                    sermon.duration
-                            .isNotEmpty
-                        ? sermon.duration
-                        : 'Watch this sermon',
-
-                color:
-                    primaryColor,
-
-                onTap: () {
-                  _openMedia(
-                    context,
-                    type: 'video',
-                  );
-                },
+                subtitle: _videoLoading
+                    ? 'Opening video...'
+                    : 'Watch this sermon',
+                color: primaryColor,
+                loading: _videoLoading,
+                onTap: _playVideo,
               ),
 
             // ====================================================
@@ -292,28 +509,16 @@ class SermonDetailsScreen
             // ====================================================
 
             if (sermon.hasAudio) ...[
-              const SizedBox(
-                height: 12,
-              ),
-
+              const SizedBox(height: 12),
               _ResourceOption(
-                icon: Icons
-                    .headphones_outlined,
-
+                icon: Icons.headphones_outlined,
                 title: 'Audio',
-
-                subtitle:
-                    'Listen to this sermon',
-
-                color:
-                    orangeColor,
-
-                onTap: () {
-                  _openMedia(
-                    context,
-                    type: 'audio',
-                  );
-                },
+                subtitle: _audioLoading
+                    ? 'Opening audio...'
+                    : 'Listen to this sermon',
+                color: orangeColor,
+                loading: _audioLoading,
+                onTap: _playAudio,
               ),
             ],
 
@@ -322,73 +527,36 @@ class SermonDetailsScreen
             // ====================================================
 
             if (sermon.hasEbook) ...[
-              const SizedBox(
-                height: 12,
-              ),
-
+              const SizedBox(height: 12),
               _ResourceOption(
-                icon: Icons
-                    .menu_book_outlined,
-
+                icon: Icons.menu_book_outlined,
                 title: 'Ebook',
-
-                subtitle:
-                    'Read the sermon material',
-
-                color:
-                    primaryColor,
-
-                onTap: () {
-                  _openMedia(
-                    context,
-                    type: 'ebook',
-                  );
-                },
+                subtitle: 'Read the sermon material',
+                color: primaryColor,
+                onTap: _openEbook,
               ),
             ],
 
             // ====================================================
-            // NOTHING AVAILABLE
+            // NO RESOURCE
             // ====================================================
 
             if (!sermon.hasVideo &&
                 !sermon.hasAudio &&
                 !sermon.hasEbook)
               Container(
-                width:
-                    double.infinity,
-
-                padding:
-                    const EdgeInsets.all(
-                  20,
-                ),
-
-                decoration:
-                    BoxDecoration(
-                  color:
-                      const Color(
-                    0xFFF7F3F8,
-                  ),
-
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF7F3F8),
                   borderRadius:
-                      BorderRadius.circular(
-                    16,
-                  ),
+                      BorderRadius.circular(16),
                 ),
-
-                child:
-                    const Text(
+                child: const Text(
                   'No resources are currently available for this sermon.',
-
-                  textAlign:
-                      TextAlign.center,
-
-                  style:
-                      TextStyle(
-                    color:
-                        Color(
-                      0xFF777777,
-                    ),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Color(0xFF777777),
                   ),
                 ),
               ),
@@ -399,316 +567,17 @@ class SermonDetailsScreen
   }
 
   // ============================================================
-  // OPEN MEDIA
-  // ============================================================
-
-  Future<void> _openMedia(
-    BuildContext context, {
-    required String type,
-  }) async {
-    try {
-      final objectKey =
-          _getObjectKey(type);
-
-      // ========================================================
-      // LEGACY URL
-      //
-      // This allows old sermons to continue working.
-      // ========================================================
-
-      final legacyUrl =
-          _getLegacyUrl(type);
-
-      String mediaUrl =
-          legacyUrl;
-
-      // ========================================================
-      // B2 STORAGE PATH
-      // ========================================================
-
-      if (objectKey
-          .trim()
-          .isNotEmpty) {
-        mediaUrl =
-            await _getSignedDownloadUrl(
-          context,
-          objectKey,
-        );
-      }
-
-      if (mediaUrl.trim().isEmpty) {
-        throw Exception(
-          'No media URL is available.',
-        );
-      }
-
-      if (!context.mounted) {
-        return;
-      }
-
-      // ========================================================
-      // OPEN PLAYER
-      // ========================================================
-
-      if (type == 'video') {
-        await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) =>
-                _VideoPlayerScreen(
-              title:
-                  sermon.title,
-              url:
-                  mediaUrl,
-            ),
-          ),
-        );
-
-        return;
-      }
-
-      if (type == 'audio') {
-        await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) =>
-                _AudioPlayerScreen(
-              title:
-                  sermon.title,
-              speaker:
-                  sermon.speaker,
-              url:
-                  mediaUrl,
-            ),
-          ),
-        );
-
-        return;
-      }
-
-      if (type == 'ebook') {
-        await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) =>
-                _EbookViewerScreen(
-              title:
-                  sermon.title,
-              url:
-                  mediaUrl,
-            ),
-          ),
-        );
-
-        return;
-      }
-    } catch (error) {
-      if (!context.mounted) {
-        return;
-      }
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Unable to open $type: $error',
-          ),
-
-          behavior:
-              SnackBarBehavior
-                  .floating,
-        ),
-      );
-    }
-  }
-
-  // ============================================================
-  // GET OBJECT KEY
-  // ============================================================
-
-  String _getObjectKey(
-    String type,
-  ) {
-    switch (type) {
-      case 'video':
-        return sermon
-            .videoStoragePath
-            .trim();
-
-      case 'audio':
-        return sermon
-            .audioStoragePath
-            .trim();
-
-      case 'ebook':
-        return sermon
-            .ebookStoragePath
-            .trim();
-
-      case 'image':
-        return sermon
-            .imageStoragePath
-            .trim();
-
-      default:
-        return '';
-    }
-  }
-
-  // ============================================================
-  // GET LEGACY URL
-  // ============================================================
-
-  String _getLegacyUrl(
-    String type,
-  ) {
-    switch (type) {
-      case 'video':
-        return sermon.videoUrl
-            .trim();
-
-      case 'audio':
-        return sermon.audioUrl
-            .trim();
-
-      case 'ebook':
-        return sermon.ebookUrl
-            .trim();
-
-      case 'image':
-        return sermon.imageUrl
-            .trim();
-
-      default:
-        return '';
-    }
-  }
-
-  // ============================================================
-  // GET SIGNED B2 URL
-  // ============================================================
-
-  Future<String>
-      _getSignedDownloadUrl(
-    BuildContext context,
-    String objectKey,
-  ) async {
-    final user =
-        FirebaseAuth
-            .instance
-            .currentUser;
-
-    if (user == null) {
-      throw Exception(
-        'Please sign in to access sermon media.',
-      );
-    }
-
-    // ==========================================================
-    // GET FIREBASE ID TOKEN
-    // ==========================================================
-
-    final idToken =
-        await user.getIdToken(
-      true,
-    );
-
-    if (idToken == null ||
-        idToken.trim().isEmpty) {
-      throw Exception(
-        'Unable to authenticate with the media server.',
-      );
-    }
-
-    // ==========================================================
-    // CALL NODE BACKEND
-    // ==========================================================
-
-    final response =
-        await http.post(
-      Uri.parse(
-        '$b2BackendUrl/download-url',
-      ),
-
-      headers: {
-        'Content-Type':
-            'application/json',
-
-        'Authorization':
-            'Bearer $idToken',
-      },
-
-      body:
-          jsonEncode({
-        'objectKey':
-            objectKey,
-      }),
-    );
-
-    // ==========================================================
-    // HANDLE SERVER RESPONSE
-    // ==========================================================
-
-    if (response.statusCode !=
-        200) {
-      try {
-        final data =
-            jsonDecode(
-          response.body,
-        );
-
-        throw Exception(
-          data['message']
-                  ?.toString() ??
-              'Media server rejected the request.',
-        );
-      } catch (_) {
-        throw Exception(
-          'Media server returned status ${response.statusCode}.',
-        );
-      }
-    }
-
-    final data =
-        jsonDecode(
-      response.body,
-    );
-
-    final downloadUrl =
-        data['downloadUrl']
-                ?.toString() ??
-            '';
-
-    if (downloadUrl
-        .trim()
-        .isEmpty) {
-      throw Exception(
-        'The media server did not return a download URL.',
-      );
-    }
-
-    return downloadUrl;
-  }
-
-  // ============================================================
   // IMAGE PLACEHOLDER
   // ============================================================
 
   Widget _imagePlaceholder() {
     return Container(
-      color:
-          const Color(0xFFF3EAF5),
-
+      color: const Color(0xFFF3EAF5),
       child: const Center(
         child: Icon(
-          Icons
-              .video_library_outlined,
-
+          Icons.video_library_outlined,
           size: 55,
-
-          color:
-              Color(0xFF6B1FA2),
+          color: Color(0xFF6B1FA2),
         ),
       ),
     );
@@ -719,13 +588,13 @@ class SermonDetailsScreen
 // RESOURCE OPTION
 // ================================================================
 
-class _ResourceOption
-    extends StatelessWidget {
+class _ResourceOption extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
   final Color color;
   final VoidCallback onTap;
+  final bool loading;
 
   const _ResourceOption({
     required this.icon,
@@ -733,113 +602,75 @@ class _ResourceOption
     required this.subtitle,
     required this.color,
     required this.onTap,
+    this.loading = false,
   });
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
+  Widget build(BuildContext context) {
     return Material(
-      color:
-          Colors.white,
-
-      borderRadius:
-          BorderRadius.circular(
-        18,
-      ),
-
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(18),
       child: InkWell(
-        onTap: onTap,
-
-        borderRadius:
-            BorderRadius.circular(
-          18,
-        ),
-
+        onTap: loading ? null : onTap,
+        borderRadius: BorderRadius.circular(18),
         child: Container(
-          padding:
-              const EdgeInsets.all(
-            16,
-          ),
-
-          decoration:
-              BoxDecoration(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
             borderRadius:
-                BorderRadius.circular(
-              18,
-            ),
-
+                BorderRadius.circular(18),
             border: Border.all(
-              color:
-                  const Color(
-                0xFFEDE3F0,
-              ),
+              color: const Color(0xFFEDE3F0),
             ),
           ),
-
           child: Row(
             children: [
               Container(
                 width: 52,
                 height: 52,
-
-                decoration:
-                    BoxDecoration(
-                  color:
-                      color.withValues(
-                    alpha: .10,
-                  ),
-
-                  shape:
-                      BoxShape.circle,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: .10),
+                  shape: BoxShape.circle,
                 ),
-
-                child: Icon(
-                  icon,
-                  color:
-                      color,
-                  size: 27,
-                ),
+                child: loading
+                    ? Padding(
+                        padding:
+                            const EdgeInsets.all(14),
+                        child:
+                            CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: color,
+                        ),
+                      )
+                    : Icon(
+                        icon,
+                        color: color,
+                        size: 27,
+                      ),
               ),
 
-              const SizedBox(
-                width: 15,
-              ),
+              const SizedBox(width: 15),
 
               Expanded(
                 child: Column(
                   crossAxisAlignment:
                       CrossAxisAlignment.start,
-
                   children: [
                     Text(
                       title,
-
-                      style:
-                          const TextStyle(
+                      style: const TextStyle(
                         fontSize: 16,
-                        fontWeight:
-                            FontWeight.w800,
-                        color:
-                            Color(
-                          0xFF3D004D,
-                        ),
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF3D004D),
                       ),
                     ),
 
-                    const SizedBox(
-                      height: 4,
-                    ),
+                    const SizedBox(height: 4),
 
                     Text(
                       subtitle,
-
                       style: TextStyle(
                         fontSize: 12,
-                        color:
-                            Colors
-                                .grey
-                                .shade600,
+                        color: Colors.grey.shade600,
                       ),
                     ),
                   ],
@@ -847,14 +678,9 @@ class _ResourceOption
               ),
 
               Icon(
-                Icons
-                    .arrow_forward_ios_rounded,
-
+                Icons.arrow_forward_ios_rounded,
                 size: 16,
-
-                color:
-                    Colors.grey
-                        .shade500,
+                color: Colors.grey.shade500,
               ),
             ],
           ),
@@ -865,852 +691,384 @@ class _ResourceOption
 }
 
 // ================================================================
-// VIDEO PLAYER
+// VIDEO PLAYER SCREEN
 // ================================================================
 
-class _VideoPlayerScreen
-    extends StatefulWidget {
+class _VideoPlayerScreen extends StatefulWidget {
+  final VideoPlayerController controller;
   final String title;
-  final String url;
 
   const _VideoPlayerScreen({
+    required this.controller,
     required this.title,
-    required this.url,
   });
 
   @override
-  State<_VideoPlayerScreen>
-      createState() =>
-          _VideoPlayerScreenState();
+  State<_VideoPlayerScreen> createState() =>
+      _VideoPlayerScreenState();
 }
 
 class _VideoPlayerScreenState
-    extends State<
-        _VideoPlayerScreen> {
-  late final VideoPlayerController
-      _controller;
-
-  bool _loading = true;
-
-  String? _error;
-
+    extends State<_VideoPlayerScreen> {
   @override
   void initState() {
     super.initState();
 
-    _initialize();
-  }
-
-  Future<void> _initialize() async {
-    try {
-      _controller =
-          VideoPlayerController
-              .networkUrl(
-        Uri.parse(
-          widget.url,
-        ),
-      );
-
-      await _controller.initialize();
-
-      await _controller.setLooping(
-        false,
-      );
-
-      if (mounted) {
-        setState(() {
-          _loading = false;
-        });
-      }
-    } catch (error) {
-      if (mounted) {
-        setState(() {
-          _loading = false;
-          _error =
-              error.toString();
-        });
-      }
+    if (!widget.controller.value.isPlaying) {
+      widget.controller.play();
     }
   }
 
   @override
   void dispose() {
-    _controller.dispose();
-
+    widget.controller.pause();
     super.dispose();
   }
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
+  Widget build(BuildContext context) {
+    final controller = widget.controller;
+
     return Scaffold(
-      backgroundColor:
-          Colors.black,
-
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor:
-            Colors.black,
-
-        foregroundColor:
-            Colors.white,
-
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
         title: Text(
           widget.title,
-
           maxLines: 1,
-
-          overflow:
-              TextOverflow.ellipsis,
+          overflow: TextOverflow.ellipsis,
         ),
       ),
-
       body: Center(
-        child: _loading
-            ? const CircularProgressIndicator(
-                color:
-                    Color(
-                  0xFFF7931E,
-                ),
-              )
-            : _error != null
-                ? Padding(
-                    padding:
-                        const EdgeInsets.all(
-                      25,
-                    ),
+        child: controller.value.isInitialized
+            ? AspectRatio(
+                aspectRatio:
+                    controller.value.aspectRatio,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    VideoPlayer(controller),
 
-                    child: Text(
-                      'Unable to play video.\n\n$_error',
-
-                      textAlign:
-                          TextAlign.center,
-
-                      style:
-                          const TextStyle(
-                        color:
-                            Colors.white,
-                      ),
-                    ),
-                  )
-                : Column(
-                    mainAxisAlignment:
-                        MainAxisAlignment
-                            .center,
-
-                    children: [
-                      AspectRatio(
-                        aspectRatio:
-                            _controller
-                                .value
-                                .aspectRatio,
-
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          if (controller
+                              .value
+                              .isPlaying) {
+                            controller.pause();
+                          } else {
+                            controller.play();
+                          }
+                        });
+                      },
+                      child: Container(
+                        width: 65,
+                        height: 65,
+                        decoration:
+                            const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
                         child:
-                            VideoPlayer(
-                          _controller,
-                        ),
-                      ),
-
-                      const SizedBox(
-                        height: 20,
-                      ),
-
-                      IconButton(
-                        iconSize: 60,
-
-                        color:
-                            Colors.white,
-
-                        icon: Icon(
-                          _controller
-                                  .value
-                                  .isPlaying
-                              ? Icons
-                                  .pause_circle
-                              : Icons
-                                  .play_circle,
-                        ),
-
-                        onPressed: () {
-                          setState(() {
-                            if (_controller
-                                .value
-                                .isPlaying) {
-                              _controller
-                                  .pause();
-                            } else {
-                              _controller
-                                  .play();
-                            }
-                          });
-                        },
-                      ),
-
-                      const SizedBox(
-                        height: 10,
-                      ),
-
-                      VideoProgressIndicator(
-                        _controller,
-
-                        allowScrubbing:
-                            true,
-
-                        padding:
-                            const EdgeInsets
-                                .symmetric(
-                          horizontal:
-                              20,
-                        ),
-                      ),
-                    ],
-                  ),
-      ),
-    );
-  }
-}
-
-// ================================================================
-// AUDIO PLAYER
-// ================================================================
-
-class _AudioPlayerScreen
-    extends StatefulWidget {
-  final String title;
-  final String speaker;
-  final String url;
-
-  const _AudioPlayerScreen({
-    required this.title,
-    required this.speaker,
-    required this.url,
-  });
-
-  @override
-  State<_AudioPlayerScreen>
-      createState() =>
-          _AudioPlayerScreenState();
-}
-
-class _AudioPlayerScreenState
-    extends State<
-        _AudioPlayerScreen> {
-  final AudioPlayer _player =
-      AudioPlayer();
-
-  bool _loading = true;
-
-  String? _error;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _initialize();
-  }
-
-  Future<void> _initialize() async {
-    try {
-      await _player.setUrl(
-        widget.url,
-      );
-
-      if (mounted) {
-        setState(() {
-          _loading = false;
-        });
-      }
-    } catch (error) {
-      if (mounted) {
-        setState(() {
-          _loading = false;
-          _error =
-              error.toString();
-        });
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _player.dispose();
-
-    super.dispose();
-  }
-
-  @override
-  Widget build(
-    BuildContext context,
-  ) {
-    return Scaffold(
-      backgroundColor:
-          Colors.white,
-
-      appBar: AppBar(
-        backgroundColor:
-            Colors.white,
-
-        surfaceTintColor:
-            Colors.white,
-
-        elevation: 0,
-
-        leading: IconButton(
-          icon: const Icon(
-            Icons
-                .arrow_back_ios_new_rounded,
-          ),
-
-          color:
-              Colors.black,
-
-          onPressed: () {
-            Navigator.pop(
-              context,
-            );
-          },
-        ),
-
-        title: const Text(
-          'Audio',
-
-          style:
-              TextStyle(
-            fontWeight:
-                FontWeight.w700,
-
-            color:
-                Color(
-              0xFF3D004D,
-            ),
-          ),
-        ),
-      ),
-
-      body: Center(
-        child: _loading
-            ? const CircularProgressIndicator(
-                color:
-                    Color(
-                  0xFF6B1FA2,
-                ),
-              )
-            : _error != null
-                ? Padding(
-                    padding:
-                        const EdgeInsets.all(
-                      25,
-                    ),
-
-                    child: Text(
-                      'Unable to play audio.\n\n$_error',
-
-                      textAlign:
-                          TextAlign.center,
-
-                      style:
-                          const TextStyle(
-                        color:
-                            Color(
-                          0xFF777777,
-                        ),
-                      ),
-                    ),
-                  )
-                : Padding(
-                    padding:
-                        const EdgeInsets.all(
-                      30,
-                    ),
-
-                    child: Column(
-                      mainAxisAlignment:
-                          MainAxisAlignment
-                              .center,
-
-                      children: [
-                        Container(
-                          width: 140,
-                          height: 140,
-
-                          decoration:
-                              const BoxDecoration(
-                            color:
-                                Color(
-                              0xFFF3EAF5,
-                            ),
-
-                            shape:
-                                BoxShape
-                                    .circle,
-                          ),
-
-                          child:
-                              const Icon(
-                            Icons
-                                .headphones_rounded,
-
-                            size: 70,
-
-                            color:
-                                Color(
-                              0xFF6B1FA2,
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(
-                          height: 30,
-                        ),
-
-                        Text(
-                          widget.title,
-
-                          textAlign:
-                              TextAlign
-                                  .center,
-
-                          style:
-                              const TextStyle(
-                            fontSize: 22,
-
-                            fontWeight:
-                                FontWeight
-                                    .w800,
-
-                            color:
-                                Color(
-                              0xFF3D004D,
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(
-                          height: 8,
-                        ),
-
-                        Text(
-                          widget.speaker,
-
-                          textAlign:
-                              TextAlign
-                                  .center,
-
-                          style:
-                              const TextStyle(
-                            fontSize: 14,
-
-                            color:
-                                Color(
-                              0xFFF7931E,
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(
-                          height: 30,
-                        ),
-
-                        StreamBuilder<
-                            Duration?>(
-                          stream:
-                              _player
-                                  .durationStream,
-
+                            ValueListenableBuilder<
+                                VideoPlayerValue>(
+                          valueListenable:
+                              controller,
                           builder: (
                             context,
-                            snapshot,
+                            value,
+                            child,
                           ) {
-                            final duration =
-                                snapshot.data ??
-                                    Duration
-                                        .zero;
-
-                            return StreamBuilder<
-                                Duration>(
-                              stream:
-                                  _player
-                                      .positionStream,
-
-                              builder: (
-                                context,
-                                positionSnapshot,
-                              ) {
-                                final position =
-                                    positionSnapshot
-                                            .data ??
-                                        Duration
-                                            .zero;
-
-                                final max =
-                                    duration
-                                        .inMilliseconds
-                                        .toDouble();
-
-                                final value =
-                                    position
-                                        .inMilliseconds
-                                        .toDouble()
-                                        .clamp(
-                                          0,
-                                          max > 0
-                                              ? max
-                                              : 1,
-                                        );
-
-                                return Column(
-                                  children: [
-                                    Slider(
-                                      value:
-                                          value.toDouble(),
-
-                                      max:
-                                          max > 0
-                                              ? max
-                                              : 1,
-
-                                      activeColor:
-                                          const Color(
-                                        0xFF6B1FA2,
-                                      ),
-
-                                      onChanged:
-                                          max <=
-                                                  0
-                                              ? null
-                                              : (
-                                                  value,
-                                                ) {
-                                                  _player
-                                                      .seek(
-                                                    Duration(
-                                                      milliseconds:
-                                                          value.round(),
-                                                    ),
-                                                  );
-                                                },
-                                    ),
-
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment
-                                              .spaceBetween,
-
-                                      children: [
-                                        Text(
-                                          _formatDuration(
-                                            position,
-                                          ),
-                                        ),
-
-                                        Text(
-                                          _formatDuration(
-                                            duration,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
-                          },
-                        ),
-
-                        const SizedBox(
-                          height: 20,
-                        ),
-
-                        StreamBuilder<
-                            PlayerState>(
-                          stream:
-                              _player
-                                  .playerStateStream,
-
-                          builder: (
-                            context,
-                            snapshot,
-                          ) {
-                            final state =
-                                snapshot.data;
-
-                            final playing =
-                                state?.playing ??
-                                    false;
-
-                            return IconButton(
-                              iconSize:
-                                  72,
-
-                              color:
-                                  const Color(
+                            return Icon(
+                              value.isPlaying
+                                  ? Icons.pause_rounded
+                                  : Icons.play_arrow_rounded,
+                              color: const Color(
                                 0xFF6B1FA2,
                               ),
-
-                              icon: Icon(
-                                playing
-                                    ? Icons
-                                        .pause_circle_filled
-                                    : Icons
-                                        .play_circle_fill,
-                              ),
-
-                              onPressed:
-                                  () async {
-                                if (playing) {
-                                  await _player
-                                      .pause();
-                                } else {
-                                  await _player
-                                      .play();
-                                }
-                              },
+                              size: 38,
                             );
                           },
                         ),
-                      ],
+                      ),
                     ),
-                  ),
+                  ],
+                ),
+              )
+            : const CircularProgressIndicator(
+                color: Colors.white,
+              ),
       ),
     );
-  }
-
-  String _formatDuration(
-    Duration duration,
-  ) {
-    final minutes =
-        duration.inMinutes
-            .remainder(60)
-            .toString()
-            .padLeft(
-              2,
-              '0',
-            );
-
-    final seconds =
-        duration.inSeconds
-            .remainder(60)
-            .toString()
-            .padLeft(
-              2,
-              '0',
-            );
-
-    return '${duration.inHours > 0 ? '${duration.inHours}:' : ''}$minutes:$seconds';
   }
 }
 
 // ================================================================
-// EBOOK VIEWER
+// AUDIO PLAYER SCREEN
 // ================================================================
 
-class _EbookViewerScreen
-    extends StatelessWidget {
-  final String title;
-  final String url;
+class _AudioPlayerScreen extends StatelessWidget {
+  final AudioPlayer player;
+  final SermonModel sermon;
 
-  const _EbookViewerScreen({
-    required this.title,
-    required this.url,
+  const _AudioPlayerScreen({
+    required this.player,
+    required this.sermon,
   });
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
+  Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:
-          Colors.white,
-
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor:
-            Colors.white,
-
-        surfaceTintColor:
-            Colors.white,
-
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
         elevation: 0,
-
         leading: IconButton(
           icon: const Icon(
-            Icons
-                .arrow_back_ios_new_rounded,
+            Icons.arrow_back_ios_new_rounded,
+            color: Colors.black,
           ),
-
-          color:
-              Colors.black,
-
           onPressed: () {
-            Navigator.pop(
-              context,
-            );
+            Navigator.pop(context);
           },
         ),
-
-        title: Text(
-          title,
-
-          maxLines: 1,
-
-          overflow:
-              TextOverflow.ellipsis,
-
-          style:
-              const TextStyle(
-            fontSize: 18,
-
-            fontWeight:
-                FontWeight.w700,
-
-            color:
-                Color(
-              0xFF3D004D,
-            ),
+        title: const Text(
+          'Audio',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF3D004D),
           ),
         ),
       ),
-
-      body: Center(
+      body: SafeArea(
         child: Padding(
-          padding:
-              const EdgeInsets.all(
-            30,
-          ),
-
+          padding: const EdgeInsets.all(25),
           child: Column(
             mainAxisAlignment:
-                MainAxisAlignment
-                    .center,
-
+                MainAxisAlignment.center,
             children: [
-              Container(
-                width: 120,
-                height: 120,
+              // ==================================================
+              // ARTWORK
+              // ==================================================
 
-                decoration:
-                    const BoxDecoration(
-                  color:
-                      Color(
-                    0xFFF3EAF5,
-                  ),
-
-                  shape:
-                      BoxShape.circle,
-                ),
-
-                child:
-                    const Icon(
-                  Icons
-                      .picture_as_pdf_rounded,
-
-                  size: 65,
-
-                  color:
-                      Color(
-                    0xFF6B1FA2,
-                  ),
+              ClipOval(
+                child: SizedBox(
+                  width: 260,
+                  height: 260,
+                  child: sermon.imageUrl
+                          .trim()
+                          .isNotEmpty
+                      ? Image.network(
+                          sermon.imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (
+                            context,
+                            error,
+                            stackTrace,
+                          ) {
+                            return _placeholder();
+                          },
+                        )
+                      : _placeholder(),
                 ),
               ),
 
-              const SizedBox(
-                height: 25,
-              ),
+              const SizedBox(height: 30),
 
-              const Text(
-                'Ebook Ready',
+              // ==================================================
+              // TITLE
+              // ==================================================
 
-                style:
-                    TextStyle(
-                  fontSize: 21,
-
-                  fontWeight:
-                      FontWeight.w800,
-
-                  color:
-                      Color(
-                    0xFF3D004D,
-                  ),
+              Text(
+                sermon.title,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 23,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF3D004D),
                 ),
               ),
 
-              const SizedBox(
-                height: 10,
-              ),
+              const SizedBox(height: 8),
 
-              const Text(
-                'The sermon material is available as a PDF.',
-
-                textAlign:
-                    TextAlign.center,
-
-                style:
-                    TextStyle(
-                  color:
-                      Color(
-                    0xFF777777,
-                  ),
+              Text(
+                sermon.speaker,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFFF7931E),
                 ),
               ),
 
-              const SizedBox(
-                height: 25,
-              ),
+              const SizedBox(height: 35),
 
-              SizedBox(
-                width:
-                    double.infinity,
+              // ==================================================
+              // PROGRESS
+              // ==================================================
 
-                height: 50,
+              StreamBuilder<Duration>(
+                stream: player.positionStream,
+                builder: (
+                  context,
+                  positionSnapshot,
+                ) {
+                  final position =
+                      positionSnapshot.data ??
+                          Duration.zero;
 
-                child:
-                    ElevatedButton(
-                  onPressed: () {
-                    // ==================================================
-                    // The signed URL is ready.
-                    //
-                    // You can connect this to your preferred PDF
-                    // viewer once you add a PDF viewer package.
-                    // ==================================================
-
-                    ScaffoldMessenger
-                        .of(
+                  return StreamBuilder<Duration?>(
+                    stream: player.durationStream,
+                    builder: (
                       context,
-                    ).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'PDF URL is ready for the ebook viewer.',
-                        ),
+                      durationSnapshot,
+                    ) {
+                      final duration =
+                          durationSnapshot.data ??
+                              Duration.zero;
+
+                      final max =
+                          duration.inMilliseconds > 0
+                              ? duration
+                                  .inMilliseconds
+                                  .toDouble()
+                              : 1.0;
+
+                      final current = position
+                          .inMilliseconds
+                          .toDouble()
+                          .clamp(
+                            0.0,
+                            max,
+                          )
+                          .toDouble();
+
+                      return Column(
+                        children: [
+                          Slider(
+                            min: 0,
+                            max: max,
+                            value: current,
+                            activeColor:
+                                const Color(0xFF6B1FA2),
+                            inactiveColor:
+                                const Color(0xFFE5D9E8),
+                            onChanged:
+                                duration ==
+                                        Duration.zero
+                                    ? null
+                                    : (value) {
+                                        player.seek(
+                                          Duration(
+                                            milliseconds:
+                                                value.round(),
+                                          ),
+                                        );
+                                      },
+                          ),
+
+                          Row(
+                            mainAxisAlignment:
+                                MainAxisAlignment
+                                    .spaceBetween,
+                            children: [
+                              Text(
+                                _formatDuration(
+                                  position,
+                                ),
+                                style:
+                                    const TextStyle(
+                                  fontSize: 11,
+                                  color:
+                                      Color(0xFF888888),
+                                ),
+                              ),
+                              Text(
+                                _formatDuration(
+                                  duration,
+                                ),
+                                style:
+                                    const TextStyle(
+                                  fontSize: 11,
+                                  color:
+                                      Color(0xFF888888),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
+              ),
+
+              const SizedBox(height: 20),
+
+              // ==================================================
+              // PLAY / PAUSE
+              // ==================================================
+
+              StreamBuilder<PlayerState>(
+                stream: player.playerStateStream,
+                builder: (
+                  context,
+                  snapshot,
+                ) {
+                  final state = snapshot.data;
+
+                  final playing =
+                      state?.playing ?? false;
+
+                  final processing =
+                      state?.processingState ==
+                              ProcessingState.loading ||
+                          state?.processingState ==
+                              ProcessingState.buffering;
+
+                  return GestureDetector(
+                    onTap: processing
+                        ? null
+                        : () async {
+                            if (playing) {
+                              await player.pause();
+                            } else {
+                              await player.play();
+                            }
+                          },
+                    child: Container(
+                      width: 72,
+                      height: 72,
+                      decoration:
+                          const BoxDecoration(
+                        color: Color(0xFF6B1FA2),
+                        shape: BoxShape.circle,
                       ),
-                    );
-                  },
-
-                  style:
-                      ElevatedButton
-                          .styleFrom(
-                    backgroundColor:
-                        const Color(
-                      0xFF6B1FA2,
+                      child: processing
+                          ? const Padding(
+                              padding:
+                                  EdgeInsets.all(22),
+                              child:
+                                  CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Icon(
+                              playing
+                                  ? Icons.pause_rounded
+                                  : Icons.play_arrow_rounded,
+                              color: Colors.white,
+                              size: 40,
+                            ),
                     ),
-
-                    foregroundColor:
-                        Colors.white,
-
-                    elevation: 0,
-
-                    shape:
-                        RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(
-                        25,
-                      ),
-                    ),
-                  ),
-
-                  child:
-                      const Text(
-                    'Open Ebook',
-                  ),
-                ),
+                  );
+                },
               ),
             ],
           ),
@@ -1718,4 +1076,42 @@ class _EbookViewerScreen
       ),
     );
   }
+
+  Widget _placeholder() {
+    return Container(
+      color: const Color(0xFFF3EAF5),
+      child: const Center(
+        child: Icon(
+          Icons.headphones_rounded,
+          size: 65,
+          color: Color(0xFF6B1FA2),
+        ),
+      ),
+    );
+  }
 }
+
+// ================================================================
+// FORMAT DURATION
+// ================================================================
+
+String _formatDuration(Duration duration) {
+  if (duration == Duration.zero) {
+    return '0:00';
+  }
+
+  final hours = duration.inHours;
+
+  final minutes =
+      duration.inMinutes.remainder(60);
+
+  final seconds =
+      duration.inSeconds.remainder(60);
+
+  if (hours > 0) {
+    return '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  return '$minutes:${seconds.toString().padLeft(2, '0')}';
+}
+

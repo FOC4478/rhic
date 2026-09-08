@@ -1,0 +1,98 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ============================================================
+    // HELPER FUNCTIONS
+    // ============================================================
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn()
+          && firestore.get(
+            /databases/(default)/documents/users/$(request.auth.uid)
+          ).data.role == 'admin';
+    }
+
+
+    // ============================================================
+    // SERMON VIDEOS
+    // ============================================================
+
+    match /sermons/videos/{sermonId}/{fileName} {
+
+      // Signed-in users can read sermon videos.
+      allow read: if signedIn();
+
+      // Only admins can upload/update sermon videos.
+      allow write: if isAdmin();
+
+      // Only admins can delete sermon videos.
+      allow delete: if isAdmin();
+    }
+
+
+    // ============================================================
+    // SERMON AUDIO
+    // ============================================================
+
+    match /sermons/audio/{sermonId}/{fileName} {
+
+      // Signed-in users can read sermon audio.
+      allow read: if signedIn();
+
+      // Only admins can upload/update sermon audio.
+      allow write: if isAdmin();
+
+      // Only admins can delete sermon audio.
+      allow delete: if isAdmin();
+    }
+
+
+    // ============================================================
+    // SERMON EBOOKS
+    // ============================================================
+
+    match /sermons/ebooks/{sermonId}/{fileName} {
+
+      // Signed-in users can read sermon ebooks.
+      allow read: if signedIn();
+
+      // Only admins can upload/update sermon ebooks.
+      allow write: if isAdmin();
+
+      // Only admins can delete sermon ebooks.
+      allow delete: if isAdmin();
+    }
+
+
+    // ============================================================
+    // SERMON IMAGES
+    // ============================================================
+
+    match /sermons/images/{sermonId}/{fileName} {
+
+      // Signed-in users can read sermon images.
+      allow read: if signedIn();
+
+      // Only admins can upload/update sermon images.
+      allow write: if isAdmin();
+
+      // Only admins can delete sermon images.
+      allow delete: if isAdmin();
+    }
+
+
+    // ============================================================
+    // DENY EVERYTHING ELSE
+    // ============================================================
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

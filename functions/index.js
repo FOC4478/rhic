@@ -139,7 +139,7 @@ exports.checkYouTubeLive = onCall(
           actualStartTime &&
         !actualEndTime
         ) {
-          status = "live";
+          status = "live"; 
         }
 
         if (actualEndTime) {

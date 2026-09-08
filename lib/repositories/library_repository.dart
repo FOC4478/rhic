@@ -16,7 +16,8 @@ class LibraryRepository {
   // users/{userId}/downloads/{sermonId}
   // ============================================================
 
-  CollectionReference<Map<String, dynamic>> _downloadsCollection(
+  CollectionReference<Map<String, dynamic>>
+      _downloadsCollection(
     String userId,
   ) {
     return _firestore
@@ -38,19 +39,67 @@ class LibraryRepository {
         .doc(sermon.id)
         .set(
       {
+        // ======================================================
+        // SERMON ID
+        // ======================================================
+
         'sermonId': sermon.id,
+
+        // ======================================================
+        // BASIC SERMON INFORMATION
+        // ======================================================
+
         'title': sermon.title,
         'description': sermon.description,
         'speaker': sermon.speaker,
         'category': sermon.category,
+
+        // ======================================================
+        // IMAGE
+        // ======================================================
+
         'imageUrl': sermon.imageUrl,
+        'imageStoragePath': sermon.imageStoragePath,
+
+        // ======================================================
+        // RESOURCE URLS
+        // ======================================================
+
         'videoUrl': sermon.videoUrl,
         'audioUrl': sermon.audioUrl,
         'ebookUrl': sermon.ebookUrl,
+
+        // ======================================================
+        // STORAGE PATHS
+        // ======================================================
+
+        'videoStoragePath': sermon.videoStoragePath,
+        'audioStoragePath': sermon.audioStoragePath,
+        'ebookStoragePath': sermon.ebookStoragePath,
+
+        // ======================================================
+        // ADDITIONAL INFORMATION
+        // ======================================================
+
         'date': sermon.date,
         'duration': sermon.duration,
+
+        // ======================================================
+        // DOWNLOAD TYPE
+        //
+        // video
+        // audio
+        // ebook
+        // ======================================================
+
         'downloadType': downloadType,
-        'downloadedAt': FieldValue.serverTimestamp(),
+
+        // ======================================================
+        // DOWNLOAD TIMESTAMP
+        // ======================================================
+
+        'downloadedAt':
+            FieldValue.serverTimestamp(),
       },
       SetOptions(merge: true),
     );
@@ -140,21 +189,88 @@ class LibraryRepository {
     final data = doc.data() ?? {};
 
     return SermonModel(
+      // ========================================================
+      // BASIC INFORMATION
+      // ========================================================
+
       id: data['sermonId']?.toString() ?? doc.id,
-      title: data['title']?.toString() ?? '',
-      description: data['description']?.toString() ?? '',
-      speaker: data['speaker']?.toString() ?? '',
-      category: data['category']?.toString() ?? 'General',
-      imageUrl: data['imageUrl']?.toString() ?? '',
-      videoUrl: data['videoUrl']?.toString() ?? '',
-      audioUrl: data['audioUrl']?.toString() ?? '',
-      ebookUrl: data['ebookUrl']?.toString() ?? '',
-      date: data['date']?.toString() ?? '',
-      duration: data['duration']?.toString() ?? '',
+
+      title:
+          data['title']?.toString() ?? '',
+
+      description:
+          data['description']?.toString() ?? '',
+
+      speaker:
+          data['speaker']?.toString() ?? '',
+
+      category:
+          data['category']?.toString() ?? 'General',
+
+      // ========================================================
+      // IMAGE
+      // ========================================================
+
+      imageUrl:
+          data['imageUrl']?.toString() ?? '',
+
+      imageStoragePath:
+          data['imageStoragePath']?.toString() ?? '',
+
+      // ========================================================
+      // RESOURCE URLS
+      // ========================================================
+
+      videoUrl:
+          data['videoUrl']?.toString() ?? '',
+
+      audioUrl:
+          data['audioUrl']?.toString() ?? '',
+
+      ebookUrl:
+          data['ebookUrl']?.toString() ?? '',
+
+      // ========================================================
+      // STORAGE PATHS
+      // ========================================================
+
+      videoStoragePath:
+          data['videoStoragePath']?.toString() ?? '',
+
+      audioStoragePath:
+          data['audioStoragePath']?.toString() ?? '',
+
+      ebookStoragePath:
+          data['ebookStoragePath']?.toString() ?? '',
+
+      // ========================================================
+      // ADDITIONAL INFORMATION
+      // ========================================================
+
+      date:
+          data['date']?.toString() ?? '',
+
+      duration:
+          data['duration']?.toString() ?? '',
+
+      // ========================================================
+      // PUBLISHED STATUS
+      // ========================================================
+      //
+      // If it exists in the user's library, it is available
+      // to that user.
+      // ========================================================
+
       isPublished: true,
-      createdAt: data['downloadedAt'] is Timestamp
-          ? data['downloadedAt'] as Timestamp
-          : null,
+
+      // ========================================================
+      // CREATED / DOWNLOADED AT
+      // ========================================================
+
+      createdAt:
+          data['downloadedAt'] is Timestamp
+              ? data['downloadedAt'] as Timestamp
+              : null,
     );
   }
 

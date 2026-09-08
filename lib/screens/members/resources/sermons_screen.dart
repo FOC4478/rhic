@@ -83,7 +83,6 @@ class _SermonsScreenState
             ),
             onPressed: _showSearch,
           ),
-
           const SizedBox(width: 8),
         ],
       ),
@@ -107,7 +106,9 @@ class _SermonsScreenState
           }
 
           if (snapshot.hasError) {
-            return _buildError();
+            return _buildError(
+              snapshot.error,
+            );
           }
 
           final sermons =
@@ -136,17 +137,21 @@ class _SermonsScreenState
     final filtered =
         _filterSermons(sermons);
 
+    // ==========================================================
+    // IMPORTANT:
+    // USE B2 STORAGE PATHS THROUGH hasVideo / hasAudio.
+    // DO NOT CHECK videoUrl/audioUrl ONLY.
+    // ==========================================================
+
     final videos = filtered
         .where(
-          (sermon) =>
-              sermon.videoUrl.trim().isNotEmpty,
+          (sermon) => sermon.hasVideo,
         )
         .toList();
 
     final audio = filtered
         .where(
-          (sermon) =>
-              sermon.audioUrl.trim().isNotEmpty,
+          (sermon) => sermon.hasAudio,
         )
         .toList();
 
@@ -157,21 +162,28 @@ class _SermonsScreenState
 
     return RefreshIndicator(
       color: primaryColor,
+
       onRefresh: () async {
         await Future.delayed(
-          const Duration(milliseconds: 400),
+          const Duration(
+            milliseconds: 400,
+          ),
         );
 
         if (mounted) {
           setState(() {});
         }
       },
+
       child: ListView(
         physics:
             const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.only(
+
+        padding:
+            const EdgeInsets.only(
           bottom: 35,
         ),
+
         children: [
           // ======================================================
           // CATEGORY FILTERS
@@ -181,7 +193,9 @@ class _SermonsScreenState
             categories,
           ),
 
-          const SizedBox(height: 25),
+          const SizedBox(
+            height: 25,
+          ),
 
           // ======================================================
           // VIDEO / AUDIO
@@ -189,7 +203,9 @@ class _SermonsScreenState
 
           _buildMediaTabs(),
 
-          const SizedBox(height: 28),
+          const SizedBox(
+            height: 28,
+          ),
 
           if (displayed.isEmpty)
             _buildNoMediaState()
@@ -207,6 +223,7 @@ class _SermonsScreenState
                 _selectedMediaTab == 0
                     ? 'Videos'
                     : 'Audio',
+
                 style:
                     const TextStyle(
                   fontSize: 19,
@@ -217,13 +234,17 @@ class _SermonsScreenState
               ),
             ),
 
-            const SizedBox(height: 14),
+            const SizedBox(
+              height: 14,
+            ),
 
             _buildFeaturedList(
               displayed,
             ),
 
-            const SizedBox(height: 28),
+            const SizedBox(
+              height: 28,
+            ),
 
             // ====================================================
             // OTHER MESSAGES
@@ -236,6 +257,7 @@ class _SermonsScreenState
               ),
               child: Text(
                 'Other Messages',
+
                 style:
                     const TextStyle(
                   fontSize: 19,
@@ -246,7 +268,9 @@ class _SermonsScreenState
               ),
             ),
 
-            const SizedBox(height: 14),
+            const SizedBox(
+              height: 14,
+            ),
 
             _buildOtherMessages(
               displayed,
@@ -280,9 +304,10 @@ class _SermonsScreenState
         categorySet.toList();
 
     categories.sort(
-      (a, b) => a.toLowerCase().compareTo(
-        b.toLowerCase(),
-      ),
+      (a, b) =>
+          a.toLowerCase().compareTo(
+                b.toLowerCase(),
+              ),
     );
 
     return [
@@ -300,7 +325,10 @@ class _SermonsScreenState
   ) {
     var result = sermons;
 
-    // Category
+    // ==========================================================
+    // CATEGORY
+    // ==========================================================
+
     if (_selectedCategory != 'All') {
       result = result
           .where(
@@ -315,8 +343,13 @@ class _SermonsScreenState
           .toList();
     }
 
-    // Search
-    if (_searchQuery.trim().isNotEmpty) {
+    // ==========================================================
+    // SEARCH
+    // ==========================================================
+
+    if (_searchQuery
+        .trim()
+        .isNotEmpty) {
       final query =
           _searchQuery
               .trim()
@@ -333,6 +366,9 @@ class _SermonsScreenState
                       .contains(query) ||
                   sermon.category
                       .toLowerCase()
+                      .contains(query) ||
+                  sermon.description
+                      .toLowerCase()
                       .contains(query);
             },
           )
@@ -343,7 +379,7 @@ class _SermonsScreenState
   }
 
   // ============================================================
-  // HORIZONTAL CATEGORY FILTER
+  // CATEGORY FILTERS
   // ============================================================
 
   Widget _buildCategoryFilters(
@@ -351,19 +387,27 @@ class _SermonsScreenState
   ) {
     return SizedBox(
       height: 54,
+
       child: ListView.separated(
         scrollDirection:
             Axis.horizontal,
+
         padding:
             const EdgeInsets.symmetric(
           horizontal: 20,
         ),
-        itemCount: categories.length,
+
+        itemCount:
+            categories.length,
+
         separatorBuilder: (
           context,
           index,
         ) =>
-            const SizedBox(width: 9),
+            const SizedBox(
+          width: 9,
+        ),
+
         itemBuilder: (
           context,
           index,
@@ -382,25 +426,32 @@ class _SermonsScreenState
                     category;
               });
             },
+
             child: AnimatedContainer(
               duration:
                   const Duration(
                 milliseconds: 180,
               ),
+
               padding:
                   const EdgeInsets.symmetric(
                 horizontal: 18,
               ),
+
               alignment:
                   Alignment.center,
-              decoration: BoxDecoration(
+
+              decoration:
+                  BoxDecoration(
                 color: selected
                     ? orangeColor
                     : Colors.white,
+
                 borderRadius:
                     BorderRadius.circular(
                   28,
                 ),
+
                 border: Border.all(
                   color: selected
                       ? orangeColor
@@ -409,13 +460,16 @@ class _SermonsScreenState
                         ),
                 ),
               ),
+
               child: Text(
                 category,
+
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: selected
                       ? FontWeight.w600
                       : FontWeight.w400,
+
                   color: selected
                       ? Colors.white
                       : const Color(
@@ -431,7 +485,7 @@ class _SermonsScreenState
   }
 
   // ============================================================
-  // VIDEO / AUDIO TABS
+  // MEDIA TABS
   // ============================================================
 
   Widget _buildMediaTabs() {
@@ -440,6 +494,7 @@ class _SermonsScreenState
           const EdgeInsets.symmetric(
         horizontal: 20,
       ),
+
       child: Row(
         children: [
           Expanded(
@@ -447,6 +502,7 @@ class _SermonsScreenState
               title: 'Videos',
               selected:
                   _selectedMediaTab == 0,
+
               onTap: () {
                 setState(() {
                   _selectedMediaTab = 0;
@@ -460,6 +516,7 @@ class _SermonsScreenState
               title: 'Audio',
               selected:
                   _selectedMediaTab == 1,
+
               onTap: () {
                 setState(() {
                   _selectedMediaTab = 1;
@@ -484,29 +541,39 @@ class _SermonsScreenState
 
     return SizedBox(
       height: 300,
+
       child: ListView.separated(
         scrollDirection:
             Axis.horizontal,
+
         padding:
             const EdgeInsets.symmetric(
           horizontal: 20,
         ),
-        itemCount: featured.length,
+
+        itemCount:
+            featured.length,
+
         separatorBuilder: (
           context,
           index,
         ) =>
-            const SizedBox(width: 18),
+            const SizedBox(
+          width: 18,
+        ),
+
         itemBuilder: (
           context,
           index,
         ) {
           return _FeaturedSermonCard(
             sermon: featured[index],
+
             mediaType:
                 _selectedMediaTab == 0
                     ? 'video'
                     : 'audio',
+
             onTap: () {
               _openSermon(
                 featured[index],
@@ -525,9 +592,10 @@ class _SermonsScreenState
   Widget _buildOtherMessages(
     List<SermonModel> sermons,
   ) {
-    final others = sermons.length > 5
-        ? sermons.sublist(5)
-        : <SermonModel>[];
+    final others =
+        sermons.length > 5
+            ? sermons.sublist(5)
+            : <SermonModel>[];
 
     if (others.isEmpty) {
       return Padding(
@@ -535,8 +603,10 @@ class _SermonsScreenState
             const EdgeInsets.symmetric(
           horizontal: 20,
         ),
+
         child: Text(
           'More messages will appear here.',
+
           style: TextStyle(
             color:
                 Colors.grey.shade500,
@@ -547,28 +617,38 @@ class _SermonsScreenState
 
     return ListView.separated(
       shrinkWrap: true,
+
       physics:
           const NeverScrollableScrollPhysics(),
+
       padding:
           const EdgeInsets.symmetric(
         horizontal: 20,
       ),
-      itemCount: others.length,
+
+      itemCount:
+          others.length,
+
       separatorBuilder: (
         context,
         index,
       ) =>
-          const SizedBox(height: 18),
+          const SizedBox(
+        height: 18,
+      ),
+
       itemBuilder: (
         context,
         index,
       ) {
         return _OtherSermonCard(
           sermon: others[index],
+
           mediaType:
               _selectedMediaTab == 0
                   ? 'video'
                   : 'audio',
+
           onTap: () {
             _openSermon(
               others[index],
@@ -604,8 +684,12 @@ class _SermonsScreenState
   void _showSearch() {
     showModalBottomSheet(
       context: context,
+
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+
+      backgroundColor:
+          Colors.white,
+
       shape:
           const RoundedRectangleBorder(
         borderRadius:
@@ -613,47 +697,60 @@ class _SermonsScreenState
           top: Radius.circular(28),
         ),
       ),
+
       builder: (sheetContext) {
         return Padding(
-          padding: EdgeInsets.only(
+          padding:
+              EdgeInsets.only(
             left: 20,
             right: 20,
             top: 25,
-            bottom: MediaQuery.of(
-                  sheetContext,
-                ).viewInsets.bottom +
-                25,
+
+            bottom:
+                MediaQuery.of(
+                      sheetContext,
+                    ).viewInsets.bottom +
+                    25,
           ),
+
           child: TextField(
             autofocus: true,
+
             controller:
                 _searchController,
+
             onChanged: (value) {
               setState(() {
-                _searchQuery = value;
+                _searchQuery =
+                    value;
               });
             },
+
             decoration:
                 InputDecoration(
               hintText:
                   'Search sermons...',
+
               prefixIcon:
                   const Icon(
                 Icons.search_rounded,
                 color: primaryColor,
               ),
+
               suffixIcon:
                   IconButton(
                 icon:
                     const Icon(
                   Icons.close,
                 ),
+
                 onPressed: () {
                   _searchController
                       .clear();
 
                   setState(() {
-                    _searchQuery = '';
+                    _searchQuery =
+                        '';
                   });
 
                   Navigator.pop(
@@ -661,17 +758,21 @@ class _SermonsScreenState
                   );
                 },
               ),
+
               filled: true,
+
               fillColor:
                   const Color(
                 0xFFF7F3F8,
               ),
+
               border:
                   OutlineInputBorder(
                 borderRadius:
                     BorderRadius.circular(
                   16,
                 ),
+
                 borderSide:
                     BorderSide.none,
               ),
@@ -690,10 +791,14 @@ class _SermonsScreenState
     return Center(
       child: Padding(
         padding:
-            const EdgeInsets.all(30),
+            const EdgeInsets.all(
+          30,
+        ),
+
         child: Column(
           mainAxisAlignment:
               MainAxisAlignment.center,
+
           children: [
             const Icon(
               Icons
@@ -703,10 +808,13 @@ class _SermonsScreenState
                   Color(0xFFD6D6D6),
             ),
 
-            const SizedBox(height: 18),
+            const SizedBox(
+              height: 18,
+            ),
 
             const Text(
               'No sermons available yet',
+
               style: TextStyle(
                 fontSize: 17,
                 fontWeight:
@@ -716,12 +824,16 @@ class _SermonsScreenState
               ),
             ),
 
-            const SizedBox(height: 8),
+            const SizedBox(
+              height: 8,
+            ),
 
             Text(
               'Published sermons will appear here.',
+
               textAlign:
                   TextAlign.center,
+
               style: TextStyle(
                 color:
                     Colors.grey.shade500,
@@ -737,14 +849,20 @@ class _SermonsScreenState
   // ERROR
   // ============================================================
 
-  Widget _buildError() {
+  Widget _buildError(
+    Object? error,
+  ) {
     return Center(
       child: Padding(
         padding:
-            const EdgeInsets.all(30),
+            const EdgeInsets.all(
+          30,
+        ),
+
         child: Column(
           mainAxisAlignment:
               MainAxisAlignment.center,
+
           children: [
             const Icon(
               Icons.cloud_off_outlined,
@@ -753,12 +871,16 @@ class _SermonsScreenState
                   Color(0xFFD0D0D0),
             ),
 
-            const SizedBox(height: 18),
+            const SizedBox(
+              height: 18,
+            ),
 
             const Text(
               'Unable to load sermons.',
+
               textAlign:
                   TextAlign.center,
+
               style: TextStyle(
                 fontSize: 16,
                 fontWeight:
@@ -768,14 +890,52 @@ class _SermonsScreenState
               ),
             ),
 
-            const SizedBox(height: 18),
+            const SizedBox(
+              height: 10,
+            ),
+
+            if (error != null)
+              Padding(
+                padding:
+                    const EdgeInsets
+                        .symmetric(
+                  horizontal: 20,
+                ),
+
+                child: Text(
+                  error.toString(),
+
+                  maxLines: 4,
+
+                  overflow:
+                      TextOverflow
+                          .ellipsis,
+
+                  textAlign:
+                      TextAlign.center,
+
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors
+                        .grey
+                        .shade500,
+                  ),
+                ),
+              ),
+
+            const SizedBox(
+              height: 18,
+            ),
 
             OutlinedButton(
               onPressed: () {
                 setState(() {});
               },
+
               child:
-                  const Text('Retry'),
+                  const Text(
+                'Retry',
+              ),
             ),
           ],
         ),
@@ -794,6 +954,7 @@ class _SermonsScreenState
         horizontal: 30,
         vertical: 80,
       ),
+
       child: Column(
         children: [
           Icon(
@@ -802,18 +963,26 @@ class _SermonsScreenState
                     .video_library_outlined
                 : Icons
                     .headphones_outlined,
+
             size: 55,
+
             color:
-                const Color(0xFFD6D6D6),
+                const Color(
+              0xFFD6D6D6,
+            ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(
+            height: 16,
+          ),
 
           Text(
             _selectedMediaTab == 0
                 ? 'No videos found'
                 : 'No audio found',
-            style: const TextStyle(
+
+            style:
+                const TextStyle(
               fontSize: 17,
               fontWeight:
                   FontWeight.w600,
@@ -844,16 +1013,24 @@ class _MediaTab
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return GestureDetector(
       onTap: onTap,
+
       child: Container(
         height: 48,
+
         alignment:
             Alignment.center,
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
+
+        decoration:
+            BoxDecoration(
+          border:
+              Border(
+            bottom:
+                BorderSide(
               color: selected
                   ? const Color(
                       0xFFF7931E,
@@ -861,17 +1038,26 @@ class _MediaTab
                   : const Color(
                       0xFFE8E8E8,
                     ),
-              width: selected ? 3 : 1,
+
+              width:
+                  selected
+                      ? 3
+                      : 1,
             ),
           ),
         ),
+
         child: Text(
           title,
+
           style: TextStyle(
             fontSize: 16,
-            fontWeight: selected
-                ? FontWeight.w700
-                : FontWeight.w400,
+
+            fontWeight:
+                selected
+                    ? FontWeight.w700
+                    : FontWeight.w400,
+
             color: selected
                 ? const Color(
                     0xFF3D174A,
@@ -903,14 +1089,19 @@ class _FeaturedSermonCard
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return SizedBox(
       width: 420,
+
       child: GestureDetector(
         onTap: onTap,
+
         child: Column(
           crossAxisAlignment:
               CrossAxisAlignment.start,
+
           children: [
             Stack(
               children: [
@@ -919,15 +1110,19 @@ class _FeaturedSermonCard
                       BorderRadius.circular(
                     16,
                   ),
+
                   child: SizedBox(
-                    width: double.infinity,
+                    width:
+                        double.infinity,
                     height: 220,
+
                     child:
-                        sermon.imageUrl
-                                .isNotEmpty
+                        sermon.hasImage
                             ? Image.network(
                                 sermon.imageUrl,
-                                fit: BoxFit.cover,
+                                fit:
+                                    BoxFit.cover,
+
                                 errorBuilder:
                                     (
                                   context,
@@ -946,11 +1141,15 @@ class _FeaturedSermonCard
                     child: Container(
                       width: 58,
                       height: 58,
+
                       decoration:
                           const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
+                        color:
+                            Colors.white,
+                        shape:
+                            BoxShape.circle,
                       ),
+
                       child: Icon(
                         mediaType ==
                                 'video'
@@ -958,10 +1157,12 @@ class _FeaturedSermonCard
                                 .play_arrow_rounded
                             : Icons
                                 .headphones_rounded,
+
                         color:
                             const Color(
                           0xFF6B1FA2,
                         ),
+
                         size: 32,
                       ),
                     ),
@@ -970,13 +1171,18 @@ class _FeaturedSermonCard
               ],
             ),
 
-            const SizedBox(height: 10),
+            const SizedBox(
+              height: 10,
+            ),
 
             Text(
               sermon.title,
+
               maxLines: 2,
+
               overflow:
                   TextOverflow.ellipsis,
+
               style:
                   const TextStyle(
                 fontSize: 16,
@@ -987,13 +1193,18 @@ class _FeaturedSermonCard
               ),
             ),
 
-            const SizedBox(height: 5),
+            const SizedBox(
+              height: 5,
+            ),
 
             Text(
               sermon.speaker,
+
               maxLines: 1,
+
               overflow:
                   TextOverflow.ellipsis,
+
               style:
                   const TextStyle(
                 fontSize: 14,
@@ -1011,11 +1222,14 @@ class _FeaturedSermonCard
     return Container(
       color:
           const Color(0xFFF3EAF5),
+
       child: const Center(
         child: Icon(
           Icons
               .video_library_outlined,
+
           size: 55,
+
           color:
               Color(0xFF6B1FA2),
         ),
@@ -1041,25 +1255,34 @@ class _OtherSermonCard
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return GestureDetector(
       onTap: onTap,
+
       child: Row(
         crossAxisAlignment:
             CrossAxisAlignment.start,
+
         children: [
           ClipRRect(
             borderRadius:
-                BorderRadius.circular(12),
+                BorderRadius.circular(
+              12,
+            ),
+
             child: SizedBox(
               width: 195,
               height: 125,
+
               child:
-                  sermon.imageUrl
-                          .isNotEmpty
+                  sermon.hasImage
                       ? Image.network(
                           sermon.imageUrl,
-                          fit: BoxFit.cover,
+                          fit:
+                              BoxFit.cover,
+
                           errorBuilder:
                               (
                             context,
@@ -1073,18 +1296,24 @@ class _OtherSermonCard
             ),
           ),
 
-          const SizedBox(width: 13),
+          const SizedBox(
+            width: 13,
+          ),
 
           Expanded(
             child: Column(
               crossAxisAlignment:
                   CrossAxisAlignment.start,
+
               children: [
                 Text(
                   sermon.title,
+
                   maxLines: 3,
+
                   overflow:
                       TextOverflow.ellipsis,
+
                   style:
                       const TextStyle(
                     fontSize: 15,
@@ -1095,13 +1324,18 @@ class _OtherSermonCard
                   ),
                 ),
 
-                const SizedBox(height: 6),
+                const SizedBox(
+                  height: 6,
+                ),
 
                 Text(
                   sermon.speaker,
+
                   maxLines: 2,
+
                   overflow:
                       TextOverflow.ellipsis,
+
                   style:
                       const TextStyle(
                     fontSize: 12,
@@ -1110,19 +1344,25 @@ class _OtherSermonCard
                   ),
                 ),
 
-                const SizedBox(height: 7),
+                const SizedBox(
+                  height: 7,
+                ),
 
                 Row(
                   children: [
                     const Icon(
                       Icons
                           .access_time_outlined,
+
                       size: 13,
+
                       color:
                           Color(0xFFAAAAAA),
                     ),
 
-                    const SizedBox(width: 4),
+                    const SizedBox(
+                      width: 4,
+                    ),
 
                     Expanded(
                       child: Text(
@@ -1130,10 +1370,13 @@ class _OtherSermonCard
                                 .isNotEmpty
                             ? sermon.duration
                             : sermon.date,
+
                         maxLines: 1,
+
                         overflow:
                             TextOverflow
                                 .ellipsis,
+
                         style:
                             const TextStyle(
                           fontSize: 11,
@@ -1158,11 +1401,14 @@ class _OtherSermonCard
     return Container(
       color:
           const Color(0xFFF3EAF5),
+
       child: const Center(
         child: Icon(
           Icons
               .video_library_outlined,
+
           size: 35,
+
           color:
               Color(0xFF6B1FA2),
         ),

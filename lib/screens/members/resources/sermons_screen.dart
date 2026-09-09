@@ -16,8 +16,7 @@ class SermonsScreen extends StatefulWidget {
       _SermonsScreenState();
 }
 
-class _SermonsScreenState
-    extends State<SermonsScreen> {
+class _SermonsScreenState extends State<SermonsScreen> {
   static const Color primaryColor =
       Color(0xFF6B1FA2);
 
@@ -26,11 +25,12 @@ class _SermonsScreenState
 
   int _selectedMediaTab = 0;
 
-  final TextEditingController
-      _searchController =
+  final TextEditingController _searchController =
       TextEditingController();
 
   String _searchQuery = '';
+
+  String? _loadingSermonId;
 
   @override
   void dispose() {
@@ -46,12 +46,10 @@ class _SermonsScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-
       appBar: AppBar(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
         elevation: 0,
-
         leading: IconButton(
           icon: const Icon(
             Icons.arrow_back_ios_new_rounded,
@@ -61,7 +59,6 @@ class _SermonsScreenState
             Navigator.pop(context);
           },
         ),
-
         title: const Text(
           'Sermons',
           style: TextStyle(
@@ -70,7 +67,6 @@ class _SermonsScreenState
             color: darkPurple,
           ),
         ),
-
         actions: [
           IconButton(
             icon: const Icon(
@@ -83,12 +79,8 @@ class _SermonsScreenState
           const SizedBox(width: 8),
         ],
       ),
-
       body: StreamBuilder<List<SermonModel>>(
-        stream:
-            SermonRepository.instance
-                .sermonsStream(),
-
+        stream: SermonRepository.instance.sermonsStream(),
         builder: (
           context,
           snapshot,
@@ -106,8 +98,7 @@ class _SermonsScreenState
             return _buildError();
           }
 
-          final sermons =
-              snapshot.data ?? [];
+          final sermons = snapshot.data ?? [];
 
           if (sermons.isEmpty) {
             return _buildEmpty();
@@ -126,8 +117,7 @@ class _SermonsScreenState
   Widget _buildContent(
     List<SermonModel> sermons,
   ) {
-    final filtered =
-        _filterSermons(sermons);
+    final filtered = _filterSermons(sermons);
 
     final videos = filtered
         .where(
@@ -148,7 +138,6 @@ class _SermonsScreenState
 
     return RefreshIndicator(
       color: primaryColor,
-
       onRefresh: () async {
         await Future.delayed(
           const Duration(
@@ -160,15 +149,12 @@ class _SermonsScreenState
           setState(() {});
         }
       },
-
       child: ListView(
         physics:
             const AlwaysScrollableScrollPhysics(),
-
         padding: const EdgeInsets.only(
           bottom: 40,
         ),
-
         children: [
           const SizedBox(height: 12),
 
@@ -199,9 +185,7 @@ class _SermonsScreenState
     }
 
     final query =
-        _searchQuery
-            .trim()
-            .toLowerCase();
+        _searchQuery.trim().toLowerCase();
 
     return sermons.where(
       (sermon) {
@@ -242,7 +226,6 @@ class _SermonsScreenState
               },
             ),
           ),
-
           Expanded(
             child: _MediaTab(
               title: 'Audio',
@@ -301,25 +284,20 @@ class _SermonsScreenState
 
         SizedBox(
           height: 300,
-
           child: ListView.separated(
             scrollDirection:
                 Axis.horizontal,
-
             padding:
                 const EdgeInsets.symmetric(
               horizontal: 25,
             ),
-
             itemCount:
                 featured.length,
-
             separatorBuilder:
                 (_, __) =>
                     const SizedBox(
               width: 20,
             ),
-
             itemBuilder:
                 (context, index) {
               final sermon =
@@ -501,8 +479,6 @@ class _SermonsScreenState
   // LOADING TRACKING
   // ============================================================
 
-  String? _loadingSermonId;
-
   bool _isLoadingSermon(
     String sermonId,
   ) {
@@ -565,7 +541,7 @@ class _SermonsScreenState
           ),
         ),
       );
-    } catch (e) {
+    } catch (_) {
       if (!mounted) {
         return;
       }
@@ -636,7 +612,7 @@ class _SermonsScreenState
           ),
         ),
       );
-    } catch (e) {
+    } catch (_) {
       if (!mounted) {
         return;
       }
@@ -660,7 +636,6 @@ class _SermonsScreenState
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,
-
       shape:
           const RoundedRectangleBorder(
         borderRadius:
@@ -668,7 +643,6 @@ class _SermonsScreenState
           top: Radius.circular(28),
         ),
       ),
-
       builder: (sheetContext) {
         return Padding(
           padding: EdgeInsets.only(
@@ -681,36 +655,29 @@ class _SermonsScreenState
                 ).viewInsets.bottom +
                 25,
           ),
-
           child: TextField(
             autofocus: true,
-
             controller:
                 _searchController,
-
             onChanged: (value) {
               setState(() {
                 _searchQuery = value;
               });
             },
-
             decoration:
                 InputDecoration(
               hintText:
                   'Search sermons...',
-
               prefixIcon:
                   const Icon(
                 Icons.search_rounded,
                 color: primaryColor,
               ),
-
               suffixIcon:
                   IconButton(
                 icon: const Icon(
                   Icons.close,
                 ),
-
                 onPressed: () {
                   _searchController
                       .clear();
@@ -724,14 +691,11 @@ class _SermonsScreenState
                   );
                 },
               ),
-
               filled: true,
-
               fillColor:
                   const Color(
                 0xFFF7F3F8,
               ),
-
               border:
                   OutlineInputBorder(
                 borderRadius:
@@ -789,9 +753,7 @@ class _SermonsScreenState
               color:
                   Color(0xFFD6D6D6),
             ),
-
             const SizedBox(height: 18),
-
             const Text(
               'No sermons available yet',
               style: TextStyle(
@@ -802,9 +764,7 @@ class _SermonsScreenState
                     Color(0xFF777777),
               ),
             ),
-
             const SizedBox(height: 8),
-
             Text(
               'Published sermons will appear here.',
               textAlign:
@@ -839,9 +799,7 @@ class _SermonsScreenState
               color:
                   Color(0xFFD0D0D0),
             ),
-
             const SizedBox(height: 18),
-
             const Text(
               'Unable to load sermons.',
               textAlign:
@@ -854,9 +812,7 @@ class _SermonsScreenState
                     Color(0xFF777777),
               ),
             ),
-
             const SizedBox(height: 18),
-
             OutlinedButton(
               onPressed: () {
                 setState(() {});
@@ -893,9 +849,7 @@ class _SermonsScreenState
             color:
                 const Color(0xFFD6D6D6),
           ),
-
           const SizedBox(height: 16),
-
           Text(
             _selectedMediaTab == 0
                 ? 'No videos found'
@@ -939,8 +893,7 @@ class _SermonsScreenState
 // MEDIA TAB
 // ================================================================
 
-class _MediaTab
-    extends StatelessWidget {
+class _MediaTab extends StatelessWidget {
   final String title;
   final bool selected;
   final VoidCallback onTap;
@@ -957,13 +910,10 @@ class _MediaTab
   ) {
     return GestureDetector(
       onTap: onTap,
-
       child: Container(
         height: 48,
-
         alignment:
             Alignment.center,
-
         decoration:
             BoxDecoration(
           border: Border(
@@ -980,16 +930,13 @@ class _MediaTab
             ),
           ),
         ),
-
         child: Text(
           title,
           style: TextStyle(
             fontSize: 16,
-
             fontWeight: selected
                 ? FontWeight.w700
                 : FontWeight.w400,
-
             color: selected
                 ? const Color(
                     0xFF3D174A,
@@ -1026,14 +973,11 @@ class _FeaturedVideoCard
   ) {
     return SizedBox(
       width: 420,
-
       child: GestureDetector(
         onTap: loading ? null : onTap,
-
         child: Column(
           crossAxisAlignment:
               CrossAxisAlignment.start,
-
           children: [
             Stack(
               children: [
@@ -1042,34 +986,29 @@ class _FeaturedVideoCard
                       BorderRadius.circular(
                     16,
                   ),
-
                   child: SizedBox(
                     width:
                         double.infinity,
                     height: 220,
-
                     child: _SermonImage(
                       sermon: sermon,
                     ),
                   ),
                 ),
-
                 Positioned.fill(
                   child: Center(
                     child: loading
                         ? const CircularProgressIndicator(
                             color: Colors.white,
                           )
-                        : _PlayButton(
+                        : const _PlayButton(
                             size: 58,
                           ),
                   ),
                 ),
               ],
             ),
-
             const SizedBox(height: 10),
-
             Text(
               sermon.title,
               maxLines: 2,
@@ -1084,9 +1023,7 @@ class _FeaturedVideoCard
                     Color(0xFF3D004D),
               ),
             ),
-
             const SizedBox(height: 5),
-
             Text(
               sermon.speaker,
               maxLines: 1,
@@ -1128,11 +1065,9 @@ class _OtherVideoCard
   ) {
     return GestureDetector(
       onTap: loading ? null : onTap,
-
       child: Row(
         crossAxisAlignment:
             CrossAxisAlignment.start,
-
         children: [
           Stack(
             children: [
@@ -1141,38 +1076,32 @@ class _OtherVideoCard
                     BorderRadius.circular(
                   12,
                 ),
-
                 child: SizedBox(
                   width: 195,
                   height: 125,
-
                   child: _SermonImage(
                     sermon: sermon,
                   ),
                 ),
               ),
-
               Positioned.fill(
                 child: Center(
                   child: loading
                       ? const CircularProgressIndicator(
                           color: Colors.white,
                         )
-                      : _PlayButton(
+                      : const _PlayButton(
                           size: 36,
                         ),
                 ),
               ),
             ],
           ),
-
           const SizedBox(width: 13),
-
           Expanded(
             child: Column(
               crossAxisAlignment:
                   CrossAxisAlignment.start,
-
               children: [
                 Text(
                   sermon.title,
@@ -1188,9 +1117,7 @@ class _OtherVideoCard
                         Color(0xFF3D004D),
                   ),
                 ),
-
                 const SizedBox(height: 6),
-
                 Text(
                   sermon.speaker,
                   maxLines: 2,
@@ -1203,9 +1130,7 @@ class _OtherVideoCard
                         Color(0xFFF7931E),
                   ),
                 ),
-
                 const SizedBox(height: 7),
-
                 Text(
                   sermon.date,
                   maxLines: 1,
@@ -1249,7 +1174,6 @@ class _FeaturedAudioCard
   ) {
     return GestureDetector(
       onTap: loading ? null : onTap,
-
       child: Column(
         children: [
           Stack(
@@ -1263,23 +1187,20 @@ class _FeaturedAudioCard
                   ),
                 ),
               ),
-
               Positioned.fill(
                 child: Center(
                   child: loading
                       ? const CircularProgressIndicator(
                           color: Colors.white,
                         )
-                      : _PlayButton(
+                      : const _PlayButton(
                           size: 58,
                         ),
                 ),
               ),
             ],
           ),
-
           const SizedBox(height: 12),
-
           Text(
             sermon.title,
             textAlign:
@@ -1296,9 +1217,7 @@ class _FeaturedAudioCard
                   Color(0xFF3D004D),
             ),
           ),
-
           const SizedBox(height: 5),
-
           Text(
             sermon.speaker,
             textAlign:
@@ -1341,7 +1260,6 @@ class _OtherAudioCard
   ) {
     return GestureDetector(
       onTap: loading ? null : onTap,
-
       child: Row(
         children: [
           Stack(
@@ -1355,7 +1273,6 @@ class _OtherAudioCard
                   ),
                 ),
               ),
-
               Positioned.fill(
                 child: Center(
                   child: loading
@@ -1363,21 +1280,18 @@ class _OtherAudioCard
                           color: Colors.white,
                           strokeWidth: 2,
                         )
-                      : _PlayButton(
+                      : const _PlayButton(
                           size: 32,
                         ),
                 ),
               ),
             ],
           ),
-
           const SizedBox(width: 15),
-
           Expanded(
             child: Column(
               crossAxisAlignment:
                   CrossAxisAlignment.start,
-
               children: [
                 Text(
                   sermon.title,
@@ -1393,9 +1307,7 @@ class _OtherAudioCard
                         Color(0xFF3D004D),
                   ),
                 ),
-
                 const SizedBox(height: 5),
-
                 Text(
                   sermon.speaker,
                   maxLines: 1,
@@ -1408,9 +1320,7 @@ class _OtherAudioCard
                         Color(0xFFF7931E),
                   ),
                 ),
-
                 const SizedBox(height: 5),
-
                 Text(
                   sermon.date,
                   maxLines: 1,
@@ -1436,8 +1346,7 @@ class _OtherAudioCard
 // SERMON IMAGE
 // ================================================================
 
-class _SermonImage
-    extends StatelessWidget {
+class _SermonImage extends StatefulWidget {
   final SermonModel sermon;
 
   const _SermonImage({
@@ -1445,20 +1354,146 @@ class _SermonImage
   });
 
   @override
+  State<_SermonImage> createState() =>
+      _SermonImageState();
+}
+
+class _SermonImageState
+    extends State<_SermonImage> {
+  String? _signedImageUrl;
+  bool _loading = false;
+  bool _failed = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _loadImage();
+  }
+
+  @override
+  void didUpdateWidget(
+    covariant _SermonImage oldWidget,
+  ) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.sermon.imageStoragePath !=
+            widget.sermon.imageStoragePath ||
+        oldWidget.sermon.imageUrl !=
+            widget.sermon.imageUrl) {
+      _signedImageUrl = null;
+      _failed = false;
+      _loadImage();
+    }
+  }
+
+  Future<void> _loadImage() async {
+    final objectKey =
+        widget.sermon.imageStoragePath.trim();
+
+    final legacyUrl =
+        widget.sermon.imageUrl.trim();
+
+    // ==========================================================
+    // NEW B2 COVER IMAGE
+    // ==========================================================
+
+    if (objectKey.isNotEmpty) {
+      if (mounted) {
+        setState(() {
+          _loading = true;
+          _failed = false;
+        });
+      }
+
+      try {
+        final url =
+            await B2UploadService.instance
+                .getDownloadUrl(
+          objectKey: objectKey,
+        );
+
+        if (!mounted) {
+          return;
+        }
+
+        setState(() {
+          _signedImageUrl = url;
+          _loading = false;
+        });
+
+        return;
+      } catch (_) {
+        if (!mounted) {
+          return;
+        }
+
+        setState(() {
+          _loading = false;
+          _failed = true;
+        });
+
+        return;
+      }
+    }
+
+    // ==========================================================
+    // LEGACY PUBLIC IMAGE URL
+    // ==========================================================
+
+    if (legacyUrl.isNotEmpty) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _signedImageUrl = legacyUrl;
+        _loading = false;
+        _failed = false;
+      });
+
+      return;
+    }
+
+    // ==========================================================
+    // NO IMAGE
+    // ==========================================================
+
+    if (mounted) {
+      setState(() {
+        _loading = false;
+        _failed = true;
+      });
+    }
+  }
+
+  @override
   Widget build(
     BuildContext context,
   ) {
-    final imageUrl =
-        sermon.imageUrl.trim();
+    if (_loading) {
+      return Container(
+        color: const Color(0xFFF3EAF5),
+        child: const Center(
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: Color(0xFF6B1FA2),
+          ),
+        ),
+      );
+    }
 
-    if (imageUrl.isEmpty) {
+    if (_failed ||
+        _signedImageUrl == null ||
+        _signedImageUrl!.trim().isEmpty) {
       return _placeholder();
     }
 
     return Image.network(
-      imageUrl,
+      _signedImageUrl!,
       fit: BoxFit.cover,
-
+      width: double.infinity,
+      height: double.infinity,
       errorBuilder: (
         context,
         error,
@@ -1471,16 +1506,12 @@ class _SermonImage
 
   Widget _placeholder() {
     return Container(
-      color:
-          const Color(0xFFF3EAF5),
-
+      color: const Color(0xFFF3EAF5),
       child: const Center(
         child: Icon(
-          Icons
-              .video_library_outlined,
+          Icons.video_library_outlined,
           size: 45,
-          color:
-              Color(0xFF6B1FA2),
+          color: Color(0xFF6B1FA2),
         ),
       ),
     );
@@ -1506,13 +1537,11 @@ class _PlayButton
     return Container(
       width: size,
       height: size,
-
       decoration:
           const BoxDecoration(
         color: Colors.white,
         shape: BoxShape.circle,
       ),
-
       child: Icon(
         Icons.play_arrow_rounded,
         color:
@@ -1545,8 +1574,7 @@ class SermonAudioPlayerScreen
 }
 
 class _SermonAudioPlayerScreenState
-    extends State<
-        SermonAudioPlayerScreen> {
+    extends State<SermonAudioPlayerScreen> {
   final AudioPlayer _player =
       AudioPlayer();
 
@@ -1622,14 +1650,12 @@ class _SermonAudioPlayerScreenState
     return Scaffold(
       backgroundColor:
           Colors.white,
-
       appBar: AppBar(
         backgroundColor:
             Colors.white,
         surfaceTintColor:
             Colors.white,
         elevation: 0,
-
         leading: IconButton(
           icon: const Icon(
             Icons
@@ -1640,7 +1666,6 @@ class _SermonAudioPlayerScreenState
             Navigator.pop(context);
           },
         ),
-
         title: const Text(
           'Audio',
           style: TextStyle(
@@ -1652,16 +1677,13 @@ class _SermonAudioPlayerScreenState
           ),
         ),
       ),
-
       body: SafeArea(
         child: Padding(
           padding:
               const EdgeInsets.all(25),
-
           child: Column(
             mainAxisAlignment:
                 MainAxisAlignment.center,
-
             children: [
               const Icon(
                 Icons
@@ -1670,11 +1692,9 @@ class _SermonAudioPlayerScreenState
                 color:
                     Color(0xFF6B1FA2),
               ),
-
               const SizedBox(
                 height: 30,
               ),
-
               Text(
                 widget.title,
                 textAlign:
@@ -1688,17 +1708,12 @@ class _SermonAudioPlayerScreenState
                       Color(0xFF3D004D),
                 ),
               ),
-
               const SizedBox(
                 height: 40,
               ),
-
-              StreamBuilder<
-                  Duration>(
+              StreamBuilder<Duration>(
                 stream:
-                    _player
-                        .positionStream,
-
+                    _player.positionStream,
                 builder: (
                   context,
                   positionSnapshot,
@@ -1713,7 +1728,6 @@ class _SermonAudioPlayerScreenState
                     stream:
                         _player
                             .durationStream,
-
                     builder: (
                       context,
                       durationSnapshot,
@@ -1773,7 +1787,6 @@ class _SermonAudioPlayerScreenState
                                         );
                                       },
                           ),
-
                           Row(
                             mainAxisAlignment:
                                 MainAxisAlignment
@@ -1815,17 +1828,13 @@ class _SermonAudioPlayerScreenState
                   );
                 },
               ),
-
               const SizedBox(
                 height: 20,
               ),
-
-              StreamBuilder<
-                  PlayerState>(
+              StreamBuilder<PlayerState>(
                 stream:
                     _player
                         .playerStateStream,
-
                 builder: (
                   context,
                   snapshot,
@@ -1869,11 +1878,9 @@ class _SermonAudioPlayerScreenState
                               .replay_10_rounded,
                         ),
                       ),
-
                       const SizedBox(
                         width: 15,
                       ),
-
                       GestureDetector(
                         onTap:
                             processing
@@ -1887,7 +1894,6 @@ class _SermonAudioPlayerScreenState
                                           .play();
                                     }
                                   },
-
                         child:
                             Container(
                           width: 72,
@@ -1930,11 +1936,9 @@ class _SermonAudioPlayerScreenState
                                 ),
                         ),
                       ),
-
                       const SizedBox(
                         width: 15,
                       ),
-
                       IconButton(
                         iconSize: 32,
                         onPressed:
@@ -1958,14 +1962,11 @@ class _SermonAudioPlayerScreenState
                   );
                 },
               ),
-
               const SizedBox(
                 height: 20,
               ),
-
               DropdownButton<double>(
                 value: _speed,
-
                 items: const [
                   0.5,
                   0.75,
@@ -1984,7 +1985,6 @@ class _SermonAudioPlayerScreenState
                     );
                   },
                 ).toList(),
-
                 onChanged: (
                   value,
                 ) {
@@ -2032,8 +2032,7 @@ class SermonVideoPlayerScreen
 }
 
 class _SermonVideoPlayerScreenState
-    extends State<
-        SermonVideoPlayerScreen> {
+    extends State<SermonVideoPlayerScreen> {
   late VideoPlayerController
       _controller;
 
@@ -2068,7 +2067,6 @@ class _SermonVideoPlayerScreenState
         _loading = false;
       });
 
-      // Immediately start playback.
       await _controller.play();
 
       _controller.addListener(
@@ -2141,14 +2139,12 @@ class _SermonVideoPlayerScreenState
     return Scaffold(
       backgroundColor:
           Colors.black,
-
       appBar: AppBar(
         backgroundColor:
             Colors.black,
         foregroundColor:
             Colors.white,
         elevation: 0,
-
         title: Text(
           widget.title,
           maxLines: 1,
@@ -2156,7 +2152,6 @@ class _SermonVideoPlayerScreenState
               TextOverflow.ellipsis,
         ),
       ),
-
       body: _loading
           ? const Center(
               child:
@@ -2181,7 +2176,6 @@ class _SermonVideoPlayerScreenState
       child: Column(
         children: [
           const Spacer(),
-
           AspectRatio(
             aspectRatio:
                 value.aspectRatio,
@@ -2190,11 +2184,9 @@ class _SermonVideoPlayerScreenState
               controller,
             ),
           ),
-
           const SizedBox(
             height: 20,
           ),
-
           VideoProgressIndicator(
             controller,
             allowScrubbing: true,
@@ -2213,11 +2205,9 @@ class _SermonVideoPlayerScreenState
                   Color(0xFF444444),
             ),
           ),
-
           const SizedBox(
             height: 15,
           ),
-
           Row(
             mainAxisAlignment:
                 MainAxisAlignment
@@ -2238,11 +2228,9 @@ class _SermonVideoPlayerScreenState
                       .replay_10_rounded,
                 ),
               ),
-
               const SizedBox(
                 width: 10,
               ),
-
               IconButton(
                 color: Colors.white,
                 iconSize: 65,
@@ -2267,11 +2255,9 @@ class _SermonVideoPlayerScreenState
                           .play_circle,
                 ),
               ),
-
               const SizedBox(
                 width: 10,
               ),
-
               IconButton(
                 color: Colors.white,
                 iconSize: 32,
@@ -2289,22 +2275,17 @@ class _SermonVideoPlayerScreenState
               ),
             ],
           ),
-
           const SizedBox(
             height: 10,
           ),
-
           DropdownButton<double>(
             value: _speed,
-
             dropdownColor:
                 Colors.grey.shade900,
-
             style:
                 const TextStyle(
               color: Colors.white,
             ),
-
             items: const [
               0.5,
               0.75,
@@ -2323,7 +2304,6 @@ class _SermonVideoPlayerScreenState
                 );
               },
             ).toList(),
-
             onChanged: (
               value,
             ) {
@@ -2342,7 +2322,6 @@ class _SermonVideoPlayerScreenState
               );
             },
           ),
-
           const Spacer(),
         ],
       ),
@@ -2364,11 +2343,9 @@ class _SermonVideoPlayerScreenState
               color: Colors.white,
               size: 60,
             ),
-
             const SizedBox(
               height: 20,
             ),
-
             const Text(
               'Unable to play this video.',
               textAlign:
@@ -2378,11 +2355,9 @@ class _SermonVideoPlayerScreenState
                 fontSize: 16,
               ),
             ),
-
             const SizedBox(
               height: 20,
             ),
-
             OutlinedButton(
               onPressed: () {
                 Navigator.pop(

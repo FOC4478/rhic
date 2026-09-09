@@ -6,9 +6,7 @@ import '../../../repositories/sermon_repository.dart';
 import '../../../services/b2_upload_service.dart';
 
 class AdminSermonsScreen extends StatefulWidget {
-  const AdminSermonsScreen({
-    super.key,
-  });
+  const AdminSermonsScreen({super.key});
 
   @override
   State<AdminSermonsScreen> createState() =>
@@ -48,9 +46,9 @@ class _AdminSermonsScreenState
     super.dispose();
   }
 
-  // ==========================================================
+  // ============================================================
   // HELPERS
-  // ==========================================================
+  // ============================================================
 
   String _contentTypeForFile(
     String fileName,
@@ -59,7 +57,6 @@ class _AdminSermonsScreenState
         fileName.split('.').last.toLowerCase();
 
     switch (extension) {
-      // Images
       case 'jpg':
       case 'jpeg':
         return 'image/jpeg';
@@ -70,17 +67,21 @@ class _AdminSermonsScreenState
       case 'webp':
         return 'image/webp';
 
-      // Video
+      case 'gif':
+        return 'image/gif';
+
       case 'mp4':
         return 'video/mp4';
-
-      case 'webm':
-        return 'video/webm';
 
       case 'mov':
         return 'video/quicktime';
 
-      // Audio
+      case 'm4v':
+        return 'video/x-m4v';
+
+      case 'webm':
+        return 'video/webm';
+
       case 'mp3':
         return 'audio/mpeg';
 
@@ -96,6 +97,15 @@ class _AdminSermonsScreenState
       case 'ogg':
         return 'audio/ogg';
 
+      case 'oga':
+        return 'audio/ogg';
+
+      case 'flac':
+        return 'audio/flac';
+
+      case 'pdf':
+        return 'application/pdf';
+
       default:
         return 'application/octet-stream';
     }
@@ -106,19 +116,19 @@ class _AdminSermonsScreenState
   ) {
     switch (mediaType) {
       case 'image':
-        return 'cover image';
+        return 'Cover Image';
 
       case 'video':
-        return 'video';
+        return 'Video Sermon';
 
       case 'audio':
-        return 'audio';
+        return 'Audio Sermon';
 
       case 'ebook':
-        return 'eBook';
+        return 'Ebook';
 
       default:
-        return 'file';
+        return 'File';
     }
   }
 
@@ -132,13 +142,15 @@ class _AdminSermonsScreenState
           'jpeg',
           'png',
           'webp',
+          'gif',
         ];
 
       case 'video':
         return [
           'mp4',
-          'webm',
           'mov',
+          'm4v',
+          'webm',
         ];
 
       case 'audio':
@@ -148,6 +160,8 @@ class _AdminSermonsScreenState
           'm4a',
           'aac',
           'ogg',
+          'oga',
+          'flac',
         ];
 
       case 'ebook':
@@ -160,28 +174,34 @@ class _AdminSermonsScreenState
     }
   }
 
-  String _formatDate(
-    SermonModel sermon,
+  String _fileNameFromObjectKey(
+    String objectKey,
   ) {
-    if (sermon.date.trim().isNotEmpty) {
-      return sermon.date.trim();
+    if (objectKey.trim().isEmpty) {
+      return '';
     }
 
-    if (sermon.createdAt != null) {
-      final date =
-          sermon.createdAt!.toDate();
+    final normalized =
+        objectKey.replaceAll('\\', '/');
 
-      return '${date.day.toString().padLeft(2, '0')}/'
-          '${date.month.toString().padLeft(2, '0')}/'
-          '${date.year}';
+    final parts = normalized.split('/');
+
+    if (parts.isEmpty) {
+      return '';
     }
 
-    return 'No date';
+    return parts.last;
   }
 
-  // ==========================================================
-  // SEARCH
-  // ==========================================================
+  String _formatDate(
+    String value,
+  ) {
+    if (value.trim().isEmpty) {
+      return '';
+    }
+
+    return value.trim();
+  }
 
   bool _matchesSearch(
     SermonModel sermon,
@@ -205,10 +225,6 @@ class _AdminSermonsScreenState
     );
   }
 
-  // ==========================================================
-  // SNACKBAR
-  // ==========================================================
-
   void _showMessage(
     String message, {
     bool error = false,
@@ -216,33 +232,28 @@ class _AdminSermonsScreenState
     if (!mounted) return;
 
     ScaffoldMessenger.of(context)
-        .hideCurrentSnackBar();
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor:
-            error ? Colors.red.shade700 : null,
-      ),
-    );
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor:
+              error ? Colors.red : null,
+        ),
+      );
   }
 
-  // ==========================================================
+  // ============================================================
   // CREATE / EDIT SERMON
-  // ==========================================================
+  // ============================================================
 
   Future<void> _showSermonForm({
     SermonModel? sermon,
   }) async {
+    final bool isEditing = sermon != null;
+
     final titleController =
         TextEditingController(
       text: sermon?.title ?? '',
-    );
-
-    final descriptionController =
-        TextEditingController(
-      text: sermon?.description ?? '',
     );
 
     final speakerController =
@@ -250,9 +261,9 @@ class _AdminSermonsScreenState
       text: sermon?.speaker ?? '',
     );
 
-    final categoryController =
+    final descriptionController =
         TextEditingController(
-      text: sermon?.category ?? '',
+      text: sermon?.description ?? '',
     );
 
     final dateController =
@@ -265,9 +276,17 @@ class _AdminSermonsScreenState
       text: sermon?.duration ?? '',
     );
 
-    // --------------------------------------------------------
-    // B2 STORAGE PATHS
-    // --------------------------------------------------------
+    String selectedCategory =
+        sermon?.category.trim().isNotEmpty == true
+            ? sermon!.category
+            : 'General';
+
+    bool isPublished =
+        sermon?.isPublished ?? true;
+
+    // ============================================================
+    // EXISTING STORAGE PATHS
+    // ============================================================
 
     String imageStoragePath =
         sermon?.imageStoragePath ?? '';
@@ -281,9 +300,9 @@ class _AdminSermonsScreenState
     String ebookStoragePath =
         sermon?.ebookStoragePath ?? '';
 
-    // --------------------------------------------------------
+    // ============================================================
     // LEGACY URLS
-    // --------------------------------------------------------
+    // ============================================================
 
     String imageUrl =
         sermon?.imageUrl ?? '';
@@ -297,20 +316,35 @@ class _AdminSermonsScreenState
     String ebookUrl =
         sermon?.ebookUrl ?? '';
 
-    // --------------------------------------------------------
-    // FILE NAMES
-    // --------------------------------------------------------
+    // ============================================================
+    // FILENAMES
+    // ============================================================
 
-    String imageFileName = '';
+    String imageFileName =
+        _fileNameFromObjectKey(
+      imageStoragePath,
+    );
 
-    String videoFileName = '';
+    String videoFileName =
+        _fileNameFromObjectKey(
+      videoStoragePath,
+    );
 
-    String audioFileName = '';
+    String audioFileName =
+        _fileNameFromObjectKey(
+      audioStoragePath,
+    );
 
-    String ebookFileName = '';
+    String ebookFileName =
+        _fileNameFromObjectKey(
+      ebookStoragePath,
+    );
 
-    bool isPublished =
-        sermon?.isPublished ?? true;
+    // ============================================================
+    // UI STATE
+    // ============================================================
+
+    String imagePreviewUrl = '';
 
     bool isUploading = false;
 
@@ -319,662 +353,646 @@ class _AdminSermonsScreenState
     final formKey =
         GlobalKey<FormState>();
 
+    // ============================================================
+    // LOAD EXISTING B2 IMAGE
+    // ============================================================
+
+    Future<void> loadExistingB2Image() async {
+      if (imageStoragePath.trim().isEmpty) {
+        return;
+      }
+
+      try {
+        final url =
+            await _b2UploadService.getDownloadUrl(
+          objectKey: imageStoragePath,
+        );
+
+        imagePreviewUrl = url;
+      } catch (_) {
+        imagePreviewUrl = '';
+      }
+    }
+
+    if (imageStoragePath.trim().isNotEmpty) {
+      await loadExistingB2Image();
+    }
+
+    if (!mounted) return;
+
+    // ============================================================
+    // UPLOAD MEDIA
+    // ============================================================
+
+    Future<void> pickAndUpload(
+      String mediaType,
+    ) async {
+      try {
+        final extensions =
+            _allowedExtensions(mediaType);
+
+        final PlatformFile? selectedFile =
+            await FilePicker.pickFile(
+          type: FileType.custom,
+          allowedExtensions: extensions,
+        );
+
+        if (selectedFile == null) {
+          return;
+        }
+
+        final bytes =
+            await selectedFile.readAsBytes();
+
+        if (bytes.isEmpty) {
+          throw Exception(
+            'Unable to read the selected file.',
+          );
+        }
+
+        final fileName =
+            selectedFile.name;
+
+        if (!mounted) return;
+
+        setState(() {
+          isUploading = true;
+          uploadingLabel =
+              'Uploading ${_mediaLabel(mediaType)}...';
+        });
+
+        final uploadResult =
+            await _b2UploadService.uploadFile(
+          bytes: bytes,
+          fileName: fileName,
+          contentType:
+              _contentTypeForFile(fileName),
+          mediaType: mediaType,
+        );
+
+        if (mediaType == 'image') {
+          imageStoragePath =
+              uploadResult.objectKey;
+
+          imageUrl = '';
+
+          imageFileName = fileName;
+
+          try {
+            imagePreviewUrl =
+                await _b2UploadService
+                    .getDownloadUrl(
+              objectKey:
+                  uploadResult.objectKey,
+            );
+          } catch (_) {
+            imagePreviewUrl = '';
+          }
+        } else if (mediaType == 'video') {
+          videoStoragePath =
+              uploadResult.objectKey;
+
+          videoUrl = '';
+
+          videoFileName = fileName;
+        } else if (mediaType == 'audio') {
+          audioStoragePath =
+              uploadResult.objectKey;
+
+          audioUrl = '';
+
+          audioFileName = fileName;
+        } else if (mediaType == 'ebook') {
+          ebookStoragePath =
+              uploadResult.objectKey;
+
+          ebookUrl = '';
+
+          ebookFileName = fileName;
+        }
+
+        if (!mounted) return;
+
+        setState(() {
+          isUploading = false;
+          uploadingLabel = '';
+        });
+
+        _showMessage(
+          '${_mediaLabel(mediaType)} uploaded successfully.',
+        );
+      } catch (error) {
+        if (!mounted) return;
+
+        setState(() {
+          isUploading = false;
+          uploadingLabel = '';
+        });
+
+        _showMessage(
+          'Upload failed: $error',
+          error: true,
+        );
+      }
+    }
+
+    // ============================================================
+    // MEDIA CARD
+    // ============================================================
+
+    Widget mediaUploadCard({
+      required String mediaType,
+      required String fileName,
+      required String storagePath,
+      required String legacyUrl,
+    }) {
+      final hasMedia =
+          storagePath.trim().isNotEmpty ||
+          legacyUrl.trim().isNotEmpty;
+
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade50,
+          borderRadius:
+              BorderRadius.circular(16),
+          border: Border.all(
+            color: Colors.grey.shade300,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment:
+              CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.black
+                        .withValues(alpha: 0.06),
+                    borderRadius:
+                        BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    mediaType == 'video'
+                        ? Icons.video_library
+                        : mediaType == 'audio'
+                            ? Icons.audiotrack
+                            : Icons.picture_as_pdf,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    _mediaLabel(mediaType),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight:
+                          FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 14),
+
+            if (hasMedia)
+              Container(
+                width: double.infinity,
+                padding:
+                    const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius:
+                      BorderRadius.circular(10),
+                  border: Border.all(
+                    color:
+                        Colors.grey.shade200,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.insert_drive_file,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        fileName.trim().isNotEmpty
+                            ? fileName
+                            : 'File uploaded',
+                        maxLines: 2,
+                        overflow:
+                            TextOverflow.ellipsis,
+                        style:
+                            const TextStyle(
+                          fontSize: 13,
+                          fontWeight:
+                              FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else
+              Text(
+                'No ${_mediaLabel(mediaType).toLowerCase()} uploaded.',
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                ),
+              ),
+
+            const SizedBox(height: 12),
+
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: isUploading
+                    ? null
+                    : () => pickAndUpload(
+                          mediaType,
+                        ),
+                icon: Icon(
+                  hasMedia
+                      ? Icons.refresh
+                      : Icons.upload_file,
+                ),
+                label: Text(
+                  hasMedia
+                      ? 'Replace ${_mediaLabel(mediaType)}'
+                      : 'Upload ${_mediaLabel(mediaType)}',
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // ============================================================
+    // COVER IMAGE CARD
+    // ============================================================
+
+    Widget imageCard() {
+      final hasB2Image =
+          imageStoragePath.trim().isNotEmpty;
+
+      final hasLegacyImage =
+          imageUrl.trim().isNotEmpty;
+
+      final hasImage =
+          hasB2Image || hasLegacyImage;
+
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade50,
+          borderRadius:
+              BorderRadius.circular(16),
+          border: Border.all(
+            color: Colors.grey.shade300,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment:
+              CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.black
+                        .withValues(alpha: 0.06),
+                    borderRadius:
+                        BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.image,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text(
+                    'Cover Image',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight:
+                          FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 14),
+
+            if (hasImage)
+              ClipRRect(
+                borderRadius:
+                    BorderRadius.circular(14),
+                child: Container(
+                  width: double.infinity,
+                  height: 190,
+                  color: Colors.grey.shade200,
+                  child: imagePreviewUrl
+                          .trim()
+                          .isNotEmpty
+                      ? Image.network(
+                          imagePreviewUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder:
+                              (
+                            context,
+                            error,
+                            stackTrace,
+                          ) {
+                            return const Center(
+                              child: Icon(
+                                Icons.broken_image,
+                                size: 48,
+                              ),
+                            );
+                          },
+                        )
+                      : imageUrl
+                              .trim()
+                              .isNotEmpty
+                          ? Image.network(
+                              imageUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder:
+                                  (
+                                context,
+                                error,
+                                stackTrace,
+                              ) {
+                                return const Center(
+                                  child: Icon(
+                                    Icons.broken_image,
+                                    size: 48,
+                                  ),
+                                );
+                              },
+                            )
+                          : const Center(
+                              child:
+                                  CircularProgressIndicator(),
+                            ),
+                ),
+              )
+            else
+              Container(
+                width: double.infinity,
+                height: 190,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  borderRadius:
+                      BorderRadius.circular(14),
+                ),
+                child: const Center(
+                  child: Icon(
+                    Icons.image_outlined,
+                    size: 55,
+                    color: Colors.grey,
+                  ),
+                ),
+              ),
+
+            if (hasB2Image)
+              Padding(
+                padding:
+                    const EdgeInsets.only(top: 8),
+                child: Text(
+                  imageFileName
+                          .trim()
+                          .isNotEmpty
+                      ? imageFileName
+                      : 'Cover image uploaded',
+                  maxLines: 2,
+                  overflow:
+                      TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color:
+                        Colors.grey.shade600,
+                  ),
+                ),
+              ),
+
+            const SizedBox(height: 12),
+
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: isUploading
+                    ? null
+                    : () => pickAndUpload(
+                          'image',
+                        ),
+                icon: Icon(
+                  hasImage
+                      ? Icons.refresh
+                      : Icons.upload_file,
+                ),
+                label: Text(
+                  hasImage
+                      ? 'Replace Cover Image'
+                      : 'Upload Cover Image',
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // ============================================================
+    // SHOW DIALOG
+    // ============================================================
+
     await showDialog(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible: !isUploading,
       builder: (dialogContext) {
         return StatefulBuilder(
-          builder: (
-            context,
-            setDialogState,
-          ) {
-            // ==================================================
-            // UPLOAD FUNCTION
-            // ==================================================
-
-            Future<void> pickAndUpload(
-              String mediaType,
-            ) async {
-              try {
-                final extensions =
-                    _allowedExtensions(
-                  mediaType,
-                );
-
-                final file =
-                    await FilePicker.pickFile(
-                  type: FileType.custom,
-                  allowedExtensions:
-                      extensions,
-                );
-
-                if (file == null) {
-                  return;
-                }
-
-                final bytes =
-                    await file.readAsBytes();
-
-                if (bytes.isEmpty) {
-                  throw Exception(
-                    'The selected file is empty.',
-                  );
-                }
-
-                final fileName =
-                    file.name;
-
-                String contentType;
-
-                if (mediaType == 'ebook') {
-                  contentType =
-                      'application/pdf';
-                } else {
-                  contentType =
-                      _contentTypeForFile(
-                    fileName,
-                  );
-                }
-
-                setDialogState(() {
-                  isUploading = true;
-                  uploadingLabel =
-                      'Uploading ${_mediaLabel(mediaType)}...';
-                });
-
-                final result =
-                    await _b2UploadService
-                        .uploadFile(
-                  bytes: bytes,
-                  fileName: fileName,
-                  contentType:
-                      contentType,
-                  mediaType:
-                      mediaType,
-                );
-
-                if (mediaType == 'image') {
-                  imageStoragePath =
-                      result.objectKey;
-
-                  // New B2 media does not use
-                  // a permanent URL.
-                  imageUrl = '';
-
-                  imageFileName =
-                      fileName;
-                }
-
-                if (mediaType == 'video') {
-                  videoStoragePath =
-                      result.objectKey;
-
-                  videoUrl = '';
-
-                  videoFileName =
-                      fileName;
-                }
-
-                if (mediaType == 'audio') {
-                  audioStoragePath =
-                      result.objectKey;
-
-                  audioUrl = '';
-
-                  audioFileName =
-                      fileName;
-                }
-
-                if (mediaType == 'ebook') {
-                  ebookStoragePath =
-                      result.objectKey;
-
-                  ebookUrl = '';
-
-                  ebookFileName =
-                      fileName;
-                }
-
-                setDialogState(() {
-                  isUploading = false;
-                  uploadingLabel = '';
-                });
-
-                _showMessage(
-                  '${_mediaLabel(mediaType)} uploaded successfully.',
-                );
-              } catch (error) {
-                setDialogState(() {
-                  isUploading = false;
-                  uploadingLabel = '';
-                });
-
-                _showMessage(
-                  'Upload failed: $error',
-                  error: true,
-                );
+          builder:
+              (context, setDialogState) {
+            void refreshDialog() {
+              if (context.mounted) {
+                setDialogState(() {});
               }
-            }
-
-            // ==================================================
-            // MEDIA CARD
-            // ==================================================
-
-            Widget mediaUploadCard({
-              required String title,
-              required String mediaType,
-              required String storagePath,
-              required String legacyUrl,
-              required String fileName,
-              required IconData icon,
-              required VoidCallback onUpload,
-              required VoidCallback onRemove,
-            }) {
-              final hasStorage =
-                  storagePath
-                      .trim()
-                      .isNotEmpty;
-
-              final hasLegacyUrl =
-                  legacyUrl
-                      .trim()
-                      .isNotEmpty;
-
-              final hasFile =
-                  hasStorage ||
-                  hasLegacyUrl;
-
-              return Container(
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.all(16),
-                margin:
-                    const EdgeInsets.only(
-                  bottom: 12,
-                ),
-                decoration:
-                    BoxDecoration(
-                  borderRadius:
-                      BorderRadius.circular(
-                    16,
-                  ),
-                  border: Border.all(
-                    color: Colors.grey
-                        .withValues(alpha: .25),
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration:
-                              BoxDecoration(
-                            color: Theme.of(
-                              context,
-                            )
-                                .colorScheme
-                                .primary
-                                .withValues(alpha: 
-                                  0.10,
-                                ),
-                            borderRadius:
-                                BorderRadius
-                                    .circular(
-                              12,
-                            ),
-                          ),
-                          child: Icon(
-                            icon,
-                            color:
-                                Theme.of(
-                              context,
-                            )
-                                    .colorScheme
-                                    .primary,
-                          ),
-                        ),
-                        const SizedBox(
-                          width: 12,
-                        ),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment:
-                                CrossAxisAlignment
-                                    .start,
-                            children: [
-                              Text(
-                                title,
-                                style:
-                                    const TextStyle(
-                                  fontWeight:
-                                      FontWeight
-                                          .w700,
-                                  fontSize: 15,
-                                ),
-                              ),
-                              const SizedBox(
-                                height: 4,
-                              ),
-                              Text(
-                                hasFile
-                                    ? (fileName
-                                            .trim()
-                                            .isNotEmpty
-                                        ? fileName
-                                        : 'Existing media')
-                                    : 'No file selected',
-                                maxLines: 1,
-                                overflow:
-                                    TextOverflow
-                                        .ellipsis,
-                                style:
-                                    TextStyle(
-                                  color: Colors
-                                      .grey
-                                      .shade600,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (hasFile)
-                          IconButton(
-                            tooltip:
-                                'Remove',
-                            onPressed:
-                                isUploading
-                                    ? null
-                                    : onRemove,
-                            icon:
-                                const Icon(
-                              Icons
-                                  .delete_outline,
-                              color:
-                                  Colors.red,
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(
-                      height: 12,
-                    ),
-                    SizedBox(
-                      width:
-                          double.infinity,
-                      child:
-                          OutlinedButton.icon(
-                        onPressed:
-                            isUploading
-                                ? null
-                                : onUpload,
-                        icon:
-                            const Icon(
-                          Icons
-                              .cloud_upload_outlined,
-                        ),
-                        label: Text(
-                          hasFile
-                              ? 'Replace'
-                              : 'Upload',
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }
-
-            // ==================================================
-            // IMAGE PREVIEW
-            // ==================================================
-
-            Widget imageCard() {
-              final hasB2Image =
-                  imageStoragePath
-                      .trim()
-                      .isNotEmpty;
-
-              final hasLegacyImage =
-                  imageUrl
-                      .trim()
-                      .isNotEmpty;
-
-              return Container(
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.all(16),
-                margin:
-                    const EdgeInsets.only(
-                  bottom: 16,
-                ),
-                decoration:
-                    BoxDecoration(
-                  borderRadius:
-                      BorderRadius.circular(
-                    16,
-                  ),
-                  border: Border.all(
-                    color: Colors.grey
-                        .withValues(alpha: .25),
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Cover Image',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight:
-                            FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 12,
-                    ),
-                    if (hasLegacyImage)
-                      ClipRRect(
-                        borderRadius:
-                            BorderRadius.circular(
-                          12,
-                        ),
-                        child: AspectRatio(
-                          aspectRatio: 16 / 9,
-                          child:
-                              Image.network(
-                            imageUrl,
-                            fit: BoxFit.cover,
-                            errorBuilder: (
-                              context,
-                              error,
-                              stackTrace,
-                            ) {
-                              return Container(
-                                color: Colors
-                                    .grey
-                                    .shade200,
-                                alignment:
-                                    Alignment
-                                        .center,
-                                child:
-                                    const Icon(
-                                  Icons
-                                      .broken_image_outlined,
-                                  size: 40,
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      )
-                    else if (hasB2Image)
-                      Container(
-                        width:
-                            double.infinity,
-                        padding:
-                            const EdgeInsets
-                                .all(
-                          16,
-                        ),
-                        decoration:
-                            BoxDecoration(
-                          color: Colors
-                              .green
-                              .withValues(alpha: 
-                            0.08,
-                          ),
-                          borderRadius:
-                              BorderRadius
-                                  .circular(
-                            12,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons
-                                  .cloud_done_outlined,
-                              color:
-                                  Colors.green,
-                            ),
-                            const SizedBox(
-                              width: 10,
-                            ),
-                            Expanded(
-                              child: Text(
-                                imageFileName
-                                        .trim()
-                                        .isNotEmpty
-                                    ? imageFileName
-                                    : 'Cover image uploaded to B2',
-                                maxLines: 2,
-                                overflow:
-                                    TextOverflow
-                                        .ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    else
-                      Container(
-                        width:
-                            double.infinity,
-                        height: 160,
-                        decoration:
-                            BoxDecoration(
-                          color: Colors
-                              .grey
-                              .shade100,
-                          borderRadius:
-                              BorderRadius
-                                  .circular(
-                            12,
-                          ),
-                        ),
-                        child:
-                            const Center(
-                          child: Icon(
-                            Icons
-                                .image_outlined,
-                            size: 48,
-                          ),
-                        ),
-                      ),
-                    const SizedBox(
-                      height: 12,
-                    ),
-                    SizedBox(
-                      width:
-                          double.infinity,
-                      child:
-                          OutlinedButton.icon(
-                        onPressed:
-                            isUploading
-                                ? null
-                                : () =>
-                                    pickAndUpload(
-                                      'image',
-                                    ),
-                        icon:
-                            const Icon(
-                          Icons
-                              .cloud_upload_outlined,
-                        ),
-                        label: Text(
-                          hasB2Image ||
-                                  hasLegacyImage
-                              ? 'Replace Cover Image'
-                              : 'Upload Cover Image',
-                        ),
-                      ),
-                    ),
-                    if (hasB2Image)
-                      Padding(
-                        padding:
-                            const EdgeInsets
-                                .only(
-                          top: 8,
-                        ),
-                        child: Text(
-                          imageStoragePath,
-                          maxLines: 2,
-                          overflow:
-                              TextOverflow
-                                  .ellipsis,
-                          style:
-                              TextStyle(
-                            fontSize: 11,
-                            color: Colors
-                                .grey
-                                .shade600,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              );
             }
 
             return AlertDialog(
               title: Text(
-                sermon == null
-                    ? 'Add Sermon'
-                    : 'Edit Sermon',
+                isEditing
+                    ? 'Edit Sermon'
+                    : 'Add Sermon',
               ),
               content: SizedBox(
-                width: 650,
-                child:
-                    SingleChildScrollView(
-                  child: Form(
-                    key: formKey,
+                width: 700,
+                child: Form(
+                  key: formKey,
+                  child: SingleChildScrollView(
                     child: Column(
                       crossAxisAlignment:
-                          CrossAxisAlignment
-                              .start,
+                          CrossAxisAlignment.start,
                       children: [
-                        // ========================================
+                        if (isUploading)
+                          Container(
+                            width: double.infinity,
+                            margin:
+                                const EdgeInsets.only(
+                              bottom: 16,
+                            ),
+                            padding:
+                                const EdgeInsets.all(
+                              12,
+                            ),
+                            decoration:
+                                BoxDecoration(
+                              color: Colors.blue
+                                  .withValues(
+                                alpha: 0.08,
+                              ),
+                              borderRadius:
+                                  BorderRadius.circular(
+                                10,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child:
+                                      CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                                const SizedBox(
+                                    width: 12),
+                                Expanded(
+                                  child: Text(
+                                    uploadingLabel,
+                                    style:
+                                        const TextStyle(
+                                      fontWeight:
+                                          FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                        // ==================================================
                         // TITLE
-                        // ========================================
+                        // ==================================================
 
                         TextFormField(
                           controller:
                               titleController,
-                          enabled:
-                              !isUploading,
+                          enabled: !isUploading,
                           decoration:
                               const InputDecoration(
                             labelText:
-                                'Sermon title',
+                                'Sermon Title',
                             hintText:
                                 'Enter sermon title',
                             border:
                                 OutlineInputBorder(),
                           ),
-                          validator:
-                              (value) {
-                            if (value ==
-                                    null ||
+                          validator: (value) {
+                            if (value == null ||
                                 value
                                     .trim()
                                     .isEmpty) {
-                              return 'Enter a sermon title.';
+                              return 'Please enter a sermon title.';
                             }
 
                             return null;
                           },
                         ),
 
-                        const SizedBox(
-                          height: 14,
-                        ),
+                        const SizedBox(height: 16),
 
-                        // ========================================
+                        // ==================================================
                         // SPEAKER
-                        // ========================================
+                        // ==================================================
 
                         TextFormField(
                           controller:
                               speakerController,
-                          enabled:
-                              !isUploading,
+                          enabled: !isUploading,
                           decoration:
                               const InputDecoration(
-                            labelText:
-                                'Speaker',
+                            labelText: 'Speaker',
                             hintText:
                                 'Enter speaker name',
                             border:
                                 OutlineInputBorder(),
                           ),
-                          validator:
-                              (value) {
-                            if (value ==
-                                    null ||
+                          validator: (value) {
+                            if (value == null ||
                                 value
                                     .trim()
                                     .isEmpty) {
-                              return 'Enter the speaker.';
+                              return 'Please enter the speaker.';
                             }
 
                             return null;
                           },
                         ),
 
-                        const SizedBox(
-                          height: 14,
-                        ),
+                        const SizedBox(height: 16),
 
-                        // ========================================
+                        // ==================================================
                         // CATEGORY
-                        // ========================================
+                        // ==================================================
 
                         StreamBuilder<
                             List<String>>(
-                          stream:
-                              _sermonRepository
-                                  .categoriesStream(),
-                          builder: (
+                          stream: _sermonRepository
+                              .categoriesStream(),
+                          builder:
+                              (
                             context,
                             snapshot,
                           ) {
                             final categories =
-                                snapshot.data ??
-                                    [];
+                                <String>{
+                              'General',
+                              ...?snapshot.data,
+                            }.toList();
 
-                            final categoryNames =
-                                categories
-                                    .where(
-                                      (category) =>
-                                          category
-                                              .trim()
-                                              .isNotEmpty,
-                                    )
-                                    .toList();
+                            if (!categories
+                                .contains(
+                              selectedCategory,
+                            )) {
+                              categories.insert(
+                                0,
+                                selectedCategory,
+                              );
+                            }
 
-                            return DropdownButtonFormField<String>(
-                                 initialValue: 
-                                  categoryController
-                                          .text
-                                          .trim()
-                                          .isNotEmpty &&
-                                      categoryNames
-                                          .contains(
-                                        categoryController
-                                            .text
-                                            .trim(),
-                                      )
-                                      ? categoryController
-                                          .text
-                                          .trim()
-                                      : null,
+                            return DropdownButtonFormField<
+                                String>(
+                              initialValue:
+                                  selectedCategory,
                               decoration:
                                   const InputDecoration(
                                 labelText:
@@ -982,24 +1000,22 @@ class _AdminSermonsScreenState
                                 border:
                                     OutlineInputBorder(),
                               ),
-                              items:
-                                  categoryNames
-                                      .map(
-                                        (
+                              items: categories
+                                  .map(
+                                    (
+                                      category,
+                                    ) {
+                                      return DropdownMenuItem<
+                                          String>(
+                                        value:
+                                            category,
+                                        child: Text(
                                           category,
-                                        ) {
-                                          return DropdownMenuItem<
-                                              String>(
-                                            value:
-                                                category,
-                                            child:
-                                                Text(
-                                              category,
-                                            ),
-                                          );
-                                        },
-                                      )
-                                      .toList(),
+                                        ),
+                                      );
+                                    },
+                                  )
+                                  .toList(),
                               onChanged:
                                   isUploading
                                       ? null
@@ -1011,43 +1027,25 @@ class _AdminSermonsScreenState
                                             return;
                                           }
 
-                                          setDialogState(
-                                            () {
-                                              categoryController
-                                                      .text =
-                                                  value;
-                                            },
-                                          );
-                                        },
-                              validator:
-                                  (value) {
-                                if (value ==
-                                        null ||
-                                    value
-                                        .trim()
-                                        .isEmpty) {
-                                  return 'Select a category.';
-                                }
+                                          selectedCategory =
+                                              value;
 
-                                return null;
-                              },
+                                          refreshDialog();
+                                        },
                             );
                           },
                         ),
 
-                        const SizedBox(
-                          height: 14,
-                        ),
+                        const SizedBox(height: 16),
 
-                        // ========================================
+                        // ==================================================
                         // DESCRIPTION
-                        // ========================================
+                        // ==================================================
 
                         TextFormField(
                           controller:
                               descriptionController,
-                          enabled:
-                              !isUploading,
+                          enabled: !isUploading,
                           maxLines: 5,
                           decoration:
                               const InputDecoration(
@@ -1062,295 +1060,170 @@ class _AdminSermonsScreenState
                           ),
                         ),
 
-                        const SizedBox(
-                          height: 14,
+                        const SizedBox(height: 16),
+
+                        // ==================================================
+                        // DATE
+                        // ==================================================
+
+                        TextFormField(
+                          controller:
+                              dateController,
+                          enabled: !isUploading,
+                          decoration:
+                              const InputDecoration(
+                            labelText:
+                                'Date',
+                            hintText:
+                                'e.g. 7 September 2026',
+                            border:
+                                OutlineInputBorder(),
+                          ),
                         ),
 
-                        // ========================================
-                        // DATE + DURATION
-                        // ========================================
+                        const SizedBox(height: 16),
 
-                        Row(
-                          children: [
-                            Expanded(
-                              child:
-                                  TextFormField(
-                                controller:
-                                    dateController,
-                                enabled:
-                                    !isUploading,
-                                decoration:
-                                    const InputDecoration(
-                                  labelText:
-                                      'Date',
-                                  hintText:
-                                      'e.g. 7 September 2026',
-                                  border:
-                                      OutlineInputBorder(),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(
-                              width: 12,
-                            ),
-                            Expanded(
-                              child:
-                                  TextFormField(
-                                controller:
-                                    durationController,
-                                enabled:
-                                    !isUploading,
-                                decoration:
-                                    const InputDecoration(
-                                  labelText:
-                                      'Duration',
-                                  hintText:
-                                      'e.g. 45:30',
-                                  border:
-                                      OutlineInputBorder(),
-                                ),
-                              ),
-                            ),
-                          ],
+                        // ==================================================
+                        // DURATION
+                        // ==================================================
+
+                        TextFormField(
+                          controller:
+                              durationController,
+                          enabled: !isUploading,
+                          decoration:
+                              const InputDecoration(
+                            labelText:
+                                'Duration',
+                            hintText:
+                                'e.g. 45:30',
+                            border:
+                                OutlineInputBorder(),
+                          ),
                         ),
 
-                        const SizedBox(
-                          height: 20,
+                        const SizedBox(height: 22),
+
+                        const Text(
+                          'Sermon Media',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight:
+                                FontWeight.w800,
+                          ),
                         ),
 
-                        // ========================================
-                        // COVER IMAGE
-                        // ========================================
+                        const SizedBox(height: 4),
+
+                        Text(
+                          'Upload any of the available sermon resources independently.',
+                          style: TextStyle(
+                            color:
+                                Colors.grey.shade600,
+                          ),
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // ==================================================
+                        // COVER
+                        // ==================================================
 
                         imageCard(),
 
-                        // ========================================
+                        // ==================================================
                         // VIDEO
-                        // ========================================
+                        // ==================================================
 
                         mediaUploadCard(
-                          title: 'Sermon Video',
-                          mediaType:
-                              'video',
+                          mediaType: 'video',
+                          fileName:
+                              videoFileName,
                           storagePath:
                               videoStoragePath,
                           legacyUrl:
                               videoUrl,
-                          fileName:
-                              videoFileName,
-                          icon: Icons
-                              .video_library_outlined,
-                          onUpload:
-                              () =>
-                                  pickAndUpload(
-                                'video',
-                              ),
-                          onRemove:
-                              () {
-                            setDialogState(
-                              () {
-                                videoStoragePath =
-                                    '';
-                                videoUrl =
-                                    '';
-                                videoFileName =
-                                    '';
-                              },
-                            );
-                          },
                         ),
 
-                        // ========================================
+                        // ==================================================
                         // AUDIO
-                        // ========================================
+                        // ==================================================
 
                         mediaUploadCard(
-                          title: 'Sermon Audio',
-                          mediaType:
-                              'audio',
+                          mediaType: 'audio',
+                          fileName:
+                              audioFileName,
                           storagePath:
                               audioStoragePath,
                           legacyUrl:
                               audioUrl,
-                          fileName:
-                              audioFileName,
-                          icon: Icons
-                              .audio_file_outlined,
-                          onUpload:
-                              () =>
-                                  pickAndUpload(
-                                'audio',
-                              ),
-                          onRemove:
-                              () {
-                            setDialogState(
-                              () {
-                                audioStoragePath =
-                                    '';
-                                audioUrl =
-                                    '';
-                                audioFileName =
-                                    '';
-                              },
-                            );
-                          },
                         ),
 
-                        // ========================================
+                        // ==================================================
                         // EBOOK
-                        // ========================================
+                        // ==================================================
 
                         mediaUploadCard(
-                          title:
-                              'Sermon eBook',
-                          mediaType:
-                              'ebook',
+                          mediaType: 'ebook',
+                          fileName:
+                              ebookFileName,
                           storagePath:
                               ebookStoragePath,
                           legacyUrl:
                               ebookUrl,
-                          fileName:
-                              ebookFileName,
-                          icon: Icons
-                              .picture_as_pdf_outlined,
-                          onUpload:
-                              () =>
-                                  pickAndUpload(
-                                'ebook',
-                              ),
-                          onRemove:
-                              () {
-                            setDialogState(
-                              () {
-                                ebookStoragePath =
-                                    '';
-                                ebookUrl =
-                                    '';
-                                ebookFileName =
-                                    '';
-                              },
-                            );
-                          },
                         ),
 
-                        // ========================================
+                        // ==================================================
                         // PUBLISH
-                        // ========================================
+                        // ==================================================
 
                         Container(
-                          margin:
-                              const EdgeInsets
-                                  .only(
-                            top: 4,
+                          width: double.infinity,
+                          padding:
+                              const EdgeInsets.all(
+                            14,
                           ),
                           decoration:
                               BoxDecoration(
-                            color: Colors
-                                .grey
-                                .withValues(alpha: 
-                              0.08,
-                            ),
+                            color: Colors.grey
+                                .shade50,
                             borderRadius:
-                                BorderRadius
-                                    .circular(
-                              12,
+                                BorderRadius.circular(
+                              14,
+                            ),
+                            border: Border.all(
+                              color: Colors
+                                  .grey.shade300,
                             ),
                           ),
-                          child:
-                              SwitchListTile(
-                            value:
-                                isPublished,
+                          child: SwitchListTile(
+                            contentPadding:
+                                EdgeInsets.zero,
+                            title: const Text(
+                              'Published',
+                              style: TextStyle(
+                                fontWeight:
+                                    FontWeight.w700,
+                              ),
+                            ),
+                            subtitle: Text(
+                              isPublished
+                                  ? 'This sermon is visible to members.'
+                                  : 'This sermon is hidden from members.',
+                            ),
+                            value: isPublished,
                             onChanged:
                                 isUploading
                                     ? null
                                     : (
                                         value,
                                       ) {
-                                        setDialogState(
-                                          () {
-                                            isPublished =
-                                                value;
-                                          },
-                                        );
+                                        isPublished =
+                                            value;
+                                        refreshDialog();
                                       },
-                            title:
-                                const Text(
-                              'Published',
-                              style:
-                                  TextStyle(
-                                fontWeight:
-                                    FontWeight
-                                        .w600,
-                              ),
-                            ),
-                            subtitle:
-                                Text(
-                              isPublished
-                                  ? 'This sermon is visible to users.'
-                                  : 'This sermon is hidden from users.',
-                            ),
                           ),
                         ),
-
-                        // ========================================
-                        // UPLOADING STATUS
-                        // ========================================
-
-                        if (isUploading)
-                          Padding(
-                            padding:
-                                const EdgeInsets
-                                    .only(
-                              top: 18,
-                            ),
-                            child: Container(
-                              width:
-                                  double.infinity,
-                              padding:
-                                  const EdgeInsets
-                                      .all(
-                                14,
-                              ),
-                              decoration:
-                                  BoxDecoration(
-                                color: Theme.of(
-                                  context,
-                                )
-                                    .colorScheme
-                                    .primary
-                                    .withValues(alpha: 
-                                      0.08,
-                                    ),
-                                borderRadius:
-                                    BorderRadius
-                                        .circular(
-                                  12,
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child:
-                                        CircularProgressIndicator(
-                                      strokeWidth:
-                                          2,
-                                    ),
-                                  ),
-                                  const SizedBox(
-                                    width: 12,
-                                  ),
-                                  Expanded(
-                                    child:
-                                        Text(
-                                      uploadingLabel,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
                       ],
                     ),
                   ),
@@ -1358,251 +1231,158 @@ class _AdminSermonsScreenState
               ),
               actions: [
                 TextButton(
-                  onPressed:
-                      isUploading
-                          ? null
-                          : () {
-                              Navigator.of(
-                                dialogContext,
-                              ).pop();
-                            },
+                  onPressed: isUploading
+                      ? null
+                      : () {
+                          Navigator.of(
+                            dialogContext,
+                          ).pop();
+                        },
                   child:
-                      const Text(
-                    'Cancel',
-                  ),
+                      const Text('Cancel'),
                 ),
-                FilledButton(
-                  onPressed:
-                      isUploading
-                          ? null
-                          : () async {
-                              if (!formKey
-                                  .currentState!
-                                  .validate()) {
-                                return;
-                              }
+                ElevatedButton.icon(
+                  onPressed: isUploading
+                      ? null
+                      : () async {
+                          if (!formKey
+                              .currentState!
+                              .validate()) {
+                            return;
+                          }
 
-                              // ------------------------------------------------
-                              // REQUIRE COVER IMAGE
-                              // ------------------------------------------------
+                          // Cover image is required.
+                          if (imageStoragePath
+                              .trim()
+                              .isEmpty &&
+                              imageUrl
+                                  .trim()
+                                  .isEmpty) {
+                            _showMessage(
+                              'Please upload a cover image.',
+                              error: true,
+                            );
+                            return;
+                          }
 
-                              if (imageStoragePath
+                          try {
+                            if (context
+                                .mounted) {
+                              setDialogState(
+                                () {
+                                  isUploading =
+                                      true;
+                                  uploadingLabel =
+                                      'Saving sermon...';
+                                },
+                              );
+                            }
+
+                            final model =
+                                SermonModel(
+                              id: sermon?.id ??
+                                  '',
+                              title:
+                                  titleController
+                                      .text
+                                      .trim(),
+                              description:
+                                  descriptionController
+                                      .text
+                                      .trim(),
+                              speaker:
+                                  speakerController
+                                      .text
+                                      .trim(),
+                              category:
+                                  selectedCategory
                                       .trim()
-                                      .isEmpty &&
-                                  imageUrl
-                                      .trim()
-                                      .isEmpty) {
-                                _showMessage(
-                                  'Please upload a cover image.',
-                                  error:
-                                      true,
-                                );
-
-                                return;
-                              }
-
-                              try {
-                                setDialogState(
-                                  () {
-                                    isUploading =
-                                        true;
-                                    uploadingLabel =
-                                        'Saving sermon...';
-                                  },
-                                );
-
-                                // ============================================
-                                // CREATE
-                                // ============================================
-
-                                if (sermon ==
-                                    null) {
-                                  final newSermon =
-                                      SermonModel(
-                                    id: '',
-                                    title:
-                                        titleController
-                                            .text
-                                            .trim(),
-                                    description:
-                                        descriptionController
-                                            .text
-                                            .trim(),
-                                    speaker:
-                                        speakerController
-                                            .text
-                                            .trim(),
-                                    category:
-                                        categoryController
-                                            .text
-                                            .trim(),
-
-                                    // B2
-                                    imageStoragePath:
-                                        imageStoragePath
-                                            .trim(),
-                                    videoStoragePath:
-                                        videoStoragePath
-                                            .trim(),
-                                    audioStoragePath:
-                                        audioStoragePath
-                                            .trim(),
-                                    ebookStoragePath:
-                                        ebookStoragePath
-                                            .trim(),
-
-                                    // Legacy
-                                    imageUrl:
-                                        imageUrl
-                                            .trim(),
-                                    videoUrl:
-                                        videoUrl
-                                            .trim(),
-                                    audioUrl:
-                                        audioUrl
-                                            .trim(),
-                                    ebookUrl:
-                                        ebookUrl
-                                            .trim(),
-
-                                    date:
-                                        dateController
-                                            .text
-                                            .trim(),
-                                    duration:
-                                        durationController
-                                            .text
-                                            .trim(),
-                                    isPublished:
-                                        isPublished,
-                                    createdAt:
-                                        null,
-                                  );
-
-                                  await _sermonRepository
-                                      .createSermon(
-                                    newSermon,
-                                  );
-
-                                  if (!mounted || !dialogContext.mounted) {
-                                    return;
-                                    }
-
-                                  Navigator.of(
-                                    dialogContext,
-                                  ).pop();
-
-                                  _showMessage(
-                                    'Sermon created successfully.',
-                                  );
-
-                                  return;
-                                }
-
-                                // ============================================
-                                // UPDATE
-                                // ============================================
-
-                                final updatedSermon =
-                                    SermonModel(
-                                  id: sermon.id,
-                                  title:
-                                      titleController
-                                          .text
+                                      .isEmpty
+                                      ? 'General'
+                                      : selectedCategory
                                           .trim(),
-                                  description:
-                                      descriptionController
-                                          .text
-                                          .trim(),
-                                  speaker:
-                                      speakerController
-                                          .text
-                                          .trim(),
-                                  category:
-                                      categoryController
-                                          .text
-                                          .trim(),
+                              imageStoragePath:
+                                  imageStoragePath,
+                              videoStoragePath:
+                                  videoStoragePath,
+                              audioStoragePath:
+                                  audioStoragePath,
+                              ebookStoragePath:
+                                  ebookStoragePath,
+                              imageUrl:
+                                  imageUrl,
+                              videoUrl:
+                                  videoUrl,
+                              audioUrl:
+                                  audioUrl,
+                              ebookUrl:
+                                  ebookUrl,
+                              date:
+                                  dateController
+                                      .text
+                                      .trim(),
+                              duration:
+                                  durationController
+                                      .text
+                                      .trim(),
+                              isPublished:
+                                  isPublished,
+                              createdAt:
+                                  sermon?.createdAt,
+                            );
 
-                                  // B2
-                                  imageStoragePath:
-                                      imageStoragePath
-                                          .trim(),
-                                  videoStoragePath:
-                                      videoStoragePath
-                                          .trim(),
-                                  audioStoragePath:
-                                      audioStoragePath
-                                          .trim(),
-                                  ebookStoragePath:
-                                      ebookStoragePath
-                                          .trim(),
+                            if (isEditing) {
+                              await _sermonRepository
+                                  .updateSermon(
+                                model,
+                              );
+                            } else {
+                              await _sermonRepository
+                                  .createSermon(
+                                model,
+                              );
+                            }
 
-                                  // Legacy
-                                  imageUrl:
-                                      imageUrl
-                                          .trim(),
-                                  videoUrl:
-                                      videoUrl
-                                          .trim(),
-                                  audioUrl:
-                                      audioUrl
-                                          .trim(),
-                                  ebookUrl:
-                                      ebookUrl
-                                          .trim(),
-
-                                  date:
-                                      dateController
-                                          .text
-                                          .trim(),
-                                  duration:
-                                      durationController
-                                          .text
-                                          .trim(),
-                                  isPublished:
-                                      isPublished,
-                                  createdAt:
-                                      sermon
-                                          .createdAt,
-                                );
-
-                                await _sermonRepository
-                                    .updateSermon(
-                                  updatedSermon,
-                                );
-
-                                if (!mounted || !dialogContext.mounted) {
+                            if (!context
+                                .mounted) {
                               return;
-                              }
+                            }
 
-                                Navigator.of(
-                                  context,
-                                ).pop();
+                            Navigator.of(
+                              dialogContext,
+                            ).pop();
 
-                                _showMessage(
-                                  'Sermon updated successfully.',
-                                );
-                              } catch (error) {
-                                setDialogState(
-                                  () {
-                                    isUploading =
-                                        false;
-                                    uploadingLabel =
-                                        '';
-                                  },
-                                );
+                            _showMessage(
+                              isEditing
+                                  ? 'Sermon updated successfully.'
+                                  : 'Sermon created successfully.',
+                            );
+                          } catch (error) {
+                            if (context
+                                .mounted) {
+                              setDialogState(
+                                () {
+                                  isUploading =
+                                      false;
+                                  uploadingLabel =
+                                      '';
+                                },
+                              );
+                            }
 
-                                _showMessage(
-                                  'Unable to save sermon: $error',
-                                  error:
-                                      true,
-                                );
-                              }
-                            },
-                  child: Text(
-                    sermon == null
-                        ? 'Create Sermon'
-                        : 'Save Changes',
+                            _showMessage(
+                              'Unable to save sermon: $error',
+                              error: true,
+                            );
+                          }
+                        },
+                  icon: const Icon(
+                    Icons.save,
+                  ),
+                  label: Text(
+                    isEditing
+                        ? 'Update Sermon'
+                        : 'Save Sermon',
                   ),
                 ),
               ],
@@ -1612,17 +1392,20 @@ class _AdminSermonsScreenState
       },
     );
 
+    // ============================================================
+    // DISPOSE FORM CONTROLLERS
+    // ============================================================
+
     titleController.dispose();
-    descriptionController.dispose();
     speakerController.dispose();
-    categoryController.dispose();
+    descriptionController.dispose();
     dateController.dispose();
     durationController.dispose();
   }
 
-  // ==========================================================
+  // ============================================================
   // DELETE SERMON
-  // ==========================================================
+  // ============================================================
 
   Future<void> _deleteSermon(
     SermonModel sermon,
@@ -1632,36 +1415,33 @@ class _AdminSermonsScreenState
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text(
-            'Delete Sermon?',
-          ),
+          title:
+              const Text('Delete Sermon'),
           content: Text(
-            'Are you sure you want to delete "${sermon.title}"? '
-            'This will remove the sermon record from Firestore.',
+            'Are you sure you want to delete "${sermon.title}"?',
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.pop(
-                  context,
-                  false,
-                );
-              },
+              onPressed: () =>
+                  Navigator.pop(
+                context,
+                false,
+              ),
               child:
                   const Text('Cancel'),
             ),
-            FilledButton(
-              style:
-                  FilledButton.styleFrom(
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
                 backgroundColor:
                     Colors.red,
+                foregroundColor:
+                    Colors.white,
               ),
-              onPressed: () {
-                Navigator.pop(
-                  context,
-                  true,
-                );
-              },
+              onPressed: () =>
+                  Navigator.pop(
+                context,
+                true,
+              ),
               child:
                   const Text('Delete'),
             ),
@@ -1691,175 +1471,89 @@ class _AdminSermonsScreenState
     }
   }
 
-  // ==========================================================
+  // ============================================================
   // TOGGLE PUBLISHED
-  // ==========================================================
+  // ============================================================
 
   Future<void> _togglePublished(
     SermonModel sermon,
-    bool value,
   ) async {
     try {
-      final updatedSermon =
-          SermonModel(
-        id: sermon.id,
-        title: sermon.title,
-        description:
-            sermon.description,
-        speaker: sermon.speaker,
-        category: sermon.category,
-
-        imageStoragePath:
-            sermon.imageStoragePath,
-
-        videoStoragePath:
-            sermon.videoStoragePath,
-
-        audioStoragePath:
-            sermon.audioStoragePath,
-
-        ebookStoragePath:
-            sermon.ebookStoragePath,
-
-        imageUrl:
-            sermon.imageUrl,
-
-        videoUrl:
-            sermon.videoUrl,
-
-        audioUrl:
-            sermon.audioUrl,
-
-        ebookUrl:
-            sermon.ebookUrl,
-
-        date: sermon.date,
-        duration:
-            sermon.duration,
-        isPublished: value,
-        createdAt:
-            sermon.createdAt,
-      );
-
       await _sermonRepository
-          .updateSermon(
-        updatedSermon,
+          .setPublished(
+        sermonId: sermon.id,
+        isPublished:
+            !sermon.isPublished,
       );
 
       _showMessage(
-        value
-            ? 'Sermon published.'
-            : 'Sermon unpublished.',
+        sermon.isPublished
+            ? 'Sermon unpublished.'
+            : 'Sermon published.',
       );
     } catch (error) {
       _showMessage(
-        'Unable to update publication status: $error',
+        'Unable to change publication status: $error',
         error: true,
       );
     }
   }
 
-  // ==========================================================
+  // ============================================================
   // SERMON CARD
-  // ==========================================================
+  // ============================================================
 
   Widget _buildSermonCard(
     SermonModel sermon,
   ) {
-    final hasImage =
-        sermon.imageUrl
-                .trim()
-                .isNotEmpty ||
-            sermon.imageStoragePath
-                .trim()
-                .isNotEmpty;
-
     return Card(
+      elevation: 1,
       margin:
-          const EdgeInsets.only(
-        bottom: 14,
-      ),
-      elevation: 0,
-      shape:
-          RoundedRectangleBorder(
+          const EdgeInsets.only(bottom: 14),
+      shape: RoundedRectangleBorder(
         borderRadius:
-            BorderRadius.circular(
-          18,
-        ),
-        side: BorderSide(
-          color: Colors.grey
-              .withValues(alpha: 
-            0.20,
-          ),
-        ),
+            BorderRadius.circular(16),
       ),
       child: Padding(
-        padding:
-            const EdgeInsets.all(
-          14,
-        ),
+        padding: const EdgeInsets.all(14),
         child: Row(
           crossAxisAlignment:
               CrossAxisAlignment.start,
           children: [
-            // ==================================================
-            // IMAGE
-            // ==================================================
-
-            ClipRRect(
-              borderRadius:
-                  BorderRadius.circular(
-                14,
-              ),
-              child: SizedBox(
-                width: 120,
-                height: 90,
-                child: hasImage &&
-                        sermon.imageUrl
+            SizedBox(
+              width: 130,
+              height: 95,
+              child: ClipRRect(
+                borderRadius:
+                    BorderRadius.circular(12),
+                child: sermon
+                        .imageStoragePath
+                        .trim()
+                        .isNotEmpty
+                    ? _AdminB2Image(
+                        objectKey: sermon
+                            .imageStoragePath,
+                      )
+                    : sermon.imageUrl
                             .trim()
                             .isNotEmpty
-                    ? Image.network(
-                        sermon.imageUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder:
-                            (
-                          context,
-                          error,
-                          stackTrace,
-                        ) {
-                          return Container(
-                            color: Colors
-                                .grey
-                                .shade200,
-                            child:
-                                const Icon(
-                              Icons
-                                  .image_not_supported_outlined,
-                            ),
-                          );
-                        },
-                      )
-                    : Container(
-                        color: Colors
-                            .grey
-                            .shade100,
-                        child:
-                            const Icon(
-                          Icons
-                              .ondemand_video_outlined,
-                          size: 32,
-                        ),
-                      ),
+                        ? Image.network(
+                            sermon.imageUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder:
+                                (
+                              context,
+                              error,
+                              stackTrace,
+                            ) {
+                              return _cardImagePlaceholder();
+                            },
+                          )
+                        : _cardImagePlaceholder(),
               ),
             ),
 
-            const SizedBox(
-              width: 14,
-            ),
-
-            // ==================================================
-            // CONTENT
-            // ==================================================
+            const SizedBox(width: 14),
 
             Expanded(
               child: Column(
@@ -1867,260 +1561,194 @@ class _AdminSermonsScreenState
                     CrossAxisAlignment.start,
                 children: [
                   Row(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         child: Text(
                           sermon.title,
                           maxLines: 2,
                           overflow:
-                              TextOverflow
-                                  .ellipsis,
+                              TextOverflow.ellipsis,
                           style:
                               const TextStyle(
+                            fontSize: 17,
                             fontWeight:
-                                FontWeight
-                                    .w700,
-                            fontSize: 16,
+                                FontWeight.w800,
                           ),
                         ),
                       ),
-                      const SizedBox(
-                        width: 8,
-                      ),
-                      Container(
-                        padding:
-                            const EdgeInsets
-                                .symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration:
-                            BoxDecoration(
-                          color: sermon
-                                  .isPublished
-                              ? Colors.green
-                                  .withValues(alpha: 
-                                  0.10,
-                                )
-                              : Colors.orange
-                                  .withValues(alpha: 
-                                  0.10,
+
+                      PopupMenuButton<
+                          String>(
+                        onSelected:
+                            (value) {
+                          switch (value) {
+                            case 'edit':
+                              _showSermonForm(
+                                sermon:
+                                    sermon,
+                              );
+                              break;
+
+                            case 'toggle':
+                              _togglePublished(
+                                sermon,
+                              );
+                              break;
+
+                            case 'delete':
+                              _deleteSermon(
+                                sermon,
+                              );
+                              break;
+                          }
+                        },
+                        itemBuilder:
+                            (context) => [
+                          const PopupMenuItem<
+                              String>(
+                            value: 'edit',
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.edit,
+                                  size: 20,
                                 ),
-                          borderRadius:
-                              BorderRadius
-                                  .circular(
-                            20,
+                                SizedBox(
+                                    width: 10),
+                                Text('Edit'),
+                              ],
+                            ),
                           ),
-                        ),
-                        child: Text(
-                          sermon.isPublished
-                              ? 'Published'
-                              : 'Draft',
-                          style:
-                              TextStyle(
-                            fontSize: 11,
-                            fontWeight:
-                                FontWeight
-                                    .w600,
-                            color: sermon
-                                    .isPublished
-                                ? Colors.green
-                                : Colors.orange,
+                          PopupMenuItem<
+                              String>(
+                            value:
+                                'toggle',
+                            child: Row(
+                              children: [
+                                Icon(
+                                  sermon
+                                          .isPublished
+                                      ? Icons
+                                          .visibility_off
+                                      : Icons
+                                          .visibility,
+                                  size: 20,
+                                ),
+                                const SizedBox(
+                                    width: 10),
+                                Text(
+                                  sermon
+                                          .isPublished
+                                      ? 'Unpublish'
+                                      : 'Publish',
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
+                          const PopupMenuItem<
+                              String>(
+                            value: 'delete',
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.delete,
+                                  color:
+                                      Colors.red,
+                                  size: 20,
+                                ),
+                                SizedBox(
+                                    width: 10),
+                                Text(
+                                  'Delete',
+                                  style:
+                                      TextStyle(
+                                    color:
+                                        Colors.red,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
 
-                  const SizedBox(
-                    height: 7,
-                  ),
+                  const SizedBox(height: 5),
 
                   Text(
                     sermon.speaker,
-                    style:
-                        TextStyle(
-                      color: Colors
-                          .grey
-                          .shade700,
-                      fontSize: 13,
+                    style: TextStyle(
+                      color:
+                          Colors.grey.shade700,
+                      fontWeight:
+                          FontWeight.w500,
                     ),
                   ),
 
-                  const SizedBox(
-                    height: 5,
-                  ),
+                  const SizedBox(height: 9),
 
                   Wrap(
-                    spacing: 8,
-                    runSpacing: 5,
+                    spacing: 7,
+                    runSpacing: 7,
                     children: [
-                      _infoChip(
-                        Icons
-                            .category_outlined,
-                        sermon.category,
-                      ),
-                      _infoChip(
-                        Icons
-                            .calendar_today_outlined,
-                        _formatDate(
-                          sermon,
-                        ),
-                      ),
-                      if (sermon
-                          .hasVideo)
+                      if (sermon.category
+                          .trim()
+                          .isNotEmpty)
                         _infoChip(
-                          Icons
-                              .video_library_outlined,
+                          sermon.category,
+                          Icons.category,
+                        ),
+
+                      if (sermon.date
+                          .trim()
+                          .isNotEmpty)
+                        _infoChip(
+                          _formatDate(
+                            sermon.date,
+                          ),
+                          Icons.calendar_today,
+                        ),
+
+                      if (sermon.duration
+                          .trim()
+                          .isNotEmpty)
+                        _infoChip(
+                          sermon.duration,
+                          Icons.timer,
+                        ),
+
+                      if (sermon.hasVideo)
+                        _infoChip(
                           'Video',
+                          Icons.video_library,
                         ),
-                      if (sermon
-                          .hasAudio)
+
+                      if (sermon.hasAudio)
                         _infoChip(
-                          Icons
-                              .headphones_outlined,
                           'Audio',
+                          Icons.audiotrack,
                         ),
-                      if (sermon
-                          .hasEbook)
+
+                      if (sermon.hasEbook)
                         _infoChip(
-                          Icons
-                              .picture_as_pdf_outlined,
-                          'eBook',
+                          'Ebook',
+                          Icons.picture_as_pdf,
                         ),
+
+                      _infoChip(
+                        sermon.isPublished
+                            ? 'Published'
+                            : 'Draft',
+                        sermon.isPublished
+                            ? Icons.check_circle
+                            : Icons
+                                .visibility_off,
+                      ),
                     ],
                   ),
-
-                  const SizedBox(
-                    height: 8,
-                  ),
-
-                  if (sermon.description
-                      .trim()
-                      .isNotEmpty)
-                    Text(
-                      sermon.description,
-                      maxLines: 2,
-                      overflow:
-                          TextOverflow
-                              .ellipsis,
-                      style:
-                          TextStyle(
-                        color: Colors
-                            .grey
-                            .shade600,
-                        fontSize: 12,
-                      ),
-                    ),
                 ],
               ),
-            ),
-
-            const SizedBox(
-              width: 8,
-            ),
-
-            // ==================================================
-            // ACTIONS
-            // ==================================================
-
-            PopupMenuButton<String>(
-              onSelected:
-                  (value) async {
-                if (value ==
-                    'edit') {
-                  await _showSermonForm(
-                    sermon: sermon,
-                  );
-                }
-
-                if (value ==
-                    'delete') {
-                  await _deleteSermon(
-                    sermon,
-                  );
-                }
-
-                if (value ==
-                    'toggle') {
-                  await _togglePublished(
-                    sermon,
-                    !sermon.isPublished,
-                  );
-                }
-              },
-              itemBuilder:
-                  (context) {
-                return [
-                  PopupMenuItem(
-                    value: 'edit',
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.edit_outlined,
-                          size: 20,
-                        ),
-                        const SizedBox(
-                          width: 10,
-                        ),
-                        const Text(
-                          'Edit',
-                        ),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'toggle',
-                    child: Row(
-                      children: [
-                        Icon(
-                          sermon.isPublished
-                              ? Icons
-                                  .visibility_off_outlined
-                              : Icons
-                                  .visibility_outlined,
-                          size: 20,
-                        ),
-                        const SizedBox(
-                          width: 10,
-                        ),
-                        Text(
-                          sermon.isPublished
-                              ? 'Unpublish'
-                              : 'Publish',
-                        ),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuItem(
-                    value: 'delete',
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons
-                              .delete_outline,
-                          color:
-                              Colors.red,
-                          size: 20,
-                        ),
-                        SizedBox(
-                          width: 10,
-                        ),
-                        Text(
-                          'Delete',
-                          style:
-                              TextStyle(
-                            color:
-                                Colors.red,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ];
-              },
             ),
           ],
         ),
@@ -2128,26 +1756,41 @@ class _AdminSermonsScreenState
     );
   }
 
+  // ============================================================
+  // PLACEHOLDER
+  // ============================================================
+
+  Widget _cardImagePlaceholder() {
+    return Container(
+      color: Colors.grey.shade200,
+      child: const Center(
+        child: Icon(
+          Icons.image_outlined,
+          size: 38,
+          color: Colors.grey,
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // INFO CHIP
+  // ============================================================
+
   Widget _infoChip(
+    String text,
     IconData icon,
-    String label,
   ) {
     return Container(
       padding:
           const EdgeInsets.symmetric(
-        horizontal: 8,
-        vertical: 4,
+        horizontal: 9,
+        vertical: 6,
       ),
-      decoration:
-          BoxDecoration(
-        color:
-            Colors.grey.withValues(alpha: 
-          0.08,
-        ),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
         borderRadius:
-            BorderRadius.circular(
-          20,
-        ),
+            BorderRadius.circular(30),
       ),
       child: Row(
         mainAxisSize:
@@ -2155,20 +1798,18 @@ class _AdminSermonsScreenState
         children: [
           Icon(
             icon,
-            size: 13,
-            color:
-                Colors.grey.shade700,
+            size: 14,
+            color: Colors.grey.shade700,
           ),
-          const SizedBox(
-            width: 4,
-          ),
+          const SizedBox(width: 5),
           Text(
-            label,
-            style:
-                TextStyle(
+            text,
+            style: TextStyle(
               fontSize: 11,
               color:
                   Colors.grey.shade700,
+              fontWeight:
+                  FontWeight.w600,
             ),
           ),
         ],
@@ -2176,9 +1817,9 @@ class _AdminSermonsScreenState
     );
   }
 
-  // ==========================================================
-  // MAIN BUILD
-  // ==========================================================
+  // ============================================================
+  // BUILD
+  // ============================================================
 
   @override
   Widget build(
@@ -2187,285 +1828,359 @@ class _AdminSermonsScreenState
     return Scaffold(
       appBar: AppBar(
         title:
-            const Text(
-          'Sermons',
-        ),
+            const Text('Manage Sermons'),
         actions: [
           IconButton(
-            tooltip:
-                'Refresh',
-            onPressed:
-                () {
-                  setState(() {});
-                },
-            icon:
-                const Icon(
-              Icons.refresh,
+            tooltip: 'Add Sermon',
+            onPressed: () =>
+                _showSermonForm(),
+            icon: const Icon(
+              Icons.add,
             ),
           ),
         ],
       ),
 
-      // ========================================================
-      // ADD SERMON
-      // ========================================================
-
       floatingActionButton:
           FloatingActionButton.extended(
-        onPressed:
-            () =>
-                _showSermonForm(),
-        icon:
-            const Icon(
+        onPressed: () =>
+            _showSermonForm(),
+        icon: const Icon(
           Icons.add,
         ),
         label:
-            const Text(
-          'Add Sermon',
-        ),
+            const Text('Add Sermon'),
       ),
 
-      // ========================================================
-      // BODY
-      // ========================================================
+      body: Padding(
+        padding:
+            const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            // ======================================================
+            // SEARCH
+            // ======================================================
 
-      body: SafeArea(
-        child: Padding(
-          padding:
-              const EdgeInsets.all(
-            20,
-          ),
-          child: Column(
-            children: [
-              // ==================================================
-              // SEARCH
-              // ==================================================
-
-              TextField(
-                controller:
-                    _searchController,
-                decoration:
-                    InputDecoration(
-                  hintText:
-                      'Search sermons...',
-                  prefixIcon:
-                      const Icon(
-                    Icons.search,
-                  ),
-                  suffixIcon:
-                      _searchQuery
-                              .isNotEmpty
-                          ? IconButton(
-                              onPressed:
-                                  () {
-                                _searchController
-                                    .clear();
-                              },
-                              icon:
-                                  const Icon(
-                                Icons
-                                    .clear,
-                              ),
-                            )
-                          : null,
-                  border:
-                      OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius
-                            .circular(
-                      14,
-                    ),
+            TextField(
+              controller:
+                  _searchController,
+              decoration:
+                  InputDecoration(
+                hintText:
+                    'Search sermons...',
+                prefixIcon:
+                    const Icon(
+                  Icons.search,
+                ),
+                suffixIcon:
+                    _searchQuery.isNotEmpty
+                        ? IconButton(
+                            onPressed: () {
+                              _searchController
+                                  .clear();
+                            },
+                            icon:
+                                const Icon(
+                              Icons.clear,
+                            ),
+                          )
+                        : null,
+                border:
+                    OutlineInputBorder(
+                  borderRadius:
+                      BorderRadius.circular(
+                    14,
                   ),
                 ),
               ),
+            ),
 
-              const SizedBox(
-                height: 20,
-              ),
+            const SizedBox(height: 20),
 
-              // ==================================================
-              // SERMON LIST
-              // ==================================================
+            // ======================================================
+            // SERMON LIST
+            // ======================================================
 
-              Expanded(
-                child:
-                    StreamBuilder<
-                        List<SermonModel>>(
-                  stream:
-                      _sermonRepository
-                          .allSermonsStream(),
-                  builder: (
-                    context,
-                    snapshot,
-                  ) {
-                    if (snapshot
-                        .hasError) {
-                      return Center(
-                        child:
-                            Padding(
-                          padding:
-                              const EdgeInsets
-                                  .all(
-                            24,
-                          ),
-                          child:
-                              Column(
-                            mainAxisSize:
-                                MainAxisSize
-                                    .min,
-                            children: [
-                              const Icon(
-                                Icons
-                                    .error_outline,
-                                size: 50,
-                                color:
-                                    Colors.red,
-                              ),
-                              const SizedBox(
-                                height:
-                                    12,
-                              ),
-                              const Text(
-                                'Unable to load sermons.',
-                                textAlign:
-                                    TextAlign
-                                        .center,
-                              ),
-                              const SizedBox(
-                                height:
-                                    12,
-                              ),
-                              OutlinedButton(
-                                onPressed:
-                                    () {
-                                  setState(
-                                    () {},
-                                  );
-                                },
-                                child:
-                                    const Text(
-                                  'Retry',
-                                ),
-                              ),
-                            ],
-                          ),
+            Expanded(
+              child: StreamBuilder<
+                  List<SermonModel>>(
+                stream: _sermonRepository
+                    .allSermonsStream(),
+                builder:
+                    (
+                  context,
+                  snapshot,
+                ) {
+                  if (snapshot.connectionState ==
+                      ConnectionState.waiting) {
+                    return const Center(
+                      child:
+                          CircularProgressIndicator(),
+                    );
+                  }
+
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Padding(
+                        padding:
+                            const EdgeInsets.all(
+                          24,
                         ),
-                      );
-                    }
-
-                    if (snapshot
-                        .connectionState ==
-                        ConnectionState
-                            .waiting) {
-                      return const Center(
-                        child:
-                            CircularProgressIndicator(),
-                      );
-                    }
-
-                    final sermons =
-                        snapshot.data ??
-                            [];
-
-                    final filtered =
-                        sermons
-                            .where(
-                              _matchesSearch,
-                            )
-                            .toList();
-
-                    if (filtered
-                        .isEmpty) {
-                      return Center(
-                        child:
-                            Column(
+                        child: Column(
                           mainAxisSize:
-                              MainAxisSize
-                                  .min,
+                              MainAxisSize.min,
                           children: [
-                            Icon(
-                              _searchQuery
-                                      .isNotEmpty
-                                  ? Icons
-                                      .search_off
-                                  : Icons
-                                      .library_music_outlined,
-                              size: 60,
-                              color: Colors
-                                  .grey
-                                  .shade400,
+                            const Icon(
+                              Icons.error_outline,
+                              size: 50,
+                              color: Colors.red,
                             ),
                             const SizedBox(
-                              height: 14,
-                            ),
-                            Text(
-                              _searchQuery
-                                      .isNotEmpty
-                                  ? 'No sermons found.'
-                                  : 'No sermons yet.',
-                              style:
-                                  TextStyle(
-                                fontSize:
-                                    16,
+                                height: 12),
+                            const Text(
+                              'Unable to load sermons.',
+                              style: TextStyle(
+                                fontSize: 17,
                                 fontWeight:
-                                    FontWeight
-                                        .w600,
-                                color: Colors
-                                    .grey
-                                    .shade700,
+                                    FontWeight.w700,
                               ),
                             ),
                             const SizedBox(
-                              height: 8,
-                            ),
-                            if (_searchQuery
-                                .isEmpty)
-                              const Text(
-                                'Create your first sermon using the button below.',
-                                textAlign:
-                                    TextAlign
-                                        .center,
+                                height: 8),
+                            Text(
+                              snapshot.error
+                                  .toString(),
+                              textAlign:
+                                  TextAlign.center,
+                              style: TextStyle(
+                                color: Colors
+                                    .grey.shade700,
                               ),
+                            ),
                           ],
                         ),
-                      );
-                    }
-
-                    return ListView
-                        .separated(
-                      padding:
-                          const EdgeInsets
-                              .only(
-                        bottom: 100,
                       ),
-                      itemCount:
-                          filtered.length,
-                      separatorBuilder:
-                          (
-                        context,
-                        index,
-                      ) =>
-                              const SizedBox(
-                        height: 0,
-                      ),
-                      itemBuilder:
-                          (
-                        context,
-                        index,
-                      ) {
-                        return _buildSermonCard(
-                          filtered[
-                              index],
-                        );
-                      },
                     );
-                  },
-                ),
+                  }
+
+                  final sermons =
+                      snapshot.data ?? [];
+
+                  final filteredSermons =
+                      sermons
+                          .where(
+                            _matchesSearch,
+                          )
+                          .toList();
+
+                  if (sermons.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisSize:
+                            MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons
+                                .library_music_outlined,
+                            size: 65,
+                            color: Colors
+                                .grey.shade400,
+                          ),
+                          const SizedBox(
+                              height: 14),
+                          const Text(
+                            'No sermons yet',
+                            style:
+                                TextStyle(
+                              fontSize: 20,
+                              fontWeight:
+                                  FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(
+                              height: 7),
+                          Text(
+                            'Create your first sermon to get started.',
+                            style: TextStyle(
+                              color: Colors
+                                  .grey.shade600,
+                            ),
+                          ),
+                          const SizedBox(
+                              height: 18),
+                          ElevatedButton.icon(
+                            onPressed: () =>
+                                _showSermonForm(),
+                            icon:
+                                const Icon(
+                              Icons.add,
+                            ),
+                            label:
+                                const Text(
+                              'Add Sermon',
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  if (filteredSermons
+                      .isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisSize:
+                            MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.search_off,
+                            size: 55,
+                          ),
+                          const SizedBox(
+                              height: 12),
+                          const Text(
+                            'No matching sermons.',
+                            style:
+                                TextStyle(
+                              fontSize: 18,
+                              fontWeight:
+                                  FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(
+                              height: 8),
+                          Text(
+                            'Try a different search term.',
+                            style: TextStyle(
+                              color: Colors
+                                  .grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  return ListView.builder(
+                    itemCount:
+                        filteredSermons.length,
+                    itemBuilder:
+                        (context, index) {
+                      final sermon =
+                          filteredSermons[
+                              index];
+
+                      return _buildSermonCard(
+                        sermon,
+                      );
+                    },
+                  );
+                },
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
+    );
+  }
+}
+
+// ============================================================================
+// ADMIN B2 IMAGE
+// ============================================================================
+
+class _AdminB2Image extends StatefulWidget {
+  final String objectKey;
+
+  const _AdminB2Image({
+    required this.objectKey,
+  });
+
+  @override
+  State<_AdminB2Image> createState() =>
+      _AdminB2ImageState();
+}
+
+class _AdminB2ImageState
+    extends State<_AdminB2Image> {
+  String? _url;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadImage();
+  }
+
+  Future<void> _loadImage() async {
+    try {
+      final url =
+          await B2UploadService.instance
+              .getDownloadUrl(
+        objectKey:
+            widget.objectKey,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _url = url;
+      });
+    } catch (error) {
+      if (!mounted) return;
+
+      setState(() {
+        _error = error.toString();
+      });
+    }
+  }
+
+  @override
+  Widget build(
+    BuildContext context,
+  ) {
+    if (_error != null) {
+      return Container(
+        color: Colors.grey.shade200,
+        child: const Center(
+          child: Icon(
+            Icons.broken_image,
+            color: Colors.grey,
+            size: 35,
+          ),
+        ),
+      );
+    }
+
+    if (_url == null ||
+        _url!.trim().isEmpty) {
+      return Container(
+        color: Colors.grey.shade200,
+        child: const Center(
+          child:
+              CircularProgressIndicator(
+            strokeWidth: 2,
+          ),
+        ),
+      );
+    }
+
+    return Image.network(
+      _url!,
+      fit: BoxFit.cover,
+      errorBuilder:
+          (context, error, stackTrace) {
+        return Container(
+          color: Colors.grey.shade200,
+          child: const Center(
+            child: Icon(
+              Icons.broken_image,
+              color: Colors.grey,
+              size: 35,
+            ),
+          ),
+        );
+      },
     );
   }
 }

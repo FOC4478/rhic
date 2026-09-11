@@ -4,7 +4,11 @@ class CartItemModel {
   final String bookId;
   final String title;
   final String author;
-  final String coverUrl;
+
+  // Private Backblaze B2 object key for the cover.
+  // This is NOT a public URL.
+  final String coverObjectKey;
+
   final double price;
   final String currency;
   final int quantity;
@@ -14,7 +18,7 @@ class CartItemModel {
     required this.bookId,
     required this.title,
     required this.author,
-    required this.coverUrl,
+    required this.coverObjectKey,
     required this.price,
     required this.currency,
     required this.quantity,
@@ -27,26 +31,45 @@ class CartItemModel {
     final data = doc.data() ?? {};
 
     return CartItemModel(
-      bookId: data['bookId']?.toString() ?? doc.id,
-      title: data['title']?.toString() ?? '',
-      author: data['author']?.toString() ?? '',
-      coverUrl: data['coverUrl']?.toString() ?? '',
-      price: data['price'] is num
-          ? (data['price'] as num).toDouble()
-          : double.tryParse(
-                data['price']?.toString() ?? '',
-              ) ??
-              0,
-      currency: data['currency']?.toString() ?? 'NGN',
-      quantity: data['quantity'] is int
-          ? data['quantity'] as int
-          : int.tryParse(
-                data['quantity']?.toString() ?? '',
-              ) ??
-              1,
-      addedAt: data['addedAt'] is Timestamp
-          ? (data['addedAt'] as Timestamp).toDate()
-          : null,
+      bookId:
+          data['bookId']?.toString() ?? doc.id,
+
+      title:
+          data['title']?.toString() ?? '',
+
+      author:
+          data['author']?.toString() ?? '',
+
+      // New field.
+      coverObjectKey:
+          data['coverObjectKey']?.toString() ??
+              // Temporary fallback for old cart documents.
+              data['coverUrl']?.toString() ??
+              '',
+
+      price:
+          data['price'] is num
+              ? (data['price'] as num).toDouble()
+              : double.tryParse(
+                    data['price']?.toString() ?? '',
+                  ) ??
+                  0,
+
+      currency:
+          data['currency']?.toString() ?? 'NGN',
+
+      quantity:
+          data['quantity'] is int
+              ? data['quantity'] as int
+              : int.tryParse(
+                    data['quantity']?.toString() ?? '',
+                  ) ??
+                  1,
+
+      addedAt:
+          data['addedAt'] is Timestamp
+              ? (data['addedAt'] as Timestamp).toDate()
+              : null,
     );
   }
 

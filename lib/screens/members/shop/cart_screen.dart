@@ -5,6 +5,7 @@ import '../../../models/cart_item_model.dart';
 import '../../../models/payment_settings_model.dart';
 import '../../../repositories/cart_repository.dart';
 import '../../../repositories/payment_repository.dart';
+import '../../../services/b2_upload_service.dart';
 import 'order_success_screen.dart';
 
 class CartScreen extends StatelessWidget {
@@ -39,12 +40,10 @@ class CartScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor:
           const Color(0xFFFCFAFD),
-
       appBar: AppBar(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
         elevation: 0,
-
         title: const Text(
           'Your Cart',
           style: TextStyle(
@@ -53,11 +52,9 @@ class CartScreen extends StatelessWidget {
           ),
         ),
       ),
-
       body: StreamBuilder<List<CartItemModel>>(
         stream: CartRepository.instance
             .cartStream(user.uid),
-
         builder: (context, snapshot) {
           if (snapshot.connectionState ==
               ConnectionState.waiting) {
@@ -98,15 +95,13 @@ class CartScreen extends StatelessWidget {
                 child: ListView.separated(
                   padding:
                       const EdgeInsets.all(20),
-
-                  itemCount: items.length,
-
+                  itemCount:
+                      items.length,
                   separatorBuilder:
                       (_, __) =>
                           const SizedBox(
                     height: 12,
                   ),
-
                   itemBuilder:
                       (context, index) {
                     return _CartItem(
@@ -116,7 +111,6 @@ class CartScreen extends StatelessWidget {
                   },
                 ),
               ),
-
               Container(
                 padding:
                     const EdgeInsets.fromLTRB(
@@ -125,16 +119,16 @@ class CartScreen extends StatelessWidget {
                   20,
                   20,
                 ),
-
-                decoration: const BoxDecoration(
+                decoration:
+                    const BoxDecoration(
                   color: Colors.white,
                   border: Border(
                     top: BorderSide(
-                      color: Color(0xFFEFE9F1),
+                      color:
+                          Color(0xFFEFE9F1),
                     ),
                   ),
                 ),
-
                 child: SafeArea(
                   top: false,
                   child: Column(
@@ -143,7 +137,6 @@ class CartScreen extends StatelessWidget {
                         mainAxisAlignment:
                             MainAxisAlignment
                                 .spaceBetween,
-
                         children: [
                           const Text(
                             'Total',
@@ -153,7 +146,6 @@ class CartScreen extends StatelessWidget {
                                   FontWeight.w700,
                             ),
                           ),
-
                           Text(
                             _formatAmount(
                               total,
@@ -164,19 +156,21 @@ class CartScreen extends StatelessWidget {
                               fontSize: 21,
                               fontWeight:
                                   FontWeight.w800,
-                              color: darkPurple,
+                              color:
+                                  darkPurple,
                             ),
                           ),
                         ],
                       ),
-
-                      const SizedBox(height: 14),
-
+                      const SizedBox(
+                        height: 14,
+                      ),
                       SizedBox(
-                        width: double.infinity,
+                        width:
+                            double.infinity,
                         height: 52,
-
-                        child: ElevatedButton(
+                        child:
+                            ElevatedButton(
                           onPressed: () {
                             Navigator.push(
                               context,
@@ -191,18 +185,13 @@ class CartScreen extends StatelessWidget {
                               ),
                             );
                           },
-
                           style:
-                              ElevatedButton
-                                  .styleFrom(
+                              ElevatedButton.styleFrom(
                             backgroundColor:
                                 purple,
-
                             foregroundColor:
                                 Colors.white,
-
                             elevation: 0,
-
                             shape:
                                 RoundedRectangleBorder(
                               borderRadius:
@@ -212,10 +201,11 @@ class CartScreen extends StatelessWidget {
                               ),
                             ),
                           ),
-
-                          child: const Text(
+                          child:
+                              const Text(
                             'Continue to Checkout',
-                            style: TextStyle(
+                            style:
+                                TextStyle(
                               fontWeight:
                                   FontWeight.w800,
                             ),
@@ -245,12 +235,11 @@ class CartScreen extends StatelessWidget {
   }
 }
 
-
 // ============================================================
 // CART ITEM
 // ============================================================
 
-class _CartItem extends StatelessWidget {
+class _CartItem extends StatefulWidget {
   final CartItemModel item;
   final String userId;
 
@@ -260,179 +249,214 @@ class _CartItem extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  State<_CartItem> createState() =>
+      _CartItemState();
+}
+
+class _CartItemState
+    extends State<_CartItem> {
+  final B2UploadService
+      _b2UploadService =
+      B2UploadService.instance;
+
+  String? _coverUrl;
+  bool _loadingCover = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCover();
+  }
+
+  @override
+  void didUpdateWidget(
+    covariant _CartItem oldWidget,
+  ) {
+    super.didUpdateWidget(
+      oldWidget,
+    );
+
+    if (oldWidget.item.bookId !=
+        widget.item.bookId) {
+      _coverUrl = null;
+      _loadingCover = true;
+      _loadCover();
+    }
+  }
+
+  Future<void> _loadCover() async {
+    final bookId =
+        widget.item.bookId.trim();
+
+    if (bookId.isEmpty) {
+      if (!mounted) return;
+
+      setState(() {
+        _loadingCover = false;
+      });
+
+      return;
+    }
+
+    try {
+      final url =
+          await _b2UploadService
+              .getBookCoverUrl(
+        bookId: bookId,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _coverUrl = url;
+        _loadingCover = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+
+      setState(() {
+        _loadingCover = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(
+    BuildContext context,
+  ) {
     return Container(
       padding:
           const EdgeInsets.all(12),
-
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius:
             BorderRadius.circular(18),
-
         border: Border.all(
-          color: const Color(
-            0xFFF0EBF2,
-          ),
+          color:
+              const Color(0xFFF0EBF2),
         ),
       ),
-
       child: Row(
         children: [
           ClipRRect(
             borderRadius:
                 BorderRadius.circular(12),
-
             child: SizedBox(
               width: 75,
               height: 90,
-
-              child:
-                  item.coverUrl.isNotEmpty
-                      ? Image.network(
-                          item.coverUrl,
-                          fit: BoxFit.cover,
-
-                          errorBuilder:
-                              (_, __, ___) {
-                            return const ColoredBox(
-                              color:
-                                  Color(
-                                0xFFF3EAF5,
-                              ),
-                              child: Icon(
-                                Icons
-                                    .menu_book_outlined,
-                                color:
-                                    Color(
-                                  0xFF6B1FA2,
-                                ),
-                              ),
-                            );
-                          },
-                        )
-                      : const ColoredBox(
-                          color:
-                              Color(
-                            0xFFF3EAF5,
-                          ),
-                          child: Icon(
-                            Icons
-                                .menu_book_outlined,
-                            color:
-                                Color(
-                              0xFF6B1FA2,
-                            ),
-                          ),
-                        ),
+              child: _buildCover(),
             ),
           ),
-
-          const SizedBox(width: 12),
-
+          const SizedBox(
+            width: 12,
+          ),
           Expanded(
             child: Column(
               crossAxisAlignment:
                   CrossAxisAlignment.start,
-
               children: [
                 Text(
-                  item.title,
-
+                  widget.item.title,
                   maxLines: 2,
-
                   overflow:
                       TextOverflow.ellipsis,
-
-                  style: const TextStyle(
+                  style:
+                      const TextStyle(
                     fontWeight:
                         FontWeight.w800,
-
                     color:
                         Color(0xFF3D004D),
                   ),
                 ),
-
-                const SizedBox(height: 5),
-
+                const SizedBox(
+                  height: 5,
+                ),
                 Text(
-                  item.author,
-
+                  widget.item.author,
                   maxLines: 1,
-
                   overflow:
                       TextOverflow.ellipsis,
-
                   style: TextStyle(
                     fontSize: 12,
-                    color:
-                        Colors.grey.shade600,
+                    color: Colors
+                        .grey
+                        .shade600,
                   ),
                 ),
-
-                const SizedBox(height: 6),
-
+                const SizedBox(
+                  height: 6,
+                ),
                 Text(
-                  item.formattedPrice,
-
-                  style: const TextStyle(
+                  widget.item
+                      .formattedPrice,
+                  style:
+                      const TextStyle(
                     color:
                         Color(0xFF6B1FA2),
-
                     fontWeight:
                         FontWeight.w700,
                   ),
                 ),
-
-                const SizedBox(height: 8),
-
+                const SizedBox(
+                  height: 8,
+                ),
                 Row(
                   children: [
                     IconButton(
                       visualDensity:
-                          VisualDensity.compact,
-
+                          VisualDensity
+                              .compact,
                       onPressed: () {
-                        CartRepository.instance
+                        CartRepository
+                                .instance
                             .updateQuantity(
-                          userId: userId,
-                          bookId: item.bookId,
+                          userId:
+                              widget.userId,
+                          bookId:
+                              widget.item
+                                  .bookId,
                           quantity:
-                              item.quantity - 1,
+                              widget.item
+                                      .quantity -
+                                  1,
                         );
                       },
-
-                      icon: const Icon(
+                      icon:
+                          const Icon(
                         Icons
                             .remove_circle_outline,
                         size: 20,
                       ),
                     ),
-
                     Text(
-                      '${item.quantity}',
-
-                      style: const TextStyle(
+                      '${widget.item.quantity}',
+                      style:
+                          const TextStyle(
                         fontWeight:
                             FontWeight.w700,
                       ),
                     ),
-
                     IconButton(
                       visualDensity:
-                          VisualDensity.compact,
-
+                          VisualDensity
+                              .compact,
                       onPressed: () {
-                        CartRepository.instance
+                        CartRepository
+                                .instance
                             .updateQuantity(
-                          userId: userId,
-                          bookId: item.bookId,
+                          userId:
+                              widget.userId,
+                          bookId:
+                              widget.item
+                                  .bookId,
                           quantity:
-                              item.quantity + 1,
+                              widget.item
+                                      .quantity +
+                                  1,
                         );
                       },
-
-                      icon: const Icon(
+                      icon:
+                          const Icon(
                         Icons
                             .add_circle_outline,
                         size: 20,
@@ -443,59 +467,119 @@ class _CartItem extends StatelessWidget {
               ],
             ),
           ),
-
           IconButton(
             onPressed: () {
               CartRepository.instance
                   .removeFromCart(
-                userId: userId,
-                bookId: item.bookId,
+                userId:
+                    widget.userId,
+                bookId:
+                    widget.item.bookId,
               );
             },
-
-            icon: const Icon(
+            icon:
+                const Icon(
               Icons.delete_outline,
-              color: Colors.redAccent,
+              color:
+                  Colors.redAccent,
             ),
           ),
         ],
       ),
     );
   }
-}
 
+  Widget _buildCover() {
+    if (_loadingCover) {
+      return Container(
+        color:
+            const Color(0xFFF3EAF5),
+        alignment:
+            Alignment.center,
+        child:
+            const SizedBox(
+          width: 22,
+          height: 22,
+          child:
+              CircularProgressIndicator(
+            color:
+                Color(0xFF6B1FA2),
+            strokeWidth: 2,
+          ),
+        ),
+      );
+    }
+
+    if (_coverUrl == null ||
+        _coverUrl!
+            .trim()
+            .isEmpty) {
+      return _placeholder();
+    }
+
+    return Image.network(
+      _coverUrl!,
+      fit: BoxFit.cover,
+      width: 75,
+      height: 90,
+      errorBuilder: (
+        _,
+        __,
+        ___,
+      ) {
+        return _placeholder();
+      },
+    );
+  }
+
+  Widget _placeholder() {
+    return const ColoredBox(
+      color:
+          Color(0xFFF3EAF5),
+      child: Center(
+        child: Icon(
+          Icons
+              .menu_book_outlined,
+          color:
+              Color(0xFF6B1FA2),
+        ),
+      ),
+    );
+  }
+}
 
 // ============================================================
 // EMPTY CART
 // ============================================================
 
-class _EmptyCart extends StatelessWidget {
+class _EmptyCart
+    extends StatelessWidget {
   const _EmptyCart();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return const Center(
       child: Column(
         mainAxisAlignment:
-            MainAxisAlignment.center,
-
+            MainAxisAlignment
+                .center,
         children: [
           Icon(
             Icons
                 .shopping_cart_outlined,
-
             size: 65,
-
             color:
                 Color(0xFFD4CAD8),
           ),
-
-          SizedBox(height: 18),
-
+          SizedBox(
+            height: 18,
+          ),
           Text(
             'Your cart is empty',
-
-            style: TextStyle(
+            style:
+                TextStyle(
               fontSize: 18,
               fontWeight:
                   FontWeight.w700,
@@ -503,13 +587,13 @@ class _EmptyCart extends StatelessWidget {
                   Color(0xFF777777),
             ),
           ),
-
-          SizedBox(height: 7),
-
+          SizedBox(
+            height: 7,
+          ),
           Text(
             'Add a digital book to get started.',
-
-            style: TextStyle(
+            style:
+                TextStyle(
               color:
                   Color(0xFFAAAAAA),
             ),
@@ -520,12 +604,12 @@ class _EmptyCart extends StatelessWidget {
   }
 }
 
-
 // ============================================================
 // CHECKOUT SCREEN
 // ============================================================
 
-class CheckoutScreen extends StatefulWidget {
+class CheckoutScreen
+    extends StatefulWidget {
   final List<CartItemModel> items;
   final double total;
   final String currency;
@@ -552,7 +636,7 @@ class _CheckoutScreenState
 
   final TextEditingController
       _referenceController =
-          TextEditingController();
+      TextEditingController();
 
   bool _submitting = false;
 
@@ -591,20 +675,24 @@ class _CheckoutScreenState
 
     try {
       final orderId =
-          await PaymentRepository.instance
+          await PaymentRepository
+              .instance
               .createOrder(
         userId: user.uid,
         items: widget.items,
         total: widget.total,
         currency: widget.currency,
         paymentReference:
-            _referenceController.text,
+            _referenceController.text
+                .trim(),
       );
 
       await CartRepository.instance
           .clearCart(user.uid);
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       Navigator.pushAndRemoveUntil(
         context,
@@ -617,7 +705,9 @@ class _CheckoutScreenState
         (route) => route.isFirst,
       );
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       ScaffoldMessenger.of(context)
           .showSnackBar(
@@ -645,39 +735,49 @@ class _CheckoutScreenState
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Scaffold(
       backgroundColor:
           const Color(0xFFFCFAFD),
-
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
+        backgroundColor:
+            Colors.white,
+        surfaceTintColor:
+            Colors.white,
         elevation: 0,
-
-        title: const Text(
+        title:
+            const Text(
           'Checkout',
-
-          style: TextStyle(
-            color: darkPurple,
+          style:
+              TextStyle(
+            color:
+                darkPurple,
             fontWeight:
                 FontWeight.w800,
           ),
         ),
       ),
-
-      body: StreamBuilder<
-          PaymentSettingsModel?>(
-        stream: PaymentRepository.instance
-            .paymentSettingsStream(),
-
-        builder: (context, snapshot) {
-          if (snapshot.connectionState ==
+      body:
+          StreamBuilder<
+              PaymentSettingsModel?>(
+        stream:
+            PaymentRepository
+                .instance
+                .paymentSettingsStream(),
+        builder: (
+          context,
+          snapshot,
+        ) {
+          if (snapshot
+                  .connectionState ==
               ConnectionState.waiting) {
             return const Center(
               child:
                   CircularProgressIndicator(
-                color: purple,
+                color:
+                    purple,
               ),
             );
           }
@@ -716,16 +816,15 @@ class _CheckoutScreenState
           return SingleChildScrollView(
             padding:
                 const EdgeInsets.all(20),
-
             child: Column(
               crossAxisAlignment:
-                  CrossAxisAlignment.start,
-
+                  CrossAxisAlignment
+                      .start,
               children: [
                 const Text(
                   'Complete your payment',
-
-                  style: TextStyle(
+                  style:
+                      TextStyle(
                     fontSize: 25,
                     fontWeight:
                         FontWeight.w900,
@@ -733,225 +832,237 @@ class _CheckoutScreenState
                         darkPurple,
                   ),
                 ),
-
-                const SizedBox(height: 8),
-
+                const SizedBox(
+                  height: 8,
+                ),
                 Text(
                   'Transfer the exact amount below to the account details provided.',
-
                   style: TextStyle(
-                    color:
-                        Colors.grey.shade700,
+                    color: Colors
+                        .grey
+                        .shade700,
                     height: 1.5,
                   ),
                 ),
-
-                const SizedBox(height: 24),
-
+                const SizedBox(
+                  height: 24,
+                ),
                 Container(
-                  width: double.infinity,
-
+                  width:
+                      double.infinity,
                   padding:
-                      const EdgeInsets.all(20),
-
-                  decoration: BoxDecoration(
-                    color: purple,
+                      const EdgeInsets
+                          .all(
+                    20,
+                  ),
+                  decoration:
+                      BoxDecoration(
+                    color:
+                        purple,
                     borderRadius:
-                        BorderRadius.circular(
+                        BorderRadius
+                            .circular(
                       20,
                     ),
                   ),
-
                   child: Column(
                     crossAxisAlignment:
-                        CrossAxisAlignment.start,
-
+                        CrossAxisAlignment
+                            .start,
                     children: [
                       const Text(
                         'Amount to pay',
-
-                        style: TextStyle(
+                        style:
+                            TextStyle(
                           color:
-                              Colors.white70,
+                              Colors
+                                  .white70,
                         ),
                       ),
-
-                      const SizedBox(height: 6),
-
+                      const SizedBox(
+                        height: 6,
+                      ),
                       Text(
                         _formatAmount(),
-
                         style:
                             const TextStyle(
                           color:
-                              Colors.white,
-                          fontSize: 30,
+                              Colors
+                                  .white,
+                          fontSize:
+                              30,
                           fontWeight:
-                              FontWeight.w900,
+                              FontWeight
+                                  .w900,
                         ),
                       ),
                     ],
                   ),
                 ),
-
-                const SizedBox(height: 24),
-
+                const SizedBox(
+                  height: 24,
+                ),
                 const Text(
                   'Bank Transfer Details',
-
-                  style: TextStyle(
+                  style:
+                      TextStyle(
                     fontSize: 19,
                     fontWeight:
-                        FontWeight.w800,
+                        FontWeight
+                            .w800,
                     color:
                         darkPurple,
                   ),
                 ),
-
-                const SizedBox(height: 12),
-
-                _PaymentDetailsCard(
-                  settings: settings,
+                const SizedBox(
+                  height: 12,
                 ),
-
-                const SizedBox(height: 24),
-
+                _PaymentDetailsCard(
+                  settings:
+                      settings,
+                ),
+                const SizedBox(
+                  height: 24,
+                ),
                 const Text(
                   'Payment Reference',
-
-                  style: TextStyle(
+                  style:
+                      TextStyle(
                     fontWeight:
-                        FontWeight.w800,
+                        FontWeight
+                            .w800,
                     color:
                         darkPurple,
                   ),
                 ),
-
-                const SizedBox(height: 8),
-
+                const SizedBox(
+                  height: 8,
+                ),
                 TextField(
                   controller:
                       _referenceController,
-
                   decoration:
                       InputDecoration(
                     hintText:
                         'Enter transfer reference',
-
                     filled: true,
                     fillColor:
                         Colors.white,
-
                     border:
                         OutlineInputBorder(
                       borderRadius:
-                          BorderRadius.circular(
+                          BorderRadius
+                              .circular(
                         16,
                       ),
-
                       borderSide:
                           const BorderSide(
                         color:
-                            Color(0xFFE5DCE8),
+                            Color(
+                          0xFFE5DCE8,
+                        ),
                       ),
                     ),
-
                     enabledBorder:
                         OutlineInputBorder(
                       borderRadius:
-                          BorderRadius.circular(
+                          BorderRadius
+                              .circular(
                         16,
                       ),
-
                       borderSide:
                           const BorderSide(
                         color:
-                            Color(0xFFE5DCE8),
+                            Color(
+                          0xFFE5DCE8,
+                        ),
                       ),
                     ),
-
                     focusedBorder:
                         OutlineInputBorder(
                       borderRadius:
-                          BorderRadius.circular(
+                          BorderRadius
+                              .circular(
                         16,
                       ),
-
                       borderSide:
                           const BorderSide(
-                        color: purple,
+                        color:
+                            purple,
                         width: 1.5,
                       ),
                     ),
                   ),
                 ),
-
-                const SizedBox(height: 12),
-
+                const SizedBox(
+                  height: 12,
+                ),
                 Text(
                   'After transferring, enter the payment reference and submit your order. An administrator will verify your payment.',
-
                   style: TextStyle(
                     fontSize: 12,
                     height: 1.5,
-                    color:
-                        Colors.grey.shade600,
+                    color: Colors
+                        .grey
+                        .shade600,
                   ),
                 ),
-
-                const SizedBox(height: 28),
-
+                const SizedBox(
+                  height: 28,
+                ),
                 SizedBox(
-                  width: double.infinity,
+                  width:
+                      double.infinity,
                   height: 54,
-
-                  child: ElevatedButton(
+                  child:
+                      ElevatedButton(
                     onPressed:
                         _submitting
                             ? null
                             : _submitOrder,
-
                     style:
-                        ElevatedButton.styleFrom(
+                        ElevatedButton
+                            .styleFrom(
                       backgroundColor:
                           purple,
-
                       foregroundColor:
                           Colors.white,
-
                       shape:
                           RoundedRectangleBorder(
                         borderRadius:
-                            BorderRadius.circular(
+                            BorderRadius
+                                .circular(
                           28,
                         ),
                       ),
                     ),
-
-                    child: _submitting
-                        ? const SizedBox(
-                            width: 22,
-                            height: 22,
-
-                            child:
-                                CircularProgressIndicator(
-                              color:
-                                  Colors.white,
-                              strokeWidth: 2,
+                    child:
+                        _submitting
+                            ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child:
+                                  CircularProgressIndicator(
+                                color:
+                                    Colors.white,
+                                strokeWidth:
+                                    2,
+                              ),
+                            )
+                            : const Text(
+                              'Submit Payment',
+                              style:
+                                  TextStyle(
+                                fontWeight:
+                                    FontWeight
+                                        .w800,
+                              ),
                             ),
-                          )
-                        : const Text(
-                            'Submit Payment',
-
-                            style: TextStyle(
-                              fontWeight:
-                                  FontWeight.w800,
-                            ),
-                          ),
                   ),
                 ),
-
-                const SizedBox(height: 25),
+                const SizedBox(
+                  height: 25,
+                ),
               ],
             ),
           );
@@ -960,7 +1071,6 @@ class _CheckoutScreenState
     );
   }
 }
-
 
 // ============================================================
 // PAYMENT DETAILS CARD
@@ -975,75 +1085,75 @@ class _PaymentDetailsCard
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Container(
-      width: double.infinity,
-
+      width:
+          double.infinity,
       padding:
           const EdgeInsets.all(20),
-
-      decoration: BoxDecoration(
+      decoration:
+          BoxDecoration(
         color: Colors.white,
-
         borderRadius:
             BorderRadius.circular(20),
-
         border: Border.all(
           color:
               const Color(0xFFECE4EF),
         ),
       ),
-
       child: Column(
         crossAxisAlignment:
             CrossAxisAlignment.start,
-
         children: [
           _DetailRow(
             label: 'Bank',
-            value: settings.bankName,
+            value:
+                settings.bankName,
           ),
-
-          const Divider(height: 28),
-
+          const Divider(
+            height: 28,
+          ),
           _DetailRow(
             label: 'Account Name',
-            value: settings.accountName,
+            value:
+                settings.accountName,
           ),
-
-          const Divider(height: 28),
-
+          const Divider(
+            height: 28,
+          ),
           _DetailRow(
             label: 'Account Number',
-            value: settings.accountNumber,
+            value:
+                settings.accountNumber,
             canCopy: true,
           ),
-
-          if (settings
-              .instructions
+          if (settings.instructions
               .trim()
               .isNotEmpty) ...[
-            const Divider(height: 28),
-
+            const Divider(
+              height: 28,
+            ),
             const Text(
               'Instructions',
-
-              style: TextStyle(
+              style:
+                  TextStyle(
                 fontWeight:
                     FontWeight.w700,
                 color:
                     Color(0xFF3D004D),
               ),
             ),
-
-            const SizedBox(height: 6),
-
+            const SizedBox(
+              height: 6,
+            ),
             Text(
               settings.instructions,
-
               style: TextStyle(
-                color:
-                    Colors.grey.shade700,
+                color: Colors
+                    .grey
+                    .shade700,
                 height: 1.5,
               ),
             ),
@@ -1054,12 +1164,12 @@ class _PaymentDetailsCard
   }
 }
 
-
 // ============================================================
 // PAYMENT DETAIL ROW
 // ============================================================
 
-class _DetailRow extends StatelessWidget {
+class _DetailRow
+    extends StatelessWidget {
   final String label;
   final String value;
   final bool canCopy;
@@ -1071,49 +1181,53 @@ class _DetailRow extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Row(
       children: [
         Expanded(
           child: Column(
             crossAxisAlignment:
-                CrossAxisAlignment.start,
-
+                CrossAxisAlignment
+                    .start,
             children: [
               Text(
                 label,
-
                 style: TextStyle(
                   fontSize: 12,
-                  color:
-                      Colors.grey.shade600,
+                  color: Colors
+                      .grey
+                      .shade600,
                 ),
               ),
-
-              const SizedBox(height: 4),
-
+              const SizedBox(
+                height: 4,
+              ),
               Text(
                 value,
-
-                style: const TextStyle(
+                style:
+                    const TextStyle(
                   fontWeight:
                       FontWeight.w800,
                   fontSize: 15,
                   color:
-                      Color(0xFF3D004D),
+                      Color(
+                    0xFF3D004D,
+                  ),
                 ),
               ),
             ],
           ),
         ),
-
         if (canCopy)
           IconButton(
             onPressed: () {
-              // Clipboard can be added here if needed.
+              // Clipboard functionality
+              // can be added here.
             },
-
-            icon: const Icon(
+            icon:
+                const Icon(
               Icons.copy_outlined,
               color:
                   Color(0xFF6B1FA2),

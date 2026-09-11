@@ -1,3 +1,4 @@
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../models/book_model.dart';
@@ -32,7 +33,9 @@ class ShopRepository {
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-              .map(BookModel.fromFirestore)
+              .map(
+                BookModel.fromFirestore,
+              )
               .toList(),
         );
   }
@@ -41,7 +44,8 @@ class ShopRepository {
   // FEATURED BOOKS
   // ============================================================
 
-  Stream<List<BookModel>> featuredBooksStream() {
+  Stream<List<BookModel>>
+      featuredBooksStream() {
     return _books
         .where(
           'isPublished',
@@ -58,7 +62,9 @@ class ShopRepository {
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-              .map(BookModel.fromFirestore)
+              .map(
+                BookModel.fromFirestore,
+              )
               .toList(),
         );
   }
@@ -70,20 +76,24 @@ class ShopRepository {
   Future<BookModel?> getBook(
     String bookId,
   ) async {
-    final doc = await _books.doc(bookId).get();
+    final doc =
+        await _books.doc(bookId).get();
 
     if (!doc.exists) {
       return null;
     }
 
-    return BookModel.fromFirestore(doc);
+    return BookModel.fromFirestore(
+      doc,
+    );
   }
 
   // ============================================================
   // ADMIN - ALL BOOKS
   // ============================================================
 
-  Stream<List<BookModel>> adminBooksStream() {
+  Stream<List<BookModel>>
+      adminBooksStream() {
     return _books
         .orderBy(
           'createdAt',
@@ -92,13 +102,15 @@ class ShopRepository {
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-              .map(BookModel.fromFirestore)
+              .map(
+                BookModel.fromFirestore,
+              )
               .toList(),
         );
   }
 
   // ============================================================
-  // ADMIN - CREATE
+  // ADMIN - CREATE BOOK
   // ============================================================
 
   Future<String> createBook({
@@ -106,35 +118,47 @@ class ShopRepository {
     required String author,
     required String description,
     required String category,
-    required String coverUrl,
-    required String ebookUrl,
+    required String coverObjectKey,
+    required String ebookObjectKey,
     required double price,
     required String currency,
     required bool isPublished,
     required bool isFeatured,
   }) async {
-    final doc = _books.doc();
+    final doc =
+        _books.doc();
 
     await doc.set({
       'title': title.trim(),
       'author': author.trim(),
       'description': description.trim(),
       'category': category.trim(),
-      'coverUrl': coverUrl.trim(),
-      'ebookUrl': ebookUrl.trim(),
+
+      // Private B2 object key.
+      'coverObjectKey':
+          coverObjectKey.trim(),
+
+      // Private B2 object key.
+      'ebookObjectKey':
+          ebookObjectKey.trim(),
+
       'price': price,
       'currency': currency,
       'isPublished': isPublished,
       'isFeatured': isFeatured,
-      'createdAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
+
+      'createdAt':
+          FieldValue.serverTimestamp(),
+
+      'updatedAt':
+          FieldValue.serverTimestamp(),
     });
 
     return doc.id;
   }
 
   // ============================================================
-  // ADMIN - UPDATE
+  // ADMIN - UPDATE BOOK
   // ============================================================
 
   Future<void> updateBook({
@@ -143,8 +167,8 @@ class ShopRepository {
     required String author,
     required String description,
     required String category,
-    required String coverUrl,
-    required String ebookUrl,
+    required String coverObjectKey,
+    required String ebookObjectKey,
     required double price,
     required String currency,
     required bool isPublished,
@@ -155,13 +179,22 @@ class ShopRepository {
       'author': author.trim(),
       'description': description.trim(),
       'category': category.trim(),
-      'coverUrl': coverUrl.trim(),
-      'ebookUrl': ebookUrl.trim(),
+
+      // Private B2 object key.
+      'coverObjectKey':
+          coverObjectKey.trim(),
+
+      // Private B2 object key.
+      'ebookObjectKey':
+          ebookObjectKey.trim(),
+
       'price': price,
       'currency': currency,
       'isPublished': isPublished,
       'isFeatured': isFeatured,
-      'updatedAt': FieldValue.serverTimestamp(),
+
+      'updatedAt':
+          FieldValue.serverTimestamp(),
     });
   }
 
@@ -172,7 +205,9 @@ class ShopRepository {
   Future<void> deleteBook(
     String bookId,
   ) async {
-    await _books.doc(bookId).delete();
+    await _books
+        .doc(bookId)
+        .delete();
   }
 
   // ============================================================
@@ -185,7 +220,8 @@ class ShopRepository {
   }) async {
     await _books.doc(bookId).update({
       'isPublished': published,
-      'updatedAt': FieldValue.serverTimestamp(),
+      'updatedAt':
+          FieldValue.serverTimestamp(),
     });
   }
 
@@ -199,7 +235,8 @@ class ShopRepository {
   }) async {
     await _books.doc(bookId).update({
       'isFeatured': featured,
-      'updatedAt': FieldValue.serverTimestamp(),
+      'updatedAt':
+          FieldValue.serverTimestamp(),
     });
   }
 }

@@ -1,10 +1,14 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 import '../../../models/book_model.dart';
 import '../../../repositories/shop_repository.dart';
+import '../../../services/b2_upload_service.dart';
 
 class AdminBooksScreen extends StatefulWidget {
-  const AdminBooksScreen({super.key});
+  const AdminBooksScreen({
+    super.key,
+  });
 
   @override
   State<AdminBooksScreen> createState() =>
@@ -13,29 +17,28 @@ class AdminBooksScreen extends StatefulWidget {
 
 class _AdminBooksScreenState
     extends State<AdminBooksScreen> {
-  static const Color purple = Color(0xFF350044);
-  static const Color lightBackground = Color(0xFFF7F5F8);
+  static const Color _primary =
+      Color(0xFF350044);
 
   final ShopRepository _repository =
       ShopRepository.instance;
 
-  final TextEditingController _searchController =
+  final B2UploadService _b2UploadService =
+      B2UploadService.instance;
+
+  final TextEditingController
+      _searchController =
       TextEditingController();
 
-  String _searchQuery = '';
-  String _filter = 'All';
+  String _selectedFilter = 'All';
 
-  @override
-  void initState() {
-    super.initState();
-
-    _searchController.addListener(() {
-      setState(() {
-        _searchQuery =
-            _searchController.text.trim().toLowerCase();
-      });
-    });
-  }
+  final List<String> _filters = const [
+    'All',
+    'Published',
+    'Unpublished',
+    'Featured',
+    'Not Featured',
+  ];
 
   @override
   void dispose() {
@@ -50,67 +53,72 @@ class _AdminBooksScreenState
   List<BookModel> _filterBooks(
     List<BookModel> books,
   ) {
+    final search =
+        _searchController.text
+            .trim()
+            .toLowerCase();
+
     return books.where((book) {
       final matchesSearch =
-          _searchQuery.isEmpty ||
-          book.title.toLowerCase().contains(_searchQuery) ||
-          book.author.toLowerCase().contains(_searchQuery) ||
-          book.category.toLowerCase().contains(_searchQuery);
+          search.isEmpty ||
+          book.title
+              .toLowerCase()
+              .contains(search) ||
+          book.author
+              .toLowerCase()
+              .contains(search) ||
+          book.category
+              .toLowerCase()
+              .contains(search);
 
       bool matchesFilter = true;
 
-      switch (_filter) {
+      switch (_selectedFilter) {
         case 'Published':
-          matchesFilter = book.isPublished;
+          matchesFilter =
+              book.isPublished;
           break;
 
         case 'Unpublished':
-          matchesFilter = !book.isPublished;
+          matchesFilter =
+              !book.isPublished;
           break;
 
         case 'Featured':
-          matchesFilter = book.isFeatured;
+          matchesFilter =
+              book.isFeatured;
           break;
 
         case 'Not Featured':
-          matchesFilter = !book.isFeatured;
+          matchesFilter =
+              !book.isFeatured;
           break;
+
+        default:
+          matchesFilter = true;
       }
 
-      return matchesSearch && matchesFilter;
+      return matchesSearch &&
+          matchesFilter;
     }).toList();
   }
 
   // ============================================================
-  // ADD BOOK
+  // OPEN BOOK FORM
   // ============================================================
 
-  Future<void> _showAddBookDialog() async {
-    final result = await showDialog<bool>(
+  Future<void> _openBookForm({
+    BookModel? book,
+  }) async {
+    await showDialog<void>(
       context: context,
-      builder: (_) => const _BookFormDialog(),
+      barrierDismissible: false,
+      builder: (_) {
+        return _BookFormDialog(
+          book: book,
+        );
+      },
     );
-
-    if (result == true && mounted) {
-      _showMessage('Book added successfully.');
-    }
-  }
-
-  // ============================================================
-  // EDIT BOOK
-  // ============================================================
-
-  Future<void> _showEditBookDialog(
-    BookModel book,
-  ) async {
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (_) => _BookFormDialog(book: book),
-    );
-
-    if (result == true && mounted) {
-      _showMessage('Book updated successfully.');
-    }
   }
 
   // ============================================================
@@ -120,19 +128,16 @@ class _AdminBooksScreenState
   Future<void> _deleteBook(
     BookModel book,
   ) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed =
+        await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
           title: const Text(
-            'Delete Book',
-            style: TextStyle(
-              fontWeight: FontWeight.w800,
-            ),
+            'Delete book?',
           ),
           content: Text(
-            'Are you sure you want to delete "${book.title}"?\n\n'
-            'This action cannot be undone.',
+            'Are you sure you want to delete "${book.title}"?',
           ),
           actions: [
             TextButton(
@@ -142,20 +147,23 @@ class _AdminBooksScreenState
                   false,
                 );
               },
-              child: const Text('Cancel'),
+              child:
+                  const Text('Cancel'),
             ),
-            ElevatedButton(
+            FilledButton(
               onPressed: () {
                 Navigator.pop(
                   dialogContext,
                   true,
                 );
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
+              style:
+                  FilledButton.styleFrom(
+                backgroundColor:
+                    Colors.red,
               ),
-              child: const Text('Delete'),
+              child:
+                  const Text('Delete'),
             ),
           ],
         );
@@ -166,142 +174,110 @@ class _AdminBooksScreenState
       return;
     }
 
-    if (!mounted) return;
-
-    _showLoadingDialog();
-
     try {
-      await _repository.deleteBook(book.id);
-
-      if (!mounted) return;
-
-      Navigator.pop(context);
-
-      _showMessage(
-        'Book deleted successfully.',
-      );
-    } catch (e) {
-      if (!mounted) return;
-
-      Navigator.pop(context);
-
-      _showError(
-        'Unable to delete book: $e',
-      );
-    }
-  }
-
-  // ============================================================
-  // PUBLISH
-  // ============================================================
-
-  Future<void> _togglePublished(
-    BookModel book,
-  ) async {
-    try {
-      await _repository.setPublished(
-        bookId: book.id,
-        published: !book.isPublished,
+      await _repository.deleteBook(
+        book.id,
       );
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
-      _showMessage(
-        book.isPublished
-            ? 'Book unpublished.'
-            : 'Book published.',
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
+        const SnackBar(
+          content:
+              Text('Book deleted.'),
+        ),
       );
-    } catch (e) {
-      if (!mounted) return;
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
 
-      _showError(
-        'Unable to update publication status: $e',
-      );
-    }
-  }
-
-  // ============================================================
-  // FEATURED
-  // ============================================================
-
-  Future<void> _toggleFeatured(
-    BookModel book,
-  ) async {
-    try {
-      await _repository.setFeatured(
-        bookId: book.id,
-        featured: !book.isFeatured,
-      );
-
-      if (!mounted) return;
-
-      _showMessage(
-        book.isFeatured
-            ? 'Book removed from featured.'
-            : 'Book marked as featured.',
-      );
-    } catch (e) {
-      if (!mounted) return;
-
-      _showError(
-        'Unable to update featured status: $e',
-      );
-    }
-  }
-
-  // ============================================================
-  // LOADING DIALOG
-  // ============================================================
-
-  void _showLoadingDialog() {
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) {
-        return const Center(
-          child: Card(
-            child: Padding(
-              padding: EdgeInsets.all(24),
-              child: CircularProgressIndicator(),
-            ),
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
+        SnackBar(
+          content: Text(
+            error
+                .toString()
+                .replaceFirst(
+                  'Exception: ',
+                  '',
+                ),
           ),
+        ),
+      );
+    }
+  }
+
+  // ============================================================
+  // BOOK COVER WIDGET
+  // ============================================================
+
+  Widget _buildBookCover(
+    BookModel book,
+  ) {
+    if (book.coverObjectKey
+        .trim()
+        .isEmpty) {
+      return _coverPlaceholder();
+    }
+
+    return FutureBuilder<String>(
+      future:
+          _b2UploadService
+              .getBookCoverUrl(
+        bookId: book.id,
+      ),
+      builder: (
+        context,
+        snapshot,
+      ) {
+        if (snapshot.connectionState ==
+            ConnectionState.waiting) {
+          return Container(
+            color: const Color(
+              0xFFEDE6F0,
+            ),
+            alignment:
+                Alignment.center,
+            child:
+                const SizedBox(
+              width: 28,
+              height: 28,
+              child:
+                  CircularProgressIndicator(
+                strokeWidth: 2.5,
+              ),
+            ),
+          );
+        }
+
+        if (snapshot.hasError ||
+            !snapshot.hasData ||
+            snapshot.data!
+                .trim()
+                .isEmpty) {
+          return _coverPlaceholder();
+        }
+
+        return Image.network(
+          snapshot.data!,
+          fit: BoxFit.cover,
+          width:
+              double.infinity,
+          height:
+              double.infinity,
+          errorBuilder: (
+            context,
+            error,
+            stackTrace,
+          ) {
+            return _coverPlaceholder();
+          },
         );
       },
-    );
-  }
-
-  // ============================================================
-  // MESSAGE
-  // ============================================================
-
-  void _showMessage(
-    String message,
-  ) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior:
-            SnackBarBehavior.floating,
-      ),
-    );
-  }
-
-  // ============================================================
-  // ERROR
-  // ============================================================
-
-  void _showError(
-    String message,
-  ) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red.shade700,
-        behavior:
-            SnackBarBehavior.floating,
-      ),
     );
   }
 
@@ -310,52 +286,159 @@ class _AdminBooksScreenState
   // ============================================================
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Scaffold(
-      backgroundColor: lightBackground,
+      backgroundColor:
+          const Color(0xFFF9F7FA),
+      appBar: AppBar(
+        backgroundColor:
+            _primary,
+        foregroundColor:
+            Colors.white,
+        title:
+            const Text(
+          'Manage Books',
+        ),
+        actions: [
+          IconButton(
+            onPressed: () {
+              _openBookForm();
+            },
+            icon:
+                const Icon(
+              Icons.add,
+            ),
+            tooltip:
+                'Add book',
+          ),
+        ],
+      ),
+      floatingActionButton:
+          FloatingActionButton.extended(
+        backgroundColor:
+            _primary,
+        foregroundColor:
+            Colors.white,
+        onPressed: () {
+          _openBookForm();
+        },
+        icon:
+            const Icon(
+          Icons.add,
+        ),
+        label:
+            const Text(
+          'Add Book',
+        ),
+      ),
       body: Column(
         children: [
-          _buildHeader(),
-
+          _buildSearchAndFilters(),
           Expanded(
-            child: StreamBuilder<List<BookModel>>(
-              stream:
-                  _repository.adminBooksStream(),
+            child:
+                StreamBuilder<
+                    List<BookModel>>(
+              stream: _repository
+                  .adminBooksStream(),
               builder: (
                 context,
                 snapshot,
               ) {
-                if (snapshot.connectionState ==
-                    ConnectionState.waiting) {
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Padding(
+                      padding:
+                          const EdgeInsets
+                              .all(
+                        24,
+                      ),
+                      child:
+                          Text(
+                        'Unable to load books.\n\n${snapshot.error}',
+                        textAlign:
+                            TextAlign
+                                .center,
+                      ),
+                    ),
+                  );
+                }
+
+                if (!snapshot.hasData) {
                   return const Center(
                     child:
                         CircularProgressIndicator(),
                   );
                 }
 
-                if (snapshot.hasError) {
-                  return _buildErrorState(
-                    snapshot.error.toString(),
+                final books =
+                    _filterBooks(
+                  snapshot.data!,
+                );
+
+                if (books.isEmpty) {
+                  return const Center(
+                    child: Text(
+                      'No books found.',
+                    ),
                   );
                 }
 
-                final books =
-                    snapshot.data ?? [];
+                return LayoutBuilder(
+                  builder: (
+                    context,
+                    constraints,
+                  ) {
+                    int columns = 1;
 
-                final filteredBooks =
-                    _filterBooks(books);
+                    if (constraints
+                            .maxWidth >=
+                        1200) {
+                      columns = 4;
+                    } else if (constraints
+                            .maxWidth >=
+                        850) {
+                      columns = 3;
+                    } else if (constraints
+                            .maxWidth >=
+                        550) {
+                      columns = 2;
+                    }
 
-                if (books.isEmpty) {
-                  return _buildEmptyState();
-                }
-
-                if (filteredBooks.isEmpty) {
-                  return _buildNoResultsState();
-                }
-
-                return _buildBooksContent(
-                  filteredBooks,
-                  books.length,
+                    return GridView
+                        .builder(
+                      padding:
+                          const EdgeInsets
+                              .fromLTRB(
+                        20,
+                        10,
+                        20,
+                        100,
+                      ),
+                      gridDelegate:
+                          SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount:
+                            columns,
+                        crossAxisSpacing:
+                            16,
+                        mainAxisSpacing:
+                            16,
+                        childAspectRatio:
+                            0.70,
+                      ),
+                      itemCount:
+                          books.length,
+                      itemBuilder: (
+                        context,
+                        index,
+                      ) {
+                        return _buildBookCard(
+                          books[index],
+                        );
+                      },
+                    );
+                  },
                 );
               },
             ),
@@ -366,256 +449,110 @@ class _AdminBooksScreenState
   }
 
   // ============================================================
-  // HEADER
+  // SEARCH + FILTERS
   // ============================================================
 
-  Widget _buildHeader() {
+  Widget _buildSearchAndFilters() {
     return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.fromLTRB(
-        28,
-        24,
-        28,
+      padding:
+          const EdgeInsets.fromLTRB(
         20,
+        20,
+        20,
+        10,
       ),
       child: Column(
         children: [
-          Row(
-            children: [
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Books',
-                      style: TextStyle(
-                        fontSize: 25,
-                        fontWeight:
-                            FontWeight.w800,
-                        color: purple,
-                      ),
-                    ),
-                    SizedBox(height: 5),
-                    Text(
-                      'Manage your RHIC digital books.',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.black54,
-                      ),
-                    ),
-                  ],
-                ),
+          TextField(
+            controller:
+                _searchController,
+            onChanged: (_) {
+              setState(() {});
+            },
+            decoration:
+                InputDecoration(
+              hintText:
+                  'Search title, author or category',
+              prefixIcon:
+                  const Icon(
+                Icons.search,
               ),
-              ElevatedButton.icon(
-                onPressed:
-                    _showAddBookDialog,
-                icon: const Icon(
-                  Icons.add,
-                  size: 19,
+              suffixIcon:
+                  _searchController
+                          .text
+                          .isNotEmpty
+                      ? IconButton(
+                          onPressed: () {
+                            _searchController
+                                .clear();
+                            setState(
+                                () {});
+                          },
+                          icon:
+                              const Icon(
+                            Icons.close,
+                          ),
+                        )
+                      : null,
+              filled: true,
+              fillColor:
+                  Colors.white,
+              border:
+                  OutlineInputBorder(
+                borderRadius:
+                    BorderRadius
+                        .circular(
+                  16,
                 ),
-                label:
-                    const Text('Add Book'),
-                style:
-                    ElevatedButton.styleFrom(
-                  backgroundColor: purple,
-                  foregroundColor:
-                      Colors.white,
-                  padding:
-                      const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 14,
-                  ),
-                  shape:
-                      RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(
-                      12,
-                    ),
-                  ),
-                ),
+                borderSide:
+                    BorderSide.none,
               ),
-            ],
+            ),
           ),
-
-          const SizedBox(height: 20),
-
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller:
-                      _searchController,
-                  decoration:
-                      InputDecoration(
-                    hintText:
-                        'Search books, authors or categories...',
-                    prefixIcon:
-                        const Icon(
-                      Icons.search,
-                    ),
-                    suffixIcon:
-                        _searchQuery.isNotEmpty
-                            ? IconButton(
-                                onPressed: () {
-                                  _searchController
-                                      .clear();
-                                },
-                                icon:
-                                    const Icon(
-                                  Icons.clear,
-                                ),
-                              )
-                            : null,
-                    filled: true,
-                    fillColor:
-                        lightBackground,
-                    border:
-                        OutlineInputBorder(
-                      borderRadius:
-                          BorderRadius.circular(
-                        12,
-                      ),
-                      borderSide:
-                          BorderSide.none,
-                    ),
-                  ),
-                ),
+          const SizedBox(
+            height: 12,
+          ),
+          SizedBox(
+            height: 42,
+            child:
+                ListView.separated(
+              scrollDirection:
+                  Axis.horizontal,
+              itemCount:
+                  _filters.length,
+              separatorBuilder:
+                  (_, __) =>
+                      const SizedBox(
+                width: 8,
               ),
+              itemBuilder: (
+                context,
+                index,
+              ) {
+                final filter =
+                    _filters[index];
 
-              const SizedBox(width: 12),
+                final selected =
+                    filter ==
+                        _selectedFilter;
 
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(
-                  horizontal: 12,
-                ),
-                decoration:
-                    BoxDecoration(
-                  color: lightBackground,
-                  borderRadius:
-                      BorderRadius.circular(
-                    12,
-                  ),
-                ),
-                child: DropdownButtonHideUnderline(
-                  child:
-                      DropdownButton<String>(
-                    value: _filter,
-                    items: const [
-                      DropdownMenuItem(
-                        value: 'All',
-                        child: Text('All'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'Published',
-                        child:
-                            Text('Published'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'Unpublished',
-                        child:
-                            Text('Unpublished'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'Featured',
-                        child:
-                            Text('Featured'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'Not Featured',
-                        child: Text(
-                          'Not Featured',
-                        ),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      if (value == null) {
-                        return;
-                      }
-
-                      setState(() {
-                        _filter = value;
-                      });
-                    },
-                  ),
-                ),
-              ),
-            ],
+                return ChoiceChip(
+                  label:
+                      Text(filter),
+                  selected:
+                      selected,
+                  onSelected: (_) {
+                    setState(() {
+                      _selectedFilter =
+                          filter;
+                    });
+                  },
+                );
+              },
+            ),
           ),
         ],
       ),
-    );
-  }
-
-  // ============================================================
-  // BOOKS CONTENT
-  // ============================================================
-
-  Widget _buildBooksContent(
-    List<BookModel> books,
-    int totalBooks,
-  ) {
-    return LayoutBuilder(
-      builder: (
-        context,
-        constraints,
-      ) {
-        int columns = 1;
-
-        if (constraints.maxWidth >= 1200) {
-          columns = 4;
-        } else if (constraints.maxWidth >=
-            850) {
-          columns = 3;
-        } else if (constraints.maxWidth >=
-            550) {
-          columns = 2;
-        }
-
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(28),
-          child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
-            children: [
-              Text(
-                '$totalBooks ${totalBooks == 1 ? 'book' : 'books'} total',
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: Colors.black54,
-                  fontWeight:
-                      FontWeight.w600,
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              GridView.builder(
-                shrinkWrap: true,
-                physics:
-                    const NeverScrollableScrollPhysics(),
-                itemCount: books.length,
-                gridDelegate:
-                    SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: columns,
-                  crossAxisSpacing: 18,
-                  mainAxisSpacing: 18,
-                  childAspectRatio: .72,
-                ),
-                itemBuilder: (
-                  context,
-                  index,
-                ) {
-                  return _buildBookCard(
-                    books[index],
-                  );
-                },
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 
@@ -626,96 +563,82 @@ class _AdminBooksScreenState
   Widget _buildBookCard(
     BookModel book,
   ) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius:
-            BorderRadius.circular(18),
-        border: Border.all(
-          color: const Color(0xFFE9E5EA),
-        ),
-      ),
-      clipBehavior: Clip.antiAlias,
+    return Card(
+      clipBehavior:
+          Clip.antiAlias,
+      elevation: 2,
       child: Column(
         crossAxisAlignment:
-            CrossAxisAlignment.start,
+            CrossAxisAlignment
+                .start,
         children: [
           Expanded(
-            flex: 5,
             child: Stack(
+              fit: StackFit.expand,
               children: [
-                Positioned.fill(
-                  child: book.coverUrl
-                          .trim()
-                          .isNotEmpty
-                      ? Image.network(
-                          book.coverUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder:
-                              (
-                            context,
-                            error,
-                            stackTrace,
-                          ) {
-                            return _coverPlaceholder();
-                          },
-                        )
-                      : _coverPlaceholder(),
+                _buildBookCover(
+                  book,
                 ),
 
                 Positioned(
                   top: 10,
                   left: 10,
-                  child: _statusBadge(
-                    book.isPublished,
+                  child:
+                      Container(
+                    padding:
+                        const EdgeInsets
+                            .symmetric(
+                      horizontal: 9,
+                      vertical: 5,
+                    ),
+                    decoration:
+                        BoxDecoration(
+                      color:
+                          book.isPublished
+                              ? Colors
+                                  .green
+                              : Colors
+                                  .orange,
+                      borderRadius:
+                          BorderRadius
+                              .circular(
+                        30,
+                      ),
+                    ),
+                    child:
+                        Text(
+                      book.isPublished
+                          ? 'Published'
+                          : 'Draft',
+                      style:
+                          const TextStyle(
+                        color: Colors
+                            .white,
+                        fontSize:
+                            11,
+                        fontWeight:
+                            FontWeight
+                                .w600,
+                      ),
+                    ),
                   ),
                 ),
 
                 if (book.isFeatured)
-                  Positioned(
+                  const Positioned(
                     top: 10,
                     right: 10,
-                    child: Container(
-                      padding:
-                          const EdgeInsets
-                              .symmetric(
-                        horizontal: 8,
-                        vertical: 6,
-                      ),
-                      decoration:
-                          BoxDecoration(
-                        color: Colors.amber
-                            .shade700,
-                        borderRadius:
-                            BorderRadius
-                                .circular(
-                          20,
-                        ),
-                      ),
-                      child: const Row(
-                        mainAxisSize:
-                            MainAxisSize.min,
-                        children: [
+                    child:
+                        CircleAvatar(
+                      radius: 17,
+                      backgroundColor:
+                          Colors.white,
+                      child:
                           Icon(
-                            Icons.star,
-                            size: 12,
-                            color:
-                                Colors.white,
-                          ),
-                          SizedBox(width: 3),
-                          Text(
-                            'Featured',
-                            style:
-                                TextStyle(
-                              color:
-                                  Colors.white,
-                              fontSize: 10,
-                              fontWeight:
-                                  FontWeight
-                                      .w700,
-                            ),
-                          ),
-                        ],
+                        Icons.star,
+                        color: Colors
+                            .orange,
+                        size: 20,
                       ),
                     ),
                   ),
@@ -723,445 +646,230 @@ class _AdminBooksScreenState
             ),
           ),
 
-          Expanded(
-            flex: 4,
-            child: Padding(
-              padding:
-                  const EdgeInsets.all(15),
-              child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    book.category
-                        .toUpperCase(),
-                    maxLines: 1,
-                    overflow:
-                        TextOverflow.ellipsis,
-                    style:
-                        const TextStyle(
-                      color: Color(
-                        0xFFF7931E,
-                      ),
-                      fontSize: 9,
-                      fontWeight:
-                          FontWeight.w800,
-                      letterSpacing: .8,
-                    ),
+          Padding(
+            padding:
+                const EdgeInsets
+                    .all(
+              14,
+            ),
+            child: Column(
+              crossAxisAlignment:
+                  CrossAxisAlignment
+                      .start,
+              children: [
+                Text(
+                  book.category,
+                  maxLines: 1,
+                  overflow:
+                      TextOverflow
+                          .ellipsis,
+                  style: TextStyle(
+                    color: Colors
+                        .grey
+                        .shade600,
+                    fontSize: 12,
                   ),
-
-                  const SizedBox(height: 5),
-
-                  Text(
-                    book.title,
-                    maxLines: 2,
-                    overflow:
-                        TextOverflow.ellipsis,
-                    style:
-                        const TextStyle(
-                      color: purple,
-                      fontSize: 15,
-                      fontWeight:
-                          FontWeight.w800,
-                    ),
+                ),
+                const SizedBox(
+                  height: 5,
+                ),
+                Text(
+                  book.title,
+                  maxLines: 2,
+                  overflow:
+                      TextOverflow
+                          .ellipsis,
+                  style:
+                      const TextStyle(
+                    fontWeight:
+                        FontWeight
+                            .bold,
+                    fontSize: 16,
                   ),
-
-                  const SizedBox(height: 4),
-
-                  Text(
-                    'By ${book.author}',
-                    maxLines: 1,
-                    overflow:
-                        TextOverflow.ellipsis,
-                    style:
-                        const TextStyle(
-                      color: Colors.black54,
-                      fontSize: 11,
-                    ),
+                ),
+                const SizedBox(
+                  height: 4,
+                ),
+                Text(
+                  book.author,
+                  maxLines: 1,
+                  overflow:
+                      TextOverflow
+                          .ellipsis,
+                ),
+                const SizedBox(
+                  height: 8,
+                ),
+                Text(
+                  book.formattedPrice,
+                  style:
+                      const TextStyle(
+                    color: _primary,
+                    fontWeight:
+                        FontWeight
+                            .bold,
+                    fontSize: 16,
                   ),
-
-                  const Spacer(),
-
-                  Text(
-                    book.formattedPrice,
-                    style:
-                        const TextStyle(
-                      color: purple,
-                      fontSize: 17,
-                      fontWeight:
-                          FontWeight.w800,
-                    ),
-                  ),
-
-                  const SizedBox(height: 9),
-
-                  Row(
-                    children: [
-                      Expanded(
-                        child:
-                            OutlinedButton(
-                          onPressed: () =>
-                              _showEditBookDialog(
-                            book,
-                          ),
-                          style:
-                              OutlinedButton
-                                  .styleFrom(
-                            padding:
-                                const EdgeInsets
-                                    .symmetric(
-                              vertical: 9,
-                            ),
-                            side:
-                                const BorderSide(
-                              color: purple,
-                            ),
-                            foregroundColor:
-                                purple,
-                            shape:
-                                RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius
-                                      .circular(
-                                9,
-                              ),
-                            ),
-                          ),
-                          child:
-                              const Text(
-                            'Edit',
-                            style:
-                                TextStyle(
-                              fontSize: 11,
-                              fontWeight:
-                                  FontWeight.w700,
-                            ),
-                          ),
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                Row(
+                  children: [
+                    Expanded(
+                      child:
+                          OutlinedButton
+                              .icon(
+                        onPressed:
+                            () {
+                          _openBookForm(
+                            book:
+                                book,
+                          );
+                        },
+                        icon:
+                            const Icon(
+                          Icons
+                              .edit_outlined,
+                        ),
+                        label:
+                            const Text(
+                          'Edit',
                         ),
                       ),
-
-                      const SizedBox(width: 7),
-
-                      PopupMenuButton<String>(
-                        onSelected:
-                            (value) {
-                          switch (value) {
+                    ),
+                    const SizedBox(
+                      width: 8,
+                    ),
+                    PopupMenuButton<
+                        String>(
+                      onSelected:
+                          (value) async {
+                        try {
+                          switch (
+                              value) {
                             case 'publish':
-                              _togglePublished(
-                                book,
+                              await _repository
+                                  .setPublished(
+                                bookId:
+                                    book.id,
+                                published:
+                                    !book
+                                        .isPublished,
                               );
                               break;
 
-                            case 'featured':
-                              _toggleFeatured(
-                                book,
+                            case 'feature':
+                              await _repository
+                                  .setFeatured(
+                                bookId:
+                                    book.id,
+                                featured:
+                                    !book
+                                        .isFeatured,
                               );
                               break;
 
                             case 'delete':
-                              _deleteBook(
+                              await _deleteBook(
                                 book,
                               );
                               break;
                           }
-                        },
-                        itemBuilder:
-                            (context) {
-                          return [
-                            PopupMenuItem(
-                              value:
-                                  'publish',
-                              child: Text(
-                                book.isPublished
-                                    ? 'Unpublish'
-                                    : 'Publish',
+                        } catch (
+                            error) {
+                          if (!mounted) {
+                            return;
+                          }
+
+                          ScaffoldMessenger
+                                  .of(
+                            context,
+                          ).showSnackBar(
+                            SnackBar(
+                              content:
+                                  Text(
+                                error
+                                    .toString()
+                                    .replaceFirst(
+                                      'Exception: ',
+                                      '',
+                                    ),
                               ),
                             ),
-                            PopupMenuItem(
-                              value:
-                                  'featured',
-                              child: Text(
-                                book.isFeatured
-                                    ? 'Remove Featured'
-                                    : 'Make Featured',
-                              ),
-                            ),
-                            const PopupMenuDivider(),
-                            const PopupMenuItem(
-                              value:
-                                  'delete',
-                              child: Text(
-                                'Delete',
-                                style:
-                                    TextStyle(
-                                  color:
-                                      Colors.red,
-                                ),
-                              ),
-                            ),
-                          ];
-                        },
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration:
-                              BoxDecoration(
-                            border: Border.all(
-                              color:
-                                  const Color(
-                                0xFFE0DCE2,
-                              ),
-                            ),
-                            borderRadius:
-                                BorderRadius
-                                    .circular(
-                              9,
-                            ),
-                          ),
+                          );
+                        }
+                      },
+                      itemBuilder:
+                          (context) =>
+                              [
+                        PopupMenuItem(
+                          value:
+                              'publish',
                           child:
-                              const Icon(
-                            Icons.more_vert,
-                            size: 19,
+                              Text(
+                            book.isPublished
+                                ? 'Unpublish'
+                                : 'Publish',
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                        PopupMenuItem(
+                          value:
+                              'feature',
+                          child:
+                              Text(
+                            book.isFeatured
+                                ? 'Remove Featured'
+                                : 'Make Featured',
+                          ),
+                        ),
+                        const PopupMenuDivider(),
+                        const PopupMenuItem(
+                          value:
+                              'delete',
+                          child:
+                              Text(
+                            'Delete',
+                            style:
+                                TextStyle(
+                              color:
+                                  Colors.red,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ],
       ),
     );
   }
-
-  // ============================================================
-  // STATUS BADGE
-  // ============================================================
-
-  Widget _statusBadge(
-    bool published,
-  ) {
-    return Container(
-      padding:
-          const EdgeInsets.symmetric(
-        horizontal: 8,
-        vertical: 6,
-      ),
-      decoration: BoxDecoration(
-        color: published
-            ? const Color(0xFF087F75)
-            : Colors.black54,
-        borderRadius:
-            BorderRadius.circular(20),
-      ),
-      child: Text(
-        published
-            ? 'Published'
-            : 'Unpublished',
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
-  }
-
-  // ============================================================
-  // COVER PLACEHOLDER
-  // ============================================================
 
   Widget _coverPlaceholder() {
     return Container(
-      color: const Color(0xFFF1E8F3),
-      child: const Center(
-        child: Icon(
-          Icons.menu_book_outlined,
-          size: 55,
-          color: purple,
-        ),
-      ),
-    );
-  }
-
-  // ============================================================
-  // EMPTY
-  // ============================================================
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(30),
-        child: Column(
-          mainAxisAlignment:
-              MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: purple.withValues(
-                  alpha: .08,
-                ),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.library_books_outlined,
-                size: 38,
-                color: purple,
-              ),
-            ),
-
-            const SizedBox(height: 18),
-
-            const Text(
-              'No books yet',
-              style: TextStyle(
-                fontSize: 19,
-                fontWeight:
-                    FontWeight.w800,
-              ),
-            ),
-
-            const SizedBox(height: 7),
-
-            const Text(
-              'Add your first digital book to the RHIC shop.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.black54,
-                fontSize: 13,
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            ElevatedButton.icon(
-              onPressed:
-                  _showAddBookDialog,
-              icon:
-                  const Icon(Icons.add),
-              label:
-                  const Text('Add Book'),
-              style:
-                  ElevatedButton.styleFrom(
-                backgroundColor: purple,
-                foregroundColor:
-                    Colors.white,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ============================================================
-  // NO SEARCH RESULTS
-  // ============================================================
-
-  Widget _buildNoResultsState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment:
-            MainAxisAlignment.center,
-        children: [
-          const Icon(
-            Icons.search_off,
-            size: 55,
-            color: Colors.black26,
-          ),
-          const SizedBox(height: 15),
-          const Text(
-            'No matching books',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 6),
-          const Text(
-            'Try another search or filter.',
-            style: TextStyle(
-              color: Colors.black54,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ============================================================
-  // ERROR STATE
-  // ============================================================
-
-  Widget _buildErrorState(
-    String error,
-  ) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(30),
-        child: Column(
-          mainAxisAlignment:
-              MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.error_outline,
-              size: 55,
-              color: Colors.red,
-            ),
-
-            const SizedBox(height: 15),
-
-            const Text(
-              'Unable to load books',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight:
-                    FontWeight.w800,
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            Text(
-              error,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.black54,
-                fontSize: 12,
-              ),
-            ),
-
-            const SizedBox(height: 18),
-
-            ElevatedButton(
-              onPressed: () {
-                setState(() {});
-              },
-              style:
-                  ElevatedButton.styleFrom(
-                backgroundColor: purple,
-                foregroundColor:
-                    Colors.white,
-              ),
-              child:
-                  const Text('Retry'),
-            ),
-          ],
-        ),
+      color:
+          const Color(0xFFEDE6F0),
+      alignment:
+          Alignment.center,
+      child: const Icon(
+        Icons.menu_book_rounded,
+        size: 60,
+        color: _primary,
       ),
     );
   }
 }
 
-// ==================================================================
-// BOOK FORM DIALOG
-// ==================================================================
+// ============================================================
+// BOOK FORM
+// ============================================================
 
-class _BookFormDialog extends StatefulWidget {
+class _BookFormDialog
+    extends StatefulWidget {
   final BookModel? book;
 
   const _BookFormDialog({
@@ -1175,13 +883,18 @@ class _BookFormDialog extends StatefulWidget {
 
 class _BookFormDialogState
     extends State<_BookFormDialog> {
-  static const Color purple =
+  static const Color _primary =
       Color(0xFF350044);
 
   final ShopRepository _repository =
       ShopRepository.instance;
 
-  final GlobalKey<FormState> _formKey =
+  final B2UploadService
+      _b2UploadService =
+      B2UploadService.instance;
+
+  final GlobalKey<FormState>
+      _formKey =
       GlobalKey<FormState>();
 
   late final TextEditingController
@@ -1197,22 +910,27 @@ class _BookFormDialogState
       _categoryController;
 
   late final TextEditingController
-      _coverUrlController;
-
-  late final TextEditingController
-      _ebookUrlController;
-
-  late final TextEditingController
       _priceController;
 
   String _currency = 'NGN';
 
   bool _isPublished = false;
-  bool _isFeatured = false;
-  bool _saving = false;
 
-  bool get _editing =>
-      widget.book != null;
+  bool _isFeatured = false;
+
+  bool _isSaving = false;
+
+  bool _isUploadingEbook = false;
+
+  bool _isUploadingCover = false;
+
+  String _ebookObjectKey = '';
+
+  String _coverObjectKey = '';
+
+  String? _selectedEbookName;
+
+  String? _selectedCoverName;
 
   @override
   void initState() {
@@ -1232,39 +950,41 @@ class _BookFormDialogState
 
     _descriptionController =
         TextEditingController(
-      text: book?.description ?? '',
+      text:
+          book?.description ?? '',
     );
 
     _categoryController =
         TextEditingController(
-      text: book?.category ?? '',
-    );
-
-    _coverUrlController =
-        TextEditingController(
-      text: book?.coverUrl ?? '',
-    );
-
-    _ebookUrlController =
-        TextEditingController(
-      text: book?.ebookUrl ?? '',
+      text:
+          book?.category ?? '',
     );
 
     _priceController =
         TextEditingController(
-      text: book == null
-          ? ''
-          : book.price.toString(),
+      text:
+          book == null
+              ? ''
+              : book.price
+                  .toString(),
     );
 
     _currency =
         book?.currency ?? 'NGN';
 
     _isPublished =
-        book?.isPublished ?? false;
+        book?.isPublished ??
+            false;
 
     _isFeatured =
-        book?.isFeatured ?? false;
+        book?.isFeatured ??
+            false;
+
+    _ebookObjectKey =
+        book?.ebookObjectKey ?? '';
+
+    _coverObjectKey =
+        book?.coverObjectKey ?? '';
   }
 
   @override
@@ -1273,54 +993,368 @@ class _BookFormDialogState
     _authorController.dispose();
     _descriptionController.dispose();
     _categoryController.dispose();
-    _coverUrlController.dispose();
-    _ebookUrlController.dispose();
     _priceController.dispose();
 
     super.dispose();
   }
 
   // ============================================================
-  // SAVE
+  // SELECT + UPLOAD COVER
+  // ============================================================
+
+  Future<void>
+      _selectAndUploadCover() async {
+    if (_isUploadingCover) {
+      return;
+    }
+
+    try {
+      final files =
+          await FilePicker.pickFiles(
+        type:
+            FileType.custom,
+        allowedExtensions: [
+          'jpg',
+          'jpeg',
+          'png',
+          'webp',
+        ],
+      );
+
+      if (files.isEmpty) {
+        return;
+      }
+
+      final file =
+          files.first;
+
+      final bytes =
+          await file.readAsBytes();
+
+      if (bytes.isEmpty) {
+        throw Exception(
+          'Unable to read the selected cover image.',
+        );
+      }
+
+      final extension =
+          file.extension
+              ?.toLowerCase();
+
+      String contentType;
+
+      switch (extension) {
+        case 'png':
+          contentType =
+              'image/png';
+          break;
+
+        case 'webp':
+          contentType =
+              'image/webp';
+          break;
+
+        case 'jpg':
+        case 'jpeg':
+          contentType =
+              'image/jpeg';
+          break;
+
+        default:
+          throw Exception(
+            'Please select a JPG, PNG, or WEBP image.',
+          );
+      }
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _isUploadingCover =
+            true;
+        _selectedCoverName =
+            file.name;
+      });
+
+      final uploadResult =
+          await _b2UploadService
+              .uploadFile(
+        bytes: bytes,
+        fileName:
+            file.name,
+        contentType:
+            contentType,
+        mediaType:
+            'image',
+        resourceType:
+            'book',
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _coverObjectKey =
+            uploadResult
+                .objectKey;
+        _isUploadingCover =
+            false;
+      });
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Cover image uploaded successfully.',
+          ),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _isUploadingCover =
+            false;
+      });
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(
+        SnackBar(
+          content: Text(
+            error
+                .toString()
+                .replaceFirst(
+                  'Exception: ',
+                  '',
+                ),
+          ),
+        ),
+      );
+    }
+  }
+
+  // ============================================================
+  // SELECT + UPLOAD EBOOK
+  // ============================================================
+
+  Future<void>
+      _selectAndUploadEbook() async {
+    if (_isUploadingEbook) {
+      return;
+    }
+
+    try {
+      final files =
+          await FilePicker.pickFiles(
+        type:
+            FileType.custom,
+        allowedExtensions:
+            ['pdf'],
+      );
+
+      if (files.isEmpty) {
+        return;
+      }
+
+      final file =
+          files.first;
+
+      final bytes =
+          await file.readAsBytes();
+
+      if (bytes.isEmpty) {
+        throw Exception(
+          'Unable to read the selected PDF.',
+        );
+      }
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _isUploadingEbook =
+            true;
+        _selectedEbookName =
+            file.name;
+      });
+
+      final uploadResult =
+          await _b2UploadService
+              .uploadFile(
+        bytes: bytes,
+        fileName:
+            file.name,
+        contentType:
+            'application/pdf',
+        mediaType:
+            'ebook',
+        resourceType:
+            'book',
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _ebookObjectKey =
+            uploadResult
+                .objectKey;
+        _isUploadingEbook =
+            false;
+      });
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Ebook uploaded successfully.',
+          ),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _isUploadingEbook =
+            false;
+      });
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(
+        SnackBar(
+          content: Text(
+            error
+                .toString()
+                .replaceFirst(
+                  'Exception: ',
+                  '',
+                ),
+          ),
+        ),
+      );
+    }
+  }
+
+  // ============================================================
+  // SAVE BOOK
   // ============================================================
 
   Future<void> _save() async {
+    if (_isSaving ||
+        _isUploadingEbook ||
+        _isUploadingCover) {
+      return;
+    }
+
     if (!_formKey.currentState!
         .validate()) {
       return;
     }
 
-    final price = double.tryParse(
-      _priceController.text.trim(),
+    final price =
+        double.tryParse(
+      _priceController.text
+          .trim(),
     );
 
-    if (price == null || price < 0) {
-      _showError(
-        'Please enter a valid price.',
+    if (price == null ||
+        price < 0) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Enter a valid price.',
+          ),
+        ),
       );
+
+      return;
+    }
+
+    // ----------------------------------------------------------
+    // COVER IS REQUIRED
+    // ----------------------------------------------------------
+
+    if (_coverObjectKey
+        .trim()
+        .isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Upload a valid cover image before saving the book.',
+          ),
+        ),
+      );
+
+      return;
+    }
+
+    // ----------------------------------------------------------
+    // PUBLISHED BOOK MUST HAVE PDF
+    // ----------------------------------------------------------
+
+    if (_isPublished &&
+        _ebookObjectKey
+            .trim()
+            .isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Upload the ebook PDF before publishing this book.',
+          ),
+        ),
+      );
+
       return;
     }
 
     setState(() {
-      _saving = true;
+      _isSaving = true;
     });
 
     try {
-      if (_editing) {
-        await _repository.updateBook(
-          bookId: widget.book!.id,
+      if (widget.book == null) {
+        await _repository
+            .createBook(
           title:
-              _titleController.text,
+              _titleController
+                  .text
+                  .trim(),
           author:
-              _authorController.text,
+              _authorController
+                  .text
+                  .trim(),
           description:
-              _descriptionController.text,
+              _descriptionController
+                  .text
+                  .trim(),
           category:
-              _categoryController.text,
-          coverUrl:
-              _coverUrlController.text,
-          ebookUrl:
-              _ebookUrlController.text,
+              _categoryController
+                  .text
+                  .trim(),
+          coverObjectKey:
+              _coverObjectKey
+                  .trim(),
+          ebookObjectKey:
+              _ebookObjectKey
+                  .trim(),
           price: price,
           currency: _currency,
           isPublished:
@@ -1329,19 +1363,32 @@ class _BookFormDialogState
               _isFeatured,
         );
       } else {
-        await _repository.createBook(
+        await _repository
+            .updateBook(
+          bookId:
+              widget.book!.id,
           title:
-              _titleController.text,
+              _titleController
+                  .text
+                  .trim(),
           author:
-              _authorController.text,
+              _authorController
+                  .text
+                  .trim(),
           description:
-              _descriptionController.text,
+              _descriptionController
+                  .text
+                  .trim(),
           category:
-              _categoryController.text,
-          coverUrl:
-              _coverUrlController.text,
-          ebookUrl:
-              _ebookUrlController.text,
+              _categoryController
+                  .text
+                  .trim(),
+          coverObjectKey:
+              _coverObjectKey
+                  .trim(),
+          ebookObjectKey:
+              _ebookObjectKey
+                  .trim(),
           price: price,
           currency: _currency,
           isPublished:
@@ -1351,532 +1398,913 @@ class _BookFormDialogState
         );
       }
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       Navigator.pop(
         context,
-        true,
       );
-    } catch (e) {
-      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(
+        SnackBar(
+          content: Text(
+            widget.book == null
+                ? 'Book created successfully.'
+                : 'Book updated successfully.',
+          ),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
 
       setState(() {
-        _saving = false;
+        _isSaving = false;
       });
 
-      _showError(
-        'Unable to save book: $e',
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(
+        SnackBar(
+          content: Text(
+            error
+                .toString()
+                .replaceFirst(
+                  'Exception: ',
+                  '',
+                ),
+          ),
+        ),
       );
     }
   }
 
   // ============================================================
-  // ERROR
+  // BUILD FORM
   // ============================================================
 
-  void _showError(
-    String message,
+  @override
+  Widget build(
+    BuildContext context,
   ) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red.shade700,
-        behavior:
-            SnackBarBehavior.floating,
+    final editing =
+        widget.book != null;
+
+    return Dialog(
+      insetPadding:
+          const EdgeInsets.all(20),
+      child: ConstrainedBox(
+        constraints:
+            const BoxConstraints(
+          maxWidth: 650,
+          maxHeight: 820,
+        ),
+        child: Column(
+          children: [
+            // ----------------------------------------------------
+            // HEADER
+            // ----------------------------------------------------
+
+            Container(
+              padding:
+                  const EdgeInsets.all(
+                20,
+              ),
+              color: _primary,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      editing
+                          ? 'Edit Book'
+                          : 'Add Book',
+                      style:
+                          const TextStyle(
+                        color:
+                            Colors.white,
+                        fontSize: 21,
+                        fontWeight:
+                            FontWeight
+                                .bold,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed:
+                        _isSaving ||
+                                _isUploadingEbook ||
+                                _isUploadingCover
+                            ? null
+                            : () {
+                              Navigator.pop(
+                                context,
+                              );
+                            },
+                    icon:
+                        const Icon(
+                      Icons.close,
+                      color:
+                          Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // ----------------------------------------------------
+            // FORM
+            // ----------------------------------------------------
+
+            Expanded(
+              child:
+                  SingleChildScrollView(
+                padding:
+                    const EdgeInsets.all(
+                  20,
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment:
+                        CrossAxisAlignment
+                            .start,
+                    children: [
+                      _field(
+                        controller:
+                            _titleController,
+                        label:
+                            'Book Title',
+                        validator:
+                            _required,
+                      ),
+
+                      _field(
+                        controller:
+                            _authorController,
+                        label:
+                            'Author',
+                        validator:
+                            _required,
+                      ),
+
+                      _field(
+                        controller:
+                            _categoryController,
+                        label:
+                            'Category',
+                        validator:
+                            _required,
+                      ),
+
+                      _field(
+                        controller:
+                            _descriptionController,
+                        label:
+                            'Description',
+                        maxLines:
+                            5,
+                        validator:
+                            _required,
+                      ),
+
+                      const SizedBox(
+                        height: 4,
+                      ),
+
+                      // ==================================================
+                      // COVER
+                      // ==================================================
+
+                      const Text(
+                        'Book Cover',
+                        style:
+                            TextStyle(
+                          fontWeight:
+                              FontWeight
+                                  .w700,
+                          fontSize: 15,
+                        ),
+                      ),
+
+                      const SizedBox(
+                        height: 8,
+                      ),
+
+                      Container(
+                        width:
+                            double.infinity,
+                        padding:
+                            const EdgeInsets
+                                .all(
+                          16,
+                        ),
+                        decoration:
+                            BoxDecoration(
+                          border:
+                              Border.all(
+                            color: Colors
+                                .grey
+                                .shade300,
+                          ),
+                          borderRadius:
+                              BorderRadius
+                                  .circular(
+                            14,
+                          ),
+                        ),
+                        child:
+                            Column(
+                          crossAxisAlignment:
+                              CrossAxisAlignment
+                                  .start,
+                          children: [
+                            Row(
+                              children: [
+                                SizedBox(
+                                  width:
+                                      58,
+                                  height:
+                                      74,
+                                  child:
+                                      ClipRRect(
+                                    borderRadius:
+                                        BorderRadius.circular(
+                                      8,
+                                    ),
+                                    child:
+                                        _coverObjectKey.isNotEmpty
+                                            ? _CoverPreview(
+                                              bookId: widget.book?.id,
+                                              uploadService:
+                                                  _b2UploadService,
+                                              fallback:
+                                                  _coverSmallPlaceholder(),
+                                            )
+                                            : _coverSmallPlaceholder(),
+                                  ),
+                                ),
+                                const SizedBox(
+                                  width:
+                                      12,
+                                ),
+                                Expanded(
+                                  child:
+                                      Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment
+                                            .start,
+                                    children: [
+                                      Text(
+                                        _selectedCoverName ??
+                                            (_coverObjectKey.isNotEmpty
+                                                ? 'Cover already uploaded'
+                                                : 'No cover selected'),
+                                        maxLines:
+                                            2,
+                                        overflow:
+                                            TextOverflow.ellipsis,
+                                        style:
+                                            const TextStyle(
+                                          fontWeight:
+                                              FontWeight.w600,
+                                        ),
+                                      ),
+                                      if (_coverObjectKey
+                                          .isNotEmpty)
+                                        const Padding(
+                                          padding:
+                                              EdgeInsets.only(
+                                            top:
+                                                4,
+                                          ),
+                                          child:
+                                              Text(
+                                            'Private B2 cover ready',
+                                            style:
+                                                TextStyle(
+                                              color:
+                                                  Colors.green,
+                                              fontSize:
+                                                  12,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            const SizedBox(
+                              height:
+                                  14,
+                            ),
+
+                            SizedBox(
+                              width:
+                                  double.infinity,
+                              child:
+                                  OutlinedButton.icon(
+                                onPressed:
+                                    _isUploadingCover
+                                        ? null
+                                        : _selectAndUploadCover,
+                                icon:
+                                    _isUploadingCover
+                                        ? const SizedBox(
+                                          width:
+                                              18,
+                                          height:
+                                              18,
+                                          child:
+                                              CircularProgressIndicator(
+                                            strokeWidth:
+                                                2,
+                                          ),
+                                        )
+                                        : const Icon(
+                                          Icons
+                                              .upload_file_rounded,
+                                        ),
+                                label:
+                                    Text(
+                                  _isUploadingCover
+                                      ? 'Uploading Cover...'
+                                      : _coverObjectKey.isEmpty
+                                          ? 'Select & Upload Cover'
+                                          : 'Replace Cover',
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(
+                        height: 18,
+                      ),
+
+                      // ==================================================
+                      // EBOOK PDF
+                      // ==================================================
+
+                      const Text(
+                        'Book PDF',
+                        style:
+                            TextStyle(
+                          fontWeight:
+                              FontWeight
+                                  .w700,
+                          fontSize: 15,
+                        ),
+                      ),
+
+                      const SizedBox(
+                        height: 8,
+                      ),
+
+                      Container(
+                        width:
+                            double.infinity,
+                        padding:
+                            const EdgeInsets
+                                .all(
+                          16,
+                        ),
+                        decoration:
+                            BoxDecoration(
+                          border:
+                              Border.all(
+                            color: Colors
+                                .grey
+                                .shade300,
+                          ),
+                          borderRadius:
+                              BorderRadius
+                                  .circular(
+                            14,
+                          ),
+                        ),
+                        child:
+                            Column(
+                          crossAxisAlignment:
+                              CrossAxisAlignment
+                                  .start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons
+                                      .picture_as_pdf_rounded,
+                                  color:
+                                      Colors.red,
+                                  size:
+                                      34,
+                                ),
+                                const SizedBox(
+                                  width:
+                                      12,
+                                ),
+                                Expanded(
+                                  child:
+                                      Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment
+                                            .start,
+                                    children: [
+                                      Text(
+                                        _selectedEbookName ??
+                                            (_ebookObjectKey
+                                                    .isNotEmpty
+                                                ? 'Ebook already uploaded'
+                                                : 'No PDF selected'),
+                                        maxLines:
+                                            2,
+                                        overflow:
+                                            TextOverflow.ellipsis,
+                                        style:
+                                            const TextStyle(
+                                          fontWeight:
+                                              FontWeight.w600,
+                                        ),
+                                      ),
+                                      if (_ebookObjectKey
+                                          .isNotEmpty)
+                                        const Padding(
+                                          padding:
+                                              EdgeInsets.only(
+                                            top:
+                                                4,
+                                          ),
+                                          child:
+                                              Text(
+                                            'Private B2 ebook ready',
+                                            style:
+                                                TextStyle(
+                                              color:
+                                                  Colors.green,
+                                              fontSize:
+                                                  12,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            const SizedBox(
+                              height:
+                                  14,
+                            ),
+
+                            SizedBox(
+                              width:
+                                  double.infinity,
+                              child:
+                                  OutlinedButton.icon(
+                                onPressed:
+                                    _isUploadingEbook
+                                        ? null
+                                        : _selectAndUploadEbook,
+                                icon:
+                                    _isUploadingEbook
+                                        ? const SizedBox(
+                                          width:
+                                              18,
+                                          height:
+                                              18,
+                                          child:
+                                              CircularProgressIndicator(
+                                            strokeWidth:
+                                                2,
+                                          ),
+                                        )
+                                        : const Icon(
+                                          Icons
+                                              .upload_file_rounded,
+                                        ),
+                                label:
+                                    Text(
+                                  _isUploadingEbook
+                                      ? 'Uploading PDF...'
+                                      : _ebookObjectKey
+                                              .isEmpty
+                                          ? 'Select & Upload PDF'
+                                          : 'Replace PDF',
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(
+                        height: 18,
+                      ),
+
+                      // ==================================================
+                      // PRICE + CURRENCY
+                      // ==================================================
+
+                      Row(
+                        children: [
+                          Expanded(
+                            flex: 2,
+                            child:
+                                _field(
+                              controller:
+                                  _priceController,
+                              label:
+                                  'Price',
+                              keyboardType:
+                                  const TextInputType
+                                      .numberWithOptions(
+                                decimal:
+                                    true,
+                              ),
+                              validator:
+                                  _required,
+                            ),
+                          ),
+                          const SizedBox(
+                            width:
+                                12,
+                          ),
+                          Expanded(
+                            child:
+                                DropdownButtonFormField<
+                                    String>(
+                              initialValue:
+                                  _currency,
+                              decoration:
+                                  const InputDecoration(
+                                labelText:
+                                    'Currency',
+                                border:
+                                    OutlineInputBorder(),
+                              ),
+                              items:
+                                  const [
+                                'NGN',
+                                'USD',
+                                'GBP',
+                                'EUR',
+                              ]
+                                      .map(
+                                (
+                                  currency,
+                                ) =>
+                                    DropdownMenuItem<
+                                        String>(
+                                  value:
+                                      currency,
+                                  child:
+                                      Text(
+                                    currency,
+                                  ),
+                                ),
+                              )
+                                      .toList(),
+                              onChanged:
+                                  _isSaving
+                                      ? null
+                                      : (
+                                          value,
+                                        ) {
+                                          if (value !=
+                                              null) {
+                                            setState(
+                                              () {
+                                                _currency =
+                                                    value;
+                                              },
+                                            );
+                                          }
+                                        },
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      // ==================================================
+                      // PUBLISHED
+                      // ==================================================
+
+                      SwitchListTile(
+                        contentPadding:
+                            EdgeInsets.zero,
+                        title:
+                            const Text(
+                          'Published',
+                        ),
+                        subtitle:
+                            const Text(
+                          'Published books appear in the user shop.',
+                        ),
+                        value:
+                            _isPublished,
+                        onChanged:
+                            _isSaving
+                                ? null
+                                : (
+                                    value,
+                                  ) {
+                                    setState(
+                                      () {
+                                        _isPublished =
+                                            value;
+                                      },
+                                    );
+                                  },
+                      ),
+
+                      // ==================================================
+                      // FEATURED
+                      // ==================================================
+
+                      SwitchListTile(
+                        contentPadding:
+                            EdgeInsets.zero,
+                        title:
+                            const Text(
+                          'Featured',
+                        ),
+                        subtitle:
+                            const Text(
+                          'Featured books can appear in highlighted areas.',
+                        ),
+                        value:
+                            _isFeatured,
+                        onChanged:
+                            _isSaving
+                                ? null
+                                : (
+                                    value,
+                                  ) {
+                                    setState(
+                                      () {
+                                        _isFeatured =
+                                            value;
+                                      },
+                                    );
+                                  },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            // ==========================================================
+            // BOTTOM ACTIONS
+            // ==========================================================
+
+            Container(
+              padding:
+                  const EdgeInsets.all(
+                20,
+              ),
+              decoration:
+                  BoxDecoration(
+                border:
+                    Border(
+                  top:
+                      BorderSide(
+                    color: Colors
+                        .grey
+                        .shade200,
+                  ),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child:
+                        OutlinedButton(
+                      onPressed:
+                          _isSaving ||
+                                  _isUploadingEbook ||
+                                  _isUploadingCover
+                              ? null
+                              : () {
+                                Navigator.pop(
+                                  context,
+                                );
+                              },
+                      child:
+                          const Text(
+                        'Cancel',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(
+                    width: 12,
+                  ),
+                  Expanded(
+                    child:
+                        FilledButton(
+                      style:
+                          FilledButton.styleFrom(
+                        backgroundColor:
+                            _primary,
+                      ),
+                      onPressed:
+                          _isSaving ||
+                                  _isUploadingEbook ||
+                                  _isUploadingCover
+                              ? null
+                              : _save,
+                      child:
+                          _isSaving
+                              ? const SizedBox(
+                                height:
+                                    20,
+                                width:
+                                    20,
+                                child:
+                                    CircularProgressIndicator(
+                                  strokeWidth:
+                                      2,
+                                  color:
+                                      Colors.white,
+                                ),
+                              )
+                              : Text(
+                                editing
+                                    ? 'Update Book'
+                                    : 'Create Book',
+                              ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   // ============================================================
-  // FIELD
+  // SMALL COVER PLACEHOLDER
+  // ============================================================
+
+  Widget _coverSmallPlaceholder() {
+    return Container(
+      color:
+          const Color(0xFFEDE6F0),
+      alignment:
+          Alignment.center,
+      child: const Icon(
+        Icons
+            .add_photo_alternate_outlined,
+        color: _primary,
+        size: 28,
+      ),
+    );
+  }
+
+  // ============================================================
+  // TEXT FIELD
   // ============================================================
 
   Widget _field({
     required TextEditingController
         controller,
     required String label,
-    required String hint,
+    String? Function(String?)?
+        validator,
     int maxLines = 1,
     TextInputType? keyboardType,
-    String? Function(String?)? validator,
   }) {
     return Padding(
       padding:
-          const EdgeInsets.only(bottom: 16),
-      child: TextFormField(
-        controller: controller,
-        maxLines: maxLines,
-        keyboardType: keyboardType,
-        validator: validator,
-        decoration: InputDecoration(
-          labelText: label,
-          hintText: hint,
+          const EdgeInsets.only(
+        bottom: 16,
+      ),
+      child:
+          TextFormField(
+        controller:
+            controller,
+        maxLines:
+            maxLines,
+        keyboardType:
+            keyboardType,
+        validator:
+            validator,
+        decoration:
+            InputDecoration(
+          labelText:
+              label,
           alignLabelWithHint:
               maxLines > 1,
-          border: OutlineInputBorder(
-            borderRadius:
-                BorderRadius.circular(12),
-          ),
-          focusedBorder:
-              OutlineInputBorder(
-            borderRadius:
-                BorderRadius.circular(12),
-            borderSide:
-                const BorderSide(
-              color: purple,
-              width: 2,
-            ),
-          ),
+          border:
+              const OutlineInputBorder(),
         ),
       ),
     );
   }
 
-  // ============================================================
-  // COVER PREVIEW
-  // ============================================================
-
-  Widget _buildCoverPreview() {
-    final url =
-        _coverUrlController.text.trim();
-
-    if (url.isEmpty) {
-      return Container(
-        height: 180,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: const Color(0xFFF1E8F3),
-          borderRadius:
-              BorderRadius.circular(14),
-        ),
-        child: const Center(
-          child: Icon(
-            Icons.image_outlined,
-            size: 50,
-            color: purple,
-          ),
-        ),
-      );
+  String? _required(
+    String? value,
+  ) {
+    if (value == null ||
+        value.trim().isEmpty) {
+      return 'This field is required.';
     }
 
-    return ClipRRect(
-      borderRadius:
-          BorderRadius.circular(14),
-      child: Image.network(
-        url,
-        height: 180,
-        width: double.infinity,
-        fit: BoxFit.cover,
-        errorBuilder:
-            (context, error, stackTrace) {
-          return Container(
-            height: 180,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color:
-                  const Color(0xFFF1E8F3),
-              borderRadius:
-                  BorderRadius.circular(
-                14,
-              ),
-            ),
-            child: const Center(
-              child: Column(
-                mainAxisSize:
-                    MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons
-                        .broken_image_outlined,
-                    size: 40,
-                    color: Colors.black38,
-                  ),
-                  SizedBox(height: 6),
-                  Text(
-                    'Unable to preview image',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color:
-                          Colors.black54,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  // ============================================================
-  // BUILD
-  // ============================================================
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(
-        _editing
-            ? 'Edit Book'
-            : 'Add Book',
-        style: const TextStyle(
-          fontWeight: FontWeight.w800,
-          color: purple,
-        ),
-      ),
-      content: SizedBox(
-        width: 600,
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize:
-                  MainAxisSize.min,
-              children: [
-                // ------------------------------------------------
-                // COVER PREVIEW
-                // ------------------------------------------------
-
-                _buildCoverPreview(),
-
-                const SizedBox(height: 14),
-
-                _field(
-                  controller:
-                      _coverUrlController,
-                  label: 'Cover Image URL',
-                  hint:
-                      'https://example.com/cover.jpg',
-                  keyboardType:
-                      TextInputType.url,
-                  validator: (value) {
-                    if (value == null ||
-                        value.trim().isEmpty) {
-                      return 'Enter a cover image URL';
-                    }
-
-                    return null;
-                  },
-                ),
-
-                // ------------------------------------------------
-                // TITLE
-                // ------------------------------------------------
-
-                _field(
-                  controller:
-                      _titleController,
-                  label: 'Book Title',
-                  hint:
-                      'Enter book title',
-                  validator: (value) {
-                    if (value == null ||
-                        value.trim().isEmpty) {
-                      return 'Enter the book title';
-                    }
-
-                    return null;
-                  },
-                ),
-
-                // ------------------------------------------------
-                // AUTHOR
-                // ------------------------------------------------
-
-                _field(
-                  controller:
-                      _authorController,
-                  label: 'Author',
-                  hint:
-                      'Enter author name',
-                  validator: (value) {
-                    if (value == null ||
-                        value.trim().isEmpty) {
-                      return 'Enter the author';
-                    }
-
-                    return null;
-                  },
-                ),
-
-                // ------------------------------------------------
-                // CATEGORY
-                // ------------------------------------------------
-
-                _field(
-                  controller:
-                      _categoryController,
-                  label: 'Category',
-                  hint:
-                      'e.g. Faith, Leadership, Prayer',
-                  validator: (value) {
-                    if (value == null ||
-                        value.trim().isEmpty) {
-                      return 'Enter a category';
-                    }
-
-                    return null;
-                  },
-                ),
-
-                // ------------------------------------------------
-                // DESCRIPTION
-                // ------------------------------------------------
-
-                _field(
-                  controller:
-                      _descriptionController,
-                  label: 'Description',
-                  hint:
-                      'Describe the book',
-                  maxLines: 5,
-                  validator: (value) {
-                    if (value == null ||
-                        value.trim().isEmpty) {
-                      return 'Enter a description';
-                    }
-
-                    return null;
-                  },
-                ),
-
-                // ------------------------------------------------
-                // EBOOK URL
-                // ------------------------------------------------
-
-                _field(
-                  controller:
-                      _ebookUrlController,
-                  label: 'eBook URL',
-                  hint:
-                      'https://example.com/book.pdf',
-                  keyboardType:
-                      TextInputType.url,
-                  validator: (value) {
-                    if (value == null ||
-                        value.trim().isEmpty) {
-                      return 'Enter the eBook URL';
-                    }
-
-                    return null;
-                  },
-                ),
-
-                // ------------------------------------------------
-                // PRICE + CURRENCY
-                // ------------------------------------------------
-
-                Row(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: _field(
-                        controller:
-                            _priceController,
-                        label: 'Price',
-                        hint: '0',
-                        keyboardType:
-                            const TextInputType
-                                .numberWithOptions(
-                          decimal: true,
-                        ),
-                        validator: (value) {
-                          if (value == null ||
-                              value
-                                  .trim()
-                                  .isEmpty) {
-                            return 'Enter price';
-                          }
-
-                          final price =
-                              double.tryParse(
-                            value.trim(),
-                          );
-
-                          if (price == null ||
-                              price < 0) {
-                            return 'Invalid price';
-                          }
-
-                          return null;
-                        },
-                      ),
-                    ),
-
-                    const SizedBox(width: 12),
-
-                    Expanded(
-                      child: DropdownButtonFormField<
-                          String>(
-                        initialValue:
-                            _currency,
-                        decoration:
-                            InputDecoration(
-                          labelText:
-                              'Currency',
-                          border:
-                              OutlineInputBorder(
-                            borderRadius:
-                                BorderRadius
-                                    .circular(
-                              12,
-                            ),
-                          ),
-                        ),
-                        items: const [
-                          DropdownMenuItem(
-                            value: 'NGN',
-                            child:
-                                Text('NGN'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'USD',
-                            child:
-                                Text('USD'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'GBP',
-                            child:
-                                Text('GBP'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'EUR',
-                            child:
-                                Text('EUR'),
-                          ),
-                        ],
-                        onChanged:
-                            _saving
-                                ? null
-                                : (value) {
-                                    if (value ==
-                                        null) {
-                                      return;
-                                    }
-
-                                    setState(() {
-                                      _currency =
-                                          value;
-                                    });
-                                  },
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 5),
-
-                // ------------------------------------------------
-                // PUBLISHED
-                // ------------------------------------------------
-
-                SwitchListTile(
-                  contentPadding:
-                      EdgeInsets.zero,
-                  title: const Text(
-                    'Published',
-                    style: TextStyle(
-                      fontWeight:
-                          FontWeight.w700,
-                    ),
-                  ),
-                  subtitle:
-                      const Text(
-                    'Make this book visible in the shop.',
-                  ),
-                  value:
-                      _isPublished,
-                  activeThumbColor:
-                      purple,
-                  onChanged: _saving
-                      ? null
-                      : (value) {
-                          setState(() {
-                            _isPublished =
-                                value;
-                          });
-                        },
-                ),
-
-                // ------------------------------------------------
-                // FEATURED
-                // ------------------------------------------------
-
-                SwitchListTile(
-                  contentPadding:
-                      EdgeInsets.zero,
-                  title: const Text(
-                    'Featured',
-                    style: TextStyle(
-                      fontWeight:
-                          FontWeight.w700,
-                    ),
-                  ),
-                  subtitle:
-                      const Text(
-                    'Show this book in featured books.',
-                  ),
-                  value:
-                      _isFeatured,
-                  activeThumbColor:
-                      purple,
-                  onChanged: _saving
-                      ? null
-                      : (value) {
-                          setState(() {
-                            _isFeatured =
-                                value;
-                          });
-                        },
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: _saving
-              ? null
-              : () {
-                  Navigator.pop(
-                    context,
-                    false,
-                  );
-                },
-          child:
-              const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed:
-              _saving ? null : _save,
-          style:
-              ElevatedButton.styleFrom(
-            backgroundColor: purple,
-            foregroundColor:
-                Colors.white,
-          ),
-          child: _saving
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child:
-                      CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : Text(
-                  _editing
-                      ? 'Save Changes'
-                      : 'Add Book',
-                ),
-        ),
-      ],
-    );
+    return null;
   }
 }
 
+// ============================================================
+// COVER PREVIEW
+// ============================================================
+
+class _CoverPreview
+    extends StatelessWidget {
+  final String? bookId;
+  final B2UploadService uploadService;
+  final Widget fallback;
+
+  const _CoverPreview({
+    required this.bookId,
+    required this.uploadService,
+    required this.fallback,
+  });
+
+  @override
+  Widget build(
+    BuildContext context,
+  ) {
+    if (bookId == null ||
+        bookId!.trim().isEmpty) {
+      return fallback;
+    }
+
+    return FutureBuilder<String>(
+      future:
+          uploadService
+              .getBookCoverUrl(
+        bookId:
+            bookId!,
+      ),
+      builder: (
+        context,
+        snapshot,
+      ) {
+        if (snapshot.connectionState ==
+            ConnectionState.waiting) {
+          return Container(
+            color:
+                const Color(
+              0xFFEDE6F0,
+            ),
+            alignment:
+                Alignment.center,
+            child:
+                const SizedBox(
+              width: 18,
+              height: 18,
+              child:
+                  CircularProgressIndicator(
+                strokeWidth: 2,
+              ),
+            ),
+          );
+        }
+
+        if (snapshot.hasError ||
+            !snapshot.hasData ||
+            snapshot.data!
+                .trim()
+                .isEmpty) {
+          return fallback;
+        }
+
+        return Image.network(
+          snapshot.data!,
+          fit:
+              BoxFit.cover,
+          width:
+              double.infinity,
+          height:
+              double.infinity,
+          errorBuilder: (
+            context,
+            error,
+            stackTrace,
+          ) {
+            return fallback;
+          },
+        );
+      },
+    );
+  }
+}

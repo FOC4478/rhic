@@ -1,3 +1,4 @@
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class BookModel {
@@ -6,8 +7,9 @@ class BookModel {
   final String author;
   final String description;
   final String category;
-  final String coverUrl;
-  final String ebookUrl;
+  final String coverObjectKey;
+  final String ebookObjectKey;
+
   final double price;
   final String currency;
   final bool isPublished;
@@ -21,8 +23,8 @@ class BookModel {
     required this.author,
     required this.description,
     required this.category,
-    required this.coverUrl,
-    required this.ebookUrl,
+    required this.coverObjectKey,
+    required this.ebookObjectKey,
     required this.price,
     required this.currency,
     required this.isPublished,
@@ -30,6 +32,10 @@ class BookModel {
     this.createdAt,
     this.updatedAt,
   });
+
+  // ============================================================
+  // FROM FIRESTORE
+  // ============================================================
 
   factory BookModel.fromFirestore(
     DocumentSnapshot<Map<String, dynamic>> doc,
@@ -42,26 +48,58 @@ class BookModel {
       author: data['author']?.toString() ?? '',
       description: data['description']?.toString() ?? '',
       category: data['category']?.toString() ?? 'General',
-      coverUrl: data['coverUrl']?.toString() ?? '',
-      ebookUrl: data['ebookUrl']?.toString() ?? '',
+
+      // IMPORTANT:
+      // Firestore stores the B2 object key, not a URL.
+      coverObjectKey:
+          data['coverObjectKey']?.toString() ?? '',
+
+      ebookObjectKey:
+          data['ebookObjectKey']?.toString() ?? '',
+
       price: _toDouble(data['price']),
-      currency: data['currency']?.toString() ?? 'NGN',
-      isPublished: data['isPublished'] == true,
-      isFeatured: data['isFeatured'] == true,
-      createdAt: _timestampToDate(data['createdAt']),
-      updatedAt: _timestampToDate(data['updatedAt']),
+
+      currency:
+          data['currency']?.toString() ?? 'NGN',
+
+      isPublished:
+          data['isPublished'] == true,
+
+      isFeatured:
+          data['isFeatured'] == true,
+
+      createdAt:
+          _timestampToDate(
+        data['createdAt'],
+      ),
+
+      updatedAt:
+          _timestampToDate(
+        data['updatedAt'],
+      ),
     );
   }
 
-  static double _toDouble(dynamic value) {
+  // ============================================================
+  // HELPERS
+  // ============================================================
+
+  static double _toDouble(
+    dynamic value,
+  ) {
     if (value is num) {
       return value.toDouble();
     }
 
-    return double.tryParse(value?.toString() ?? '') ?? 0;
+    return double.tryParse(
+          value?.toString() ?? '',
+        ) ??
+        0;
   }
 
-  static DateTime? _timestampToDate(dynamic value) {
+  static DateTime? _timestampToDate(
+    dynamic value,
+  ) {
     if (value is Timestamp) {
       return value.toDate();
     }
@@ -69,20 +107,33 @@ class BookModel {
     return null;
   }
 
+  // ============================================================
+  // TO FIRESTORE
+  // ============================================================
+
   Map<String, dynamic> toFirestore() {
     return {
       'title': title,
       'author': author,
       'description': description,
       'category': category,
-      'coverUrl': coverUrl,
-      'ebookUrl': ebookUrl,
+
+      // Private B2 cover object key.
+      'coverObjectKey': coverObjectKey,
+
+      // Private B2 ebook object key.
+      'ebookObjectKey': ebookObjectKey,
+
       'price': price,
       'currency': currency,
       'isPublished': isPublished,
       'isFeatured': isFeatured,
     };
   }
+
+  // ============================================================
+  // FORMATTED PRICE
+  // ============================================================
 
   String get formattedPrice {
     if (currency == 'NGN') {
@@ -92,3 +143,4 @@ class BookModel {
     return '$currency ${price.toStringAsFixed(2)}';
   }
 }
+

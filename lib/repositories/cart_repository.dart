@@ -37,7 +37,9 @@ class CartRepository {
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-              .map(CartItemModel.fromFirestore)
+              .map(
+                CartItemModel.fromFirestore,
+              )
               .toList(),
         );
   }
@@ -51,33 +53,58 @@ class CartRepository {
     required BookModel book,
   }) async {
     final ref =
-        _cartCollection(userId).doc(book.id);
+        _cartCollection(userId)
+            .doc(book.id);
 
-    final existing = await ref.get();
+    final existing =
+        await ref.get();
 
     if (existing.exists) {
-      final data = existing.data() ?? {};
+      final data =
+          existing.data() ?? {};
+
       final currentQuantity =
           data['quantity'] is int
               ? data['quantity'] as int
               : 1;
 
       await ref.update({
-        'quantity': currentQuantity + 1,
+        'quantity':
+            currentQuantity + 1,
+
+        // Keep the cover reference current.
+        'coverObjectKey':
+            book.coverObjectKey,
       });
 
       return;
     }
 
     await ref.set({
-      'bookId': book.id,
-      'title': book.title,
-      'author': book.author,
-      'coverUrl': book.coverUrl,
-      'price': book.price,
-      'currency': book.currency,
-      'quantity': 1,
-      'addedAt': FieldValue.serverTimestamp(),
+      'bookId':
+          book.id,
+
+      'title':
+          book.title,
+
+      'author':
+          book.author,
+
+      // Private B2 object key.
+      'coverObjectKey':
+          book.coverObjectKey,
+
+      'price':
+          book.price,
+
+      'currency':
+          book.currency,
+
+      'quantity':
+          1,
+
+      'addedAt':
+          FieldValue.serverTimestamp(),
     });
   }
 
@@ -101,7 +128,8 @@ class CartRepository {
     await _cartCollection(userId)
         .doc(bookId)
         .update({
-      'quantity': quantity,
+      'quantity':
+          quantity,
     });
   }
 
@@ -126,12 +154,17 @@ class CartRepository {
     String userId,
   ) async {
     final snapshot =
-        await _cartCollection(userId).get();
+        await _cartCollection(userId)
+            .get();
 
-    final batch = _firestore.batch();
+    final batch =
+        _firestore.batch();
 
-    for (final doc in snapshot.docs) {
-      batch.delete(doc.reference);
+    for (final doc
+        in snapshot.docs) {
+      batch.delete(
+        doc.reference,
+      );
     }
 
     await batch.commit();

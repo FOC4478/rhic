@@ -1,3 +1,4 @@
+
 require("dotenv").config();
 
 const express = require("express");
@@ -50,10 +51,7 @@ const app = express();
 
 const PORT = process.env.PORT || 3000;
 
-// Allow requests from Flutter Web and other configured clients.
 app.use(cors());
-
-// Parse JSON request bodies.
 app.use(express.json());
 
 // ============================================================
@@ -113,10 +111,76 @@ const s3 = new S3Client({
   credentials: {
     accessKeyId:
       process.env.B2_KEY_ID,
+
     secretAccessKey:
       process.env.B2_APPLICATION_KEY,
   },
 });
+
+// ============================================================
+// OBJECT KEY SECURITY HELPERS
+// ============================================================
+
+function isSafeSermonObjectKey(objectKey) {
+  if (
+    !objectKey ||
+    typeof objectKey !== "string"
+  ) {
+    return false;
+  }
+
+  if (objectKey.includes("..")) {
+    return false;
+  }
+
+  if (objectKey.startsWith("/")) {
+    return false;
+  }
+
+  return objectKey.startsWith("sermons/");
+}
+
+function isSafeBookObjectKey(objectKey) {
+  if (
+    !objectKey ||
+    typeof objectKey !== "string"
+  ) {
+    return false;
+  }
+
+  if (objectKey.includes("..")) {
+    return false;
+  }
+
+  if (objectKey.startsWith("/")) {
+    return false;
+  }
+
+  return objectKey.startsWith(
+    "books/ebooks/",
+  );
+}
+
+function isSafeBookCoverObjectKey(objectKey) {
+  if (
+    !objectKey ||
+    typeof objectKey !== "string"
+  ) {
+    return false;
+  }
+
+  if (objectKey.includes("..")) {
+    return false;
+  }
+
+  if (objectKey.startsWith("/")) {
+    return false;
+  }
+
+  return objectKey.startsWith(
+    "books/covers/",
+  );
+}
 
 // ============================================================
 // FIREBASE AUTHENTICATION MIDDLEWARE
@@ -131,10 +195,6 @@ async function authenticateFirebase(
     const authorization =
       req.headers.authorization;
 
-    // --------------------------------------------------------
-    // AUTHORIZATION HEADER REQUIRED
-    // --------------------------------------------------------
-
     if (!authorization) {
       return res.status(401).json({
         success: false,
@@ -142,10 +202,6 @@ async function authenticateFirebase(
           "Authorization token is required.",
       });
     }
-
-    // --------------------------------------------------------
-    // CHECK BEARER FORMAT
-    // --------------------------------------------------------
 
     if (
       !authorization.startsWith(
@@ -159,10 +215,6 @@ async function authenticateFirebase(
       });
     }
 
-    // --------------------------------------------------------
-    // EXTRACT FIREBASE ID TOKEN
-    // --------------------------------------------------------
-
     const idToken =
       authorization
         .substring(7)
@@ -175,10 +227,6 @@ async function authenticateFirebase(
           "Firebase ID token is missing.",
       });
     }
-
-    // --------------------------------------------------------
-    // VERIFY FIREBASE TOKEN
-    // --------------------------------------------------------
 
     const decodedToken =
       await auth.verifyIdToken(
@@ -215,19 +263,11 @@ async function requireAdmin(
     const uid =
       req.user.uid;
 
-    // --------------------------------------------------------
-    // LOAD USER PROFILE
-    // --------------------------------------------------------
-
     const userSnapshot =
       await db
         .collection("users")
         .doc(uid)
         .get();
-
-    // --------------------------------------------------------
-    // USER PROFILE NOT FOUND
-    // --------------------------------------------------------
 
     if (!userSnapshot.exists) {
       return res.status(403).json({
@@ -240,10 +280,6 @@ async function requireAdmin(
     const userData =
       userSnapshot.data() || {};
 
-    // --------------------------------------------------------
-    // CHECK ADMIN ROLE
-    // --------------------------------------------------------
-
     if (
       userData.role !== "admin"
     ) {
@@ -253,10 +289,6 @@ async function requireAdmin(
           "Administrator access is required.",
       });
     }
-
-    // --------------------------------------------------------
-    // STORE ADMIN INFORMATION
-    // --------------------------------------------------------
 
     req.adminUser = {
       uid: uid,
@@ -285,7 +317,7 @@ async function requireAdmin(
 app.get(
   "/",
   (req, res) => {
-    res.json({
+    return res.json({
       success: true,
       service:
         "RHIC B2 Media Backend",
@@ -333,6 +365,20 @@ app.get(
 // ============================================================
 // CREATE SECURE UPLOAD URL
 // ============================================================
+//
+// resourceType:
+//
+// sermon:
+//   video -> sermons/video/...
+//   audio -> sermons/audio/...
+//   ebook -> sermons/ebook/...
+//   image -> sermons/image/...
+//
+// book:
+//   image -> books/covers/...
+//   ebook -> books/ebooks/...
+//
+// ============================================================
 
 app.post(
   "/upload-url",
@@ -344,15 +390,15 @@ app.post(
         fileName,
         contentType,
         mediaType,
+        resourceType = "sermon",
       } = req.body;
 
       // ------------------------------------------------------
-      // VALIDATE FILE NAME
+      // FILE NAME
       // ------------------------------------------------------
 
       if (
-        typeof fileName !==
-          "string" ||
+        typeof fileName !== "string" ||
         fileName.trim().length === 0
       ) {
         return res.status(400).json({
@@ -363,12 +409,11 @@ app.post(
       }
 
       // ------------------------------------------------------
-      // VALIDATE CONTENT TYPE
+      // CONTENT TYPE
       // ------------------------------------------------------
 
       if (
-        typeof contentType !==
-          "string" ||
+        typeof contentType !== "string" ||
         contentType.trim().length === 0
       ) {
         return res.status(400).json({
@@ -379,7 +424,7 @@ app.post(
       }
 
       // ------------------------------------------------------
-      // VALIDATE MEDIA TYPE
+      // MEDIA TYPE
       // ------------------------------------------------------
 
       const allowedMediaTypes = [
@@ -402,36 +447,25 @@ app.post(
       }
 
       // ------------------------------------------------------
-      // ALLOWED CONTENT TYPES
+      // RESOURCE TYPE
       // ------------------------------------------------------
 
-      const allowedContentTypes = {
-        video: [
-          "video/mp4",
-          "video/webm",
-          "video/quicktime",
-        ],
+      const allowedResourceTypes = [
+        "sermon",
+        "book",
+      ];
 
-        audio: [
-          "audio/mpeg",
-          "audio/mp3",
-          "audio/wav",
-          "audio/x-wav",
-          "audio/mp4",
-          "audio/aac",
-          "audio/ogg",
-        ],
-
-        ebook: [
-          "application/pdf",
-        ],
-
-        image: [
-          "image/jpeg",
-          "image/png",
-          "image/webp",
-        ],
-      };
+      if (
+        !allowedResourceTypes.includes(
+          resourceType,
+        )
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Invalid resource type.",
+        });
+      }
 
       // ------------------------------------------------------
       // NORMALIZE CONTENT TYPE
@@ -442,22 +476,113 @@ app.post(
           .trim()
           .toLowerCase();
 
-      // ------------------------------------------------------
-      // CHECK CONTENT TYPE
-      // ------------------------------------------------------
+      // ======================================================
+      // BOOK UPLOAD VALIDATION
+      // ======================================================
 
-      if (
-        !allowedContentTypes[
-          mediaType
-        ].includes(
-          normalizedContentType,
-        )
-      ) {
-        return res.status(400).json({
-          success: false,
-          message:
-            `File type "${contentType}" is not allowed for ${mediaType}.`,
-        });
+      if (resourceType === "book") {
+        // ----------------------------------------------------
+        // BOOK EBOOK
+        // ----------------------------------------------------
+
+        if (mediaType === "ebook") {
+          if (
+            normalizedContentType !==
+            "application/pdf"
+          ) {
+            return res.status(400).json({
+              success: false,
+              message:
+                "Book ebooks must be PDF files.",
+            });
+          }
+        }
+
+        // ----------------------------------------------------
+        // BOOK COVER
+        // ----------------------------------------------------
+
+        else if (
+          mediaType === "image"
+        ) {
+          const allowedBookCoverTypes = [
+            "image/jpeg",
+            "image/png",
+            "image/webp",
+          ];
+
+          if (
+            !allowedBookCoverTypes.includes(
+              normalizedContentType,
+            )
+          ) {
+            return res.status(400).json({
+              success: false,
+              message:
+                "Book covers must be JPG, PNG, or WEBP images.",
+            });
+          }
+        }
+
+        // ----------------------------------------------------
+        // INVALID BOOK MEDIA
+        // ----------------------------------------------------
+
+        else {
+          return res.status(400).json({
+            success: false,
+            message:
+              "Books can only have cover images or ebook PDFs.",
+          });
+        }
+      }
+
+      // ======================================================
+      // SERMON UPLOAD VALIDATION
+      // ======================================================
+
+      if (resourceType === "sermon") {
+        const allowedSermonContentTypes = {
+          video: [
+            "video/mp4",
+            "video/webm",
+            "video/quicktime",
+          ],
+
+          audio: [
+            "audio/mpeg",
+            "audio/mp3",
+            "audio/wav",
+            "audio/x-wav",
+            "audio/mp4",
+            "audio/aac",
+            "audio/ogg",
+          ],
+
+          ebook: [
+            "application/pdf",
+          ],
+
+          image: [
+            "image/jpeg",
+            "image/png",
+            "image/webp",
+          ],
+        };
+
+        if (
+          !allowedSermonContentTypes[
+            mediaType
+          ].includes(
+            normalizedContentType,
+          )
+        ) {
+          return res.status(400).json({
+            success: false,
+            message:
+              `File type "${contentType}" is not allowed for ${mediaType}.`,
+          });
+        }
       }
 
       // ------------------------------------------------------
@@ -477,7 +602,7 @@ app.post(
           );
 
       // ------------------------------------------------------
-      // CREATE UNIQUE FILE NAME
+      // UNIQUE FILE NAME
       // ------------------------------------------------------
 
       const timestamp =
@@ -491,12 +616,35 @@ app.post(
             10,
           );
 
-      // ------------------------------------------------------
-      // CREATE B2 OBJECT KEY
-      // ------------------------------------------------------
+      // ======================================================
+      // CREATE OBJECT KEY
+      // ======================================================
 
-      const objectKey =
-        `sermons/${mediaType}/${timestamp}-${randomPart}-${safeFileName}`;
+      let objectKey;
+
+      // BOOK COVER
+      if (
+        resourceType === "book" &&
+        mediaType === "image"
+      ) {
+        objectKey =
+          `books/covers/${timestamp}-${randomPart}-${safeFileName}`;
+      }
+
+      // BOOK EBOOK
+      else if (
+        resourceType === "book" &&
+        mediaType === "ebook"
+      ) {
+        objectKey =
+          `books/ebooks/${timestamp}-${randomPart}-${safeFileName}`;
+      }
+
+      // SERMON MEDIA
+      else {
+        objectKey =
+          `sermons/${mediaType}/${timestamp}-${randomPart}-${safeFileName}`;
+      }
 
       // ------------------------------------------------------
       // CREATE PUT COMMAND
@@ -523,33 +671,24 @@ app.post(
           },
         );
 
-      // ------------------------------------------------------
-      // RETURN UPLOAD INFORMATION
-      // ------------------------------------------------------
-
       return res.json({
         success: true,
-
         uploadUrl:
           uploadUrl,
-
         objectKey:
           objectKey,
-
         bucket:
           B2_BUCKET,
-
         region:
           B2_REGION,
-
         expiresIn:
           900,
-
         contentType:
           normalizedContentType,
-
         mediaType:
           mediaType,
+        resourceType:
+          resourceType,
       });
     } catch (error) {
       console.error(
@@ -567,7 +706,11 @@ app.post(
 );
 
 // ============================================================
-// CREATE SECURE DOWNLOAD URL
+// SECURE SERMON DOWNLOAD URL
+// ============================================================
+//
+// Used only for sermon media.
+//
 // ============================================================
 
 app.post(
@@ -579,13 +722,8 @@ app.post(
         objectKey,
       } = req.body;
 
-      // ------------------------------------------------------
-      // VALIDATE OBJECT KEY
-      // ------------------------------------------------------
-
       if (
-        typeof objectKey !==
-          "string" ||
+        typeof objectKey !== "string" ||
         objectKey.trim().length === 0
       ) {
         return res.status(400).json({
@@ -598,15 +736,9 @@ app.post(
       const normalizedObjectKey =
         objectKey.trim();
 
-      // ------------------------------------------------------
-      // SECURITY CHECK
-      // ------------------------------------------------------
-      // All RHIC sermon media must live
-      // inside the sermons/ directory.
-
       if (
-        !normalizedObjectKey.startsWith(
-          "sermons/",
+        !isSafeSermonObjectKey(
+          normalizedObjectKey,
         )
       ) {
         return res.status(403).json({
@@ -616,35 +748,11 @@ app.post(
         });
       }
 
-      // ------------------------------------------------------
-      // PATH TRAVERSAL PROTECTION
-      // ------------------------------------------------------
-
-      if (
-        normalizedObjectKey.includes(
-          "..",
-        )
-      ) {
-        return res.status(403).json({
-          success: false,
-          message:
-            "Invalid object key.",
-        });
-      }
-
-      // ------------------------------------------------------
-      // CREATE GET COMMAND
-      // ------------------------------------------------------
-
       const command =
         new GetObjectCommand({
           Bucket: B2_BUCKET,
           Key: normalizedObjectKey,
         });
-
-      // ------------------------------------------------------
-      // CREATE TEMPORARY SIGNED DOWNLOAD URL
-      // ------------------------------------------------------
 
       const downloadUrl =
         await getSignedUrl(
@@ -655,22 +763,16 @@ app.post(
           },
         );
 
-      // ------------------------------------------------------
-      // RETURN DOWNLOAD URL
-      // ------------------------------------------------------
-
       return res.json({
         success: true,
-
         downloadUrl:
           downloadUrl,
-
         expiresIn:
           300,
       });
     } catch (error) {
       console.error(
-        "Failed to create download URL:",
+        "Failed to create sermon download URL:",
         error.message,
       );
 
@@ -678,6 +780,349 @@ app.post(
         success: false,
         message:
           "Unable to create download URL.",
+      });
+    }
+  },
+);
+
+// ============================================================
+// SECURE BOOK COVER URL
+// ============================================================
+//
+// The client sends the bookId only.
+//
+// The server loads coverObjectKey from Firestore.
+//
+// ============================================================
+
+app.post(
+  "/book-cover-url",
+  authenticateFirebase,
+  async (req, res) => {
+    try {
+      const {
+        bookId,
+      } = req.body;
+
+      if (
+        typeof bookId !== "string" ||
+        bookId.trim().length === 0
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "A book ID is required.",
+        });
+      }
+
+      const normalizedBookId =
+        bookId.trim();
+
+      // ------------------------------------------------------
+      // LOAD BOOK
+      // ------------------------------------------------------
+
+      const bookSnapshot =
+        await db
+          .collection("books")
+          .doc(normalizedBookId)
+          .get();
+
+      if (!bookSnapshot.exists) {
+        return res.status(404).json({
+          success: false,
+          message:
+            "Book not found.",
+        });
+      }
+
+      const bookData =
+        bookSnapshot.data() || {};
+
+      // ------------------------------------------------------
+      // GET COVER OBJECT KEY
+      // ------------------------------------------------------
+
+      const coverObjectKey =
+        typeof bookData.coverObjectKey === "string"
+          ? bookData.coverObjectKey.trim()
+          : "";
+
+      if (!coverObjectKey) {
+        return res.status(404).json({
+          success: false,
+          message:
+            "This book does not have a cover image.",
+        });
+      }
+
+      // ------------------------------------------------------
+      // VERIFY COVER OBJECT KEY
+      // ------------------------------------------------------
+
+      if (
+        !isSafeBookCoverObjectKey(
+          coverObjectKey,
+        )
+      ) {
+        return res.status(403).json({
+          success: false,
+          message:
+            "This cover image is not configured correctly.",
+        });
+      }
+
+      // ------------------------------------------------------
+      // CREATE TEMPORARY COVER URL
+      // ------------------------------------------------------
+
+      const command =
+        new GetObjectCommand({
+          Bucket: B2_BUCKET,
+          Key: coverObjectKey,
+        });
+
+      const coverUrl =
+        await getSignedUrl(
+          s3,
+          command,
+          {
+            expiresIn: 900,
+          },
+        );
+
+      return res.json({
+        success: true,
+        coverUrl:
+          coverUrl,
+        expiresIn:
+          900,
+      });
+    } catch (error) {
+      console.error(
+        "Failed to create book cover URL:",
+        error.message,
+      );
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Unable to create book cover URL.",
+      });
+    }
+  },
+);
+
+// ============================================================
+// SECURE PURCHASED BOOK DOWNLOAD URL
+// ============================================================
+//
+// IMPORTANT:
+//
+// Client sends ONLY:
+// {
+//   bookId: "..."
+// }
+//
+// Server:
+// 1. Authenticates user.
+// 2. Loads book.
+// 3. Gets ebookObjectKey from Firestore.
+// 4. Verifies approved purchase.
+// 5. Creates temporary B2 URL.
+//
+// ============================================================
+
+app.post(
+  "/book-download-url",
+  authenticateFirebase,
+  async (req, res) => {
+    try {
+      const {
+        bookId,
+      } = req.body;
+
+      // ------------------------------------------------------
+      // BOOK ID
+      // ------------------------------------------------------
+
+      if (
+        typeof bookId !== "string" ||
+        bookId.trim().length === 0
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "A book ID is required.",
+        });
+      }
+
+      const normalizedBookId =
+        bookId.trim();
+
+      // ------------------------------------------------------
+      // LOAD BOOK
+      // ------------------------------------------------------
+
+      const bookSnapshot =
+        await db
+          .collection("books")
+          .doc(normalizedBookId)
+          .get();
+
+      if (!bookSnapshot.exists) {
+        return res.status(404).json({
+          success: false,
+          message:
+            "Book not found.",
+        });
+      }
+
+      const bookData =
+        bookSnapshot.data() || {};
+
+      // ------------------------------------------------------
+      // GET PRIVATE EBOOK OBJECT KEY
+      // ------------------------------------------------------
+
+      const ebookObjectKey =
+        typeof bookData.ebookObjectKey === "string"
+          ? bookData.ebookObjectKey.trim()
+          : "";
+
+      if (!ebookObjectKey) {
+        return res.status(404).json({
+          success: false,
+          message:
+            "This book does not have an ebook file.",
+        });
+      }
+
+      // ------------------------------------------------------
+      // VERIFY OBJECT KEY
+      // ------------------------------------------------------
+
+      if (
+        !isSafeBookObjectKey(
+          ebookObjectKey,
+        )
+      ) {
+        console.error(
+          `Invalid ebook object key for book ${normalizedBookId}:`,
+          ebookObjectKey,
+        );
+
+        return res.status(403).json({
+          success: false,
+          message:
+            "This ebook file is not configured correctly.",
+        });
+      }
+
+      // ------------------------------------------------------
+      // FIND APPROVED PURCHASE
+      // ------------------------------------------------------
+
+      const ordersSnapshot =
+        await db
+          .collection("book_orders")
+          .where(
+            "userId",
+            "==",
+            req.user.uid,
+          )
+          .where(
+            "status",
+            "==",
+            "approved",
+          )
+          .get();
+
+      let hasApprovedPurchase =
+        false;
+
+      for (
+        const orderDoc of
+          ordersSnapshot.docs
+      ) {
+        const orderData =
+          orderDoc.data() || {};
+
+        const items =
+          Array.isArray(
+            orderData.items,
+          )
+            ? orderData.items
+            : [];
+
+        const purchasedBook =
+          items.some(
+            (item) =>
+              item &&
+              item.bookId?.toString() ===
+                normalizedBookId,
+          );
+
+        if (
+          purchasedBook
+        ) {
+          hasApprovedPurchase =
+            true;
+          break;
+        }
+      }
+
+      // ------------------------------------------------------
+      // DENY UNPAID ACCESS
+      // ------------------------------------------------------
+
+      if (
+        !hasApprovedPurchase
+      ) {
+        return res.status(403).json({
+          success: false,
+          message:
+            "You do not have an approved purchase for this ebook.",
+        });
+      }
+
+      // ------------------------------------------------------
+      // CREATE TEMPORARY EBOOK URL
+      // ------------------------------------------------------
+
+      const command =
+        new GetObjectCommand({
+          Bucket: B2_BUCKET,
+          Key: ebookObjectKey,
+        });
+
+      const downloadUrl =
+        await getSignedUrl(
+          s3,
+          command,
+          {
+            expiresIn:
+              300,
+          },
+        );
+
+      return res.json({
+        success: true,
+        downloadUrl:
+          downloadUrl,
+        expiresIn:
+          300,
+      });
+    } catch (error) {
+      console.error(
+        "Failed to create book download URL:",
+        error.message,
+      );
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Unable to create book download URL.",
       });
     }
   },
@@ -767,7 +1212,15 @@ app.listen(
     );
 
     console.log(
-      " Download URLs: ENABLED",
+      " Sermon download access: ENABLED",
+    );
+
+    console.log(
+      " Book cover access: ENABLED",
+    );
+
+    console.log(
+      " Secure purchased ebook access: ENABLED",
     );
 
     console.log(
@@ -777,3 +1230,4 @@ app.listen(
     console.log("");
   },
 );
+

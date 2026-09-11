@@ -1,4 +1,3 @@
-
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -44,7 +43,7 @@ class B2UploadService {
 
     if (user == null) {
       throw Exception(
-        'You must be signed in to use sermon media.',
+        'You must be signed in.',
       );
     }
 
@@ -70,6 +69,10 @@ class B2UploadService {
     required String fileName,
     required String contentType,
     required String mediaType,
+
+    // sermon = normal sermon media
+    // book   = private bookstore ebook PDF
+    String resourceType = 'sermon',
   }) async {
     if (bytes.isEmpty) {
       throw Exception(
@@ -82,7 +85,7 @@ class B2UploadService {
 
     // ==========================================================
     // STEP 1
-    // Ask backend for a temporary B2 upload URL.
+    // REQUEST TEMPORARY B2 UPLOAD URL
     // ==========================================================
 
     final response = await http.post(
@@ -90,13 +93,16 @@ class B2UploadService {
         '$backendBaseUrl/upload-url',
       ),
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $idToken',
+        'Content-Type':
+            'application/json',
+        'Authorization':
+            'Bearer $idToken',
       },
       body: jsonEncode({
         'fileName': fileName,
         'contentType': contentType,
         'mediaType': mediaType,
+        'resourceType': resourceType,
       }),
     );
 
@@ -113,16 +119,14 @@ class B2UploadService {
           message =
               decoded['message'].toString();
         }
-      } catch (_) {
-        // Keep default message.
-      }
+      } catch (_) {}
 
       throw Exception(message);
     }
 
     // ==========================================================
     // STEP 2
-    // Validate backend response.
+    // VALIDATE RESPONSE
     // ==========================================================
 
     final decoded =
@@ -151,13 +155,15 @@ class B2UploadService {
 
     // ==========================================================
     // STEP 3
-    // Upload the actual bytes directly to B2.
+    // UPLOAD DIRECTLY TO B2
     // ==========================================================
 
-    final uploadResponse = await http.put(
+    final uploadResponse =
+        await http.put(
       Uri.parse(uploadUrl),
       headers: {
-        'Content-Type': contentType,
+        'Content-Type':
+            contentType,
       },
       body: bytes,
     );
@@ -172,11 +178,7 @@ class B2UploadService {
 
     // ==========================================================
     // STEP 4
-    // Return the B2 object information.
-    //
-    // IMPORTANT:
-    // We deliberately do NOT return a permanent
-    // download URL.
+    // RETURN OBJECT INFORMATION
     // ==========================================================
 
     return B2UploadResult(
@@ -189,7 +191,18 @@ class B2UploadService {
   }
 
   // ============================================================
-  // GET SIGNED DOWNLOAD URL
+  // GET SIGNED SERMON DOWNLOAD URL
+  // ============================================================
+  //
+  // Use this only for sermon media.
+  //
+  // Example:
+  //
+  // getDownloadUrl(
+  //   objectKey: sermonObjectKey,
+  // );
+  //
+  // Paid books must use getEbookDownloadUrl().
   // ============================================================
 
   Future<String> getDownloadUrl({
@@ -204,16 +217,20 @@ class B2UploadService {
     final idToken =
         await _getIdToken();
 
-    final response = await http.post(
+    final response =
+        await http.post(
       Uri.parse(
         '$backendBaseUrl/download-url',
       ),
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $idToken',
+        'Content-Type':
+            'application/json',
+        'Authorization':
+            'Bearer $idToken',
       },
       body: jsonEncode({
-        'objectKey': objectKey.trim(),
+        'objectKey':
+            objectKey.trim(),
       }),
     );
 
@@ -230,9 +247,7 @@ class B2UploadService {
           message =
               decoded['message'].toString();
         }
-      } catch (_) {
-        // Keep default message.
-      }
+      } catch (_) {}
 
       throw Exception(message);
     }
@@ -259,5 +274,173 @@ class B2UploadService {
 
     return downloadUrl;
   }
-}
 
+  // ============================================================
+  // GET SIGNED PURCHASED EBOOK URL
+  // ============================================================
+  //
+  // IMPORTANT:
+  // The client sends ONLY the book ID.
+  //
+  // The backend:
+  // 1. verifies the Firebase user
+  // 2. finds the book
+  // 3. gets ebookObjectKey from Firestore
+  // 4. checks for an approved purchase
+  // 5. creates a temporary B2 URL
+  //
+  // The client does NOT send the private object key.
+  // ============================================================
+
+  Future<String> getEbookDownloadUrl({
+    required String bookId,
+  }) async {
+    if (bookId.trim().isEmpty) {
+      throw Exception(
+        'Book ID is required.',
+      );
+    }
+
+    final idToken =
+        await _getIdToken();
+
+    final response =
+        await http.post(
+      Uri.parse(
+        '$backendBaseUrl/book-download-url',
+      ),
+      headers: {
+        'Content-Type':
+            'application/json',
+        'Authorization':
+            'Bearer $idToken',
+      },
+      body: jsonEncode({
+        'bookId':
+            bookId.trim(),
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      String message =
+          'Unable to access this ebook.';
+
+      try {
+        final decoded =
+            jsonDecode(response.body);
+
+        if (decoded is Map &&
+            decoded['message'] != null) {
+          message =
+              decoded['message'].toString();
+        }
+      } catch (_) {}
+
+      throw Exception(message);
+    }
+
+    final decoded =
+        jsonDecode(response.body);
+
+    if (decoded is! Map ||
+        decoded['success'] != true ||
+        decoded['downloadUrl'] == null) {
+      throw Exception(
+        'The ebook server returned an invalid response.',
+      );
+    }
+
+    final downloadUrl =
+        decoded['downloadUrl'].toString();
+
+    if (downloadUrl.trim().isEmpty) {
+      throw Exception(
+        'The server returned an empty ebook URL.',
+      );
+    }
+
+    return downloadUrl;
+  }
+
+
+  // ============================================================
+  // GET SIGNED BOOK COVER URL
+  // ============================================================
+  //
+  // The client sends only the book ID.
+  // The backend gets coverObjectKey from Firestore and
+  // returns a temporary signed B2 URL.
+  // ============================================================
+
+  Future<String> getBookCoverUrl({
+    required String bookId,
+  }) async {
+    if (bookId.trim().isEmpty) {
+      throw Exception(
+        'Book ID is required.',
+      );
+    }
+
+    final idToken =
+        await _getIdToken();
+
+    final response = await http.post(
+      Uri.parse(
+        '$backendBaseUrl/book-cover-url',
+      ),
+      headers: {
+        'Content-Type':
+            'application/json',
+        'Authorization':
+            'Bearer $idToken',
+      },
+      body: jsonEncode({
+        'bookId':
+            bookId.trim(),
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      String message =
+          'Unable to load book cover.';
+
+      try {
+        final decoded =
+            jsonDecode(response.body);
+
+        if (decoded is Map &&
+            decoded['message'] != null) {
+          message =
+              decoded['message'].toString();
+        }
+      } catch (_) {}
+
+      throw Exception(message);
+    }
+
+    final decoded =
+        jsonDecode(response.body);
+
+    if (decoded is! Map ||
+        decoded['success'] != true ||
+        decoded['coverUrl'] == null) {
+      throw Exception(
+        'The cover server returned an invalid response.',
+      );
+    }
+
+    final coverUrl =
+        decoded['coverUrl'].toString();
+
+    if (coverUrl.trim().isEmpty) {
+      throw Exception(
+        'The server returned an empty cover URL.',
+      );
+    }
+
+    return coverUrl;
+  }
+
+
+
+}

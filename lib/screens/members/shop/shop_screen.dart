@@ -1,9 +1,11 @@
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../../models/book_model.dart';
 import '../../../repositories/cart_repository.dart';
 import '../../../repositories/shop_repository.dart';
+import '../../../services/b2_upload_service.dart';
 import 'book_details_screen.dart';
 import 'cart_screen.dart';
 
@@ -47,7 +49,8 @@ class _ShopScreenState
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFCFAFD),
+      backgroundColor:
+          const Color(0xFFFCFAFD),
       appBar: AppBar(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
@@ -61,14 +64,22 @@ class _ShopScreenState
         ),
         actions: [
           StreamBuilder(
-            stream: CartRepository.instance
-                .cartStream(user.uid),
-            builder: (context, snapshot) {
+            stream:
+                CartRepository.instance
+                    .cartStream(user.uid),
+            builder: (
+              context,
+              snapshot,
+            ) {
               final count =
                   snapshot.data?.fold<int>(
                         0,
-                        (total, item) =>
-                            total + item.quantity,
+                        (
+                          total,
+                          item,
+                        ) =>
+                            total +
+                            item.quantity,
                       ) ??
                       0;
 
@@ -80,7 +91,8 @@ class _ShopScreenState
                 child: Stack(
                   children: [
                     IconButton(
-                      icon: const Icon(
+                      icon:
+                          const Icon(
                         Icons
                             .shopping_cart_outlined,
                         color: darkPurple,
@@ -99,25 +111,33 @@ class _ShopScreenState
                       Positioned(
                         right: 3,
                         top: 3,
-                        child: Container(
+                        child:
+                            Container(
                           padding:
                               const EdgeInsets
-                                  .all(4),
+                                  .all(
+                            4,
+                          ),
                           decoration:
                               const BoxDecoration(
-                            color: orangeColor,
+                            color:
+                                orangeColor,
                             shape:
-                                BoxShape.circle,
+                                BoxShape
+                                    .circle,
                           ),
-                          child: Text(
+                          child:
+                              Text(
                             '$count',
                             style:
                                 const TextStyle(
                               color:
                                   Colors.white,
-                              fontSize: 10,
+                              fontSize:
+                                  10,
                               fontWeight:
-                                  FontWeight.w800,
+                                  FontWeight
+                                      .w800,
                             ),
                           ),
                         ),
@@ -129,60 +149,82 @@ class _ShopScreenState
           ),
         ],
       ),
-      body: StreamBuilder<List<BookModel>>(
-        stream: ShopRepository.instance
-            .booksStream(),
-        builder: (context, snapshot) {
+      body:
+          StreamBuilder<List<BookModel>>(
+        stream:
+            ShopRepository.instance
+                .booksStream(),
+        builder: (
+          context,
+          snapshot,
+        ) {
           if (snapshot.connectionState ==
               ConnectionState.waiting) {
             return const Center(
-              child: CircularProgressIndicator(
-                color: primaryColor,
+              child:
+                  CircularProgressIndicator(
+                color:
+                    primaryColor,
               ),
             );
           }
 
           if (snapshot.hasError) {
             return _ErrorState(
-              onRetry: () => setState(() {}),
+              onRetry: () {
+                setState(() {});
+              },
             );
           }
 
           final books =
               snapshot.data ?? [];
 
-          final categories = <String>{
+          final categories =
+              <String>{
             'All',
             ...books
-                .map((book) => book.category)
+                .map(
+                  (book) =>
+                      book.category,
+                )
                 .where(
                   (category) =>
-                      category.trim().isNotEmpty,
+                      category
+                          .trim()
+                          .isNotEmpty,
                 ),
           }.toList();
 
           final filteredBooks =
-              books.where((book) {
-            final matchesSearch =
-                book.title
-                        .toLowerCase()
-                        .contains(
-                          _search.toLowerCase(),
-                        ) ||
-                    book.author
-                        .toLowerCase()
-                        .contains(
-                          _search.toLowerCase(),
-                        );
+              books.where(
+            (book) {
+              final query =
+                  _search
+                      .toLowerCase();
 
-            final matchesCategory =
-                _selectedCategory == 'All' ||
-                    book.category ==
-                        _selectedCategory;
+              final matchesSearch =
+                  book.title
+                          .toLowerCase()
+                          .contains(
+                            query,
+                          ) ||
+                      book.author
+                          .toLowerCase()
+                          .contains(
+                            query,
+                          );
 
-            return matchesSearch &&
-                matchesCategory;
-          }).toList();
+              final matchesCategory =
+                  _selectedCategory ==
+                          'All' ||
+                      book.category ==
+                          _selectedCategory;
+
+              return matchesSearch &&
+                  matchesCategory;
+            },
+          ).toList();
 
           return RefreshIndicator(
             color: primaryColor,
@@ -200,12 +242,17 @@ class _ShopScreenState
               children: [
                 _buildHero(),
 
-                const SizedBox(height: 20),
+                const SizedBox(
+                  height: 20,
+                ),
 
                 TextField(
-                  onChanged: (value) {
+                  onChanged: (
+                    value,
+                  ) {
                     setState(() {
-                      _search = value;
+                      _search =
+                          value;
                     });
                   },
                   decoration:
@@ -214,13 +261,17 @@ class _ShopScreenState
                         'Search digital books...',
                     prefixIcon:
                         const Icon(
-                      Icons.search_rounded,
+                      Icons
+                          .search_rounded,
                     ),
                     filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
+                    fillColor:
+                        Colors.white,
+                    border:
+                        OutlineInputBorder(
                       borderRadius:
-                          BorderRadius.circular(
+                          BorderRadius
+                              .circular(
                         16,
                       ),
                       borderSide:
@@ -229,54 +280,77 @@ class _ShopScreenState
                   ),
                 ),
 
-                const SizedBox(height: 18),
+                const SizedBox(
+                  height: 18,
+                ),
 
                 SizedBox(
                   height: 42,
-                  child: ListView.separated(
+                  child:
+                      ListView
+                          .separated(
                     scrollDirection:
                         Axis.horizontal,
                     itemCount:
-                        categories.length,
+                        categories
+                            .length,
                     separatorBuilder:
-                        (_, __) =>
+                        (
+                          _,
+                          __,
+                        ) =>
                             const SizedBox(
                       width: 8,
                     ),
                     itemBuilder:
-                        (context, index) {
+                        (
+                      context,
+                      index,
+                    ) {
                       final category =
-                          categories[index];
+                          categories[
+                              index];
 
                       final selected =
                           category ==
                               _selectedCategory;
 
                       return ChoiceChip(
-                        label:
-                            Text(category),
-                        selected: selected,
-                        onSelected: (_) {
-                          setState(() {
-                            _selectedCategory =
-                                category;
-                          });
+                        label: Text(
+                          category,
+                        ),
+                        selected:
+                            selected,
+                        onSelected:
+                            (_) {
+                          setState(
+                            () {
+                              _selectedCategory =
+                                  category;
+                            },
+                          );
                         },
                         selectedColor:
                             primaryColor,
-                        labelStyle: TextStyle(
-                          color: selected
-                              ? Colors.white
-                              : darkPurple,
+                        labelStyle:
+                            TextStyle(
+                          color:
+                              selected
+                                  ? Colors
+                                      .white
+                                  : darkPurple,
                           fontWeight:
-                              FontWeight.w600,
+                              FontWeight
+                                  .w600,
                         ),
                       );
                     },
                   ),
                 ),
 
-                const SizedBox(height: 22),
+                const SizedBox(
+                  height: 22,
+                ),
 
                 Row(
                   mainAxisAlignment:
@@ -285,56 +359,81 @@ class _ShopScreenState
                   children: [
                     const Text(
                       'Digital Books',
-                      style: TextStyle(
-                        fontSize: 21,
+                      style:
+                          TextStyle(
+                        fontSize:
+                            21,
                         fontWeight:
-                            FontWeight.w800,
-                        color: darkPurple,
+                            FontWeight
+                                .w800,
+                        color:
+                            darkPurple,
                       ),
                     ),
                     Text(
                       '${filteredBooks.length} books',
-                      style: TextStyle(
-                        color:
-                            Colors.grey.shade600,
+                      style:
+                          TextStyle(
+                        color: Colors
+                            .grey
+                            .shade600,
                       ),
                     ),
                   ],
                 ),
 
-                const SizedBox(height: 15),
+                const SizedBox(
+                  height: 15,
+                ),
 
-                if (filteredBooks.isEmpty)
+                if (filteredBooks
+                    .isEmpty)
                   const _EmptyShop(),
 
-                if (filteredBooks.isNotEmpty)
+                if (filteredBooks
+                    .isNotEmpty)
                   GridView.builder(
-                    shrinkWrap: true,
+                    shrinkWrap:
+                        true,
                     physics:
                         const NeverScrollableScrollPhysics(),
                     itemCount:
-                        filteredBooks.length,
+                        filteredBooks
+                            .length,
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 14,
-                      mainAxisSpacing: 18,
-                      childAspectRatio: .62,
+                      crossAxisCount:
+                          2,
+                      crossAxisSpacing:
+                          14,
+                      mainAxisSpacing:
+                          18,
+                      childAspectRatio:
+                          .62,
                     ),
                     itemBuilder:
-                        (context, index) {
+                        (
+                      context,
+                      index,
+                    ) {
+                      final book =
+                          filteredBooks[
+                              index];
+
                       return _BookCard(
-                        book:
-                            filteredBooks[index],
+                        book: book,
                         onTap: () {
-                          Navigator.push(
+                          Navigator
+                              .push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) =>
-                                  BookDetailsScreen(
+                              builder:
+                                  (
+                                _,
+                              ) =>
+                                      BookDetailsScreen(
                                 book:
-                                    filteredBooks[
-                                        index],
+                                    book,
                               ),
                             ),
                           );
@@ -352,49 +451,70 @@ class _ShopScreenState
 
   Widget _buildHero() {
     return Container(
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
+      padding:
+          const EdgeInsets.all(
+        22,
+      ),
+      decoration:
+          BoxDecoration(
+        gradient:
+            const LinearGradient(
           colors: [
             Color(0xFF3D004D),
             Color(0xFF6B1FA2),
           ],
         ),
         borderRadius:
-            BorderRadius.circular(24),
+            BorderRadius.circular(
+          24,
+        ),
       ),
       child: const Row(
         children: [
           Expanded(
             child: Column(
               crossAxisAlignment:
-                  CrossAxisAlignment.start,
+                  CrossAxisAlignment
+                      .start,
               children: [
                 Text(
-                  'Grow through  the Word.',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 25,
-                    height: 1.1,
+                  'Grow through the Word.',
+                  style:
+                      TextStyle(
+                    color:
+                        Colors.white,
+                    fontSize:
+                        25,
+                    height:
+                        1.1,
                     fontWeight:
-                        FontWeight.w800,
+                        FontWeight
+                            .w800,
                   ),
                 ),
-                SizedBox(height: 10),
+                SizedBox(
+                  height: 10,
+                ),
                 Text(
                   'Explore digital books from RHIC.',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 13,
-                    height: 1.4,
+                  style:
+                      TextStyle(
+                    color:
+                        Colors.white70,
+                    fontSize:
+                        13,
+                    height:
+                        1.4,
                   ),
                 ),
               ],
             ),
           ),
           Icon(
-            Icons.menu_book_rounded,
-            color: Colors.white,
+            Icons
+                .menu_book_rounded,
+            color:
+                Colors.white,
             size: 72,
           ),
         ],
@@ -403,7 +523,8 @@ class _ShopScreenState
   }
 }
 
-class _BookCard extends StatelessWidget {
+class _BookCard
+    extends StatefulWidget {
   final BookModel book;
   final VoidCallback onTap;
 
@@ -413,104 +534,255 @@ class _BookCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  State<_BookCard> createState() =>
+      _BookCardState();
+}
+
+class _BookCardState
+    extends State<_BookCard> {
+  final B2UploadService
+      _b2UploadService =
+      B2UploadService.instance;
+
+  String? _coverUrl;
+  bool _loadingCover = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCover();
+  }
+
+  @override
+  void didUpdateWidget(
+    covariant _BookCard oldWidget,
+  ) {
+    super.didUpdateWidget(
+      oldWidget,
+    );
+
+    if (oldWidget.book.id !=
+            widget.book.id ||
+        oldWidget
+                .book.coverObjectKey !=
+            widget
+                .book.coverObjectKey) {
+      _coverUrl = null;
+      _loadingCover = true;
+      _loadCover();
+    }
+  }
+
+  Future<void> _loadCover() async {
+    if (widget.book.coverObjectKey
+        .trim()
+        .isEmpty) {
+      if (mounted) {
+        setState(() {
+          _loadingCover = false;
+        });
+      }
+      return;
+    }
+
+    try {
+      final url =
+          await _b2UploadService
+              .getBookCoverUrl(
+        bookId:
+            widget.book.id,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _coverUrl = url;
+        _loadingCover = false;
+      });
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _loadingCover = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(
+    BuildContext context,
+  ) {
     return GestureDetector(
-      onTap: onTap,
+      onTap:
+          widget.onTap,
       child: Column(
         crossAxisAlignment:
-            CrossAxisAlignment.start,
+            CrossAxisAlignment
+                .start,
         children: [
           Expanded(
             child: Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
+              width:
+                  double.infinity,
+              decoration:
+                  BoxDecoration(
                 color:
-                    const Color(0xFFF0E8F3),
+                    const Color(
+                  0xFFF0E8F3,
+                ),
                 borderRadius:
-                    BorderRadius.circular(18),
+                    BorderRadius.circular(
+                  18,
+                ),
               ),
               clipBehavior:
                   Clip.antiAlias,
-              child: book.coverUrl.isNotEmpty
-                  ? Image.network(
-                      book.coverUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder:
-                          (_, __, ___) =>
-                              _placeholder(),
-                    )
-                  : _placeholder(),
+              child:
+                  _buildCover(),
             ),
           ),
-          const SizedBox(height: 9),
+          const SizedBox(
+            height: 9,
+          ),
           Text(
-            book.title,
+            widget.book.title,
             maxLines: 2,
             overflow:
                 TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontWeight: FontWeight.w800,
+            style:
+                const TextStyle(
+              fontWeight:
+                  FontWeight.w800,
               fontSize: 14,
-              color: Color(0xFF3D004D),
+              color:
+                  Color(0xFF3D004D),
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(
+            height: 4,
+          ),
           Text(
-            book.author,
+            widget.book.author,
             maxLines: 1,
             overflow:
                 TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 11,
-              color: Colors.grey.shade600,
+              color: Colors
+                  .grey
+                  .shade600,
             ),
           ),
-          const SizedBox(height: 5),
+          const SizedBox(
+            height: 5,
+          ),
           Text(
-            book.formattedPrice,
-            style: const TextStyle(
+            widget.book
+                .formattedPrice,
+            style:
+                const TextStyle(
               fontSize: 14,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF6B1FA2),
+              fontWeight:
+                  FontWeight.w800,
+              color:
+                  Color(0xFF6B1FA2),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildCover() {
+    if (_loadingCover) {
+      return const Center(
+        child:
+            SizedBox(
+          width: 28,
+          height: 28,
+          child:
+              CircularProgressIndicator(
+            color:
+                Color(0xFF6B1FA2),
+            strokeWidth: 2.5,
+          ),
+        ),
+      );
+    }
+
+    if (_coverUrl == null ||
+        _coverUrl!
+            .trim()
+            .isEmpty) {
+      return _placeholder();
+    }
+
+    return Image.network(
+      _coverUrl!,
+      fit: BoxFit.cover,
+      width:
+          double.infinity,
+      height:
+          double.infinity,
+      errorBuilder:
+          (
+        _,
+        __,
+        ___,
+      ) =>
+              _placeholder(),
     );
   }
 
   Widget _placeholder() {
     return const Center(
       child: Icon(
-        Icons.menu_book_outlined,
+        Icons
+            .menu_book_outlined,
         size: 50,
-        color: Color(0xFF6B1FA2),
+        color:
+            Color(0xFF6B1FA2),
       ),
     );
   }
 }
 
-class _EmptyShop extends StatelessWidget {
+class _EmptyShop
+    extends StatelessWidget {
   const _EmptyShop();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return const Padding(
-      padding: EdgeInsets.all(50),
+      padding:
+          EdgeInsets.all(50),
       child: Column(
         children: [
           Icon(
-            Icons.menu_book_outlined,
+            Icons
+                .menu_book_outlined,
             size: 60,
-            color: Color(0xFFD0C5D4),
+            color:
+                Color(0xFFD0C5D4),
           ),
-          SizedBox(height: 15),
+          SizedBox(
+            height: 15,
+          ),
           Text(
             'No books found',
-            style: TextStyle(
+            style:
+                TextStyle(
               fontSize: 17,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF777777),
+              fontWeight:
+                  FontWeight.w700,
+              color:
+                  Color(0xFF777777),
             ),
           ),
         ],
@@ -519,7 +791,8 @@ class _EmptyShop extends StatelessWidget {
   }
 }
 
-class _ErrorState extends StatelessWidget {
+class _ErrorState
+    extends StatelessWidget {
   final VoidCallback onRetry;
 
   const _ErrorState({
@@ -527,25 +800,38 @@ class _ErrorState extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Center(
       child: Column(
         mainAxisAlignment:
-            MainAxisAlignment.center,
+            MainAxisAlignment
+                .center,
         children: [
           const Icon(
-            Icons.cloud_off_outlined,
+            Icons
+                .cloud_off_outlined,
             size: 55,
-            color: Colors.grey,
+            color:
+                Colors.grey,
           ),
-          const SizedBox(height: 15),
+          const SizedBox(
+            height: 15,
+          ),
           const Text(
             'Unable to load the shop.',
           ),
-          const SizedBox(height: 12),
+          const SizedBox(
+            height: 12,
+          ),
           OutlinedButton(
-            onPressed: onRetry,
-            child: const Text('Retry'),
+            onPressed:
+                onRetry,
+            child:
+                const Text(
+              'Retry',
+            ),
           ),
         ],
       ),

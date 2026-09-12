@@ -47,20 +47,22 @@ class GivingModel {
     return GivingModel(
       id: doc.id,
 
-      userId:
-          data['userId']?.toString() ?? '',
+      userId: data['userId']?.toString() ?? '',
 
       userName:
           data['userName']?.toString() ?? 'RHIC Member',
 
-      type:
-          data['type']?.toString() ?? '',
+      type: data['type']?.toString() ?? '',
 
       currency:
           data['currency']?.toString() ?? 'NGN',
 
-      amount:
-          (data['amount'] as num?)?.toDouble() ?? 0,
+      amount: data['amount'] is num
+          ? (data['amount'] as num).toDouble()
+          : double.tryParse(
+                data['amount']?.toString() ?? '',
+              ) ??
+              0,
 
       status:
           data['status']?.toString() ?? 'pending',
@@ -69,11 +71,13 @@ class GivingModel {
           data['paymentMethod']?.toString() ??
               'bank_transfer',
 
-      createdAt:
-          (data['createdAt'] as Timestamp?)?.toDate(),
+      createdAt: data['createdAt'] is Timestamp
+          ? (data['createdAt'] as Timestamp).toDate()
+          : null,
 
-      verifiedAt:
-          (data['verifiedAt'] as Timestamp?)?.toDate(),
+      verifiedAt: data['verifiedAt'] is Timestamp
+          ? (data['verifiedAt'] as Timestamp).toDate()
+          : null,
 
       verifiedBy:
           data['verifiedBy']?.toString(),
@@ -91,12 +95,9 @@ class GivingModel {
     return {
       'userId': userId,
       'userName': userName,
-
       'type': type,
       'currency': currency,
-
       'amount': amount,
-
       'status': status,
       'paymentMethod': paymentMethod,
 

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:church_app/screens/admin/books/admin_books_screen.dart';
 import 'package:church_app/screens/admin/sermons/admin_sermons_screen.dart';
 import 'package:church_app/services/auth_service.dart';
+import 'package:church_app/screens/admin/shop/admin_payment_settings_screen.dart';
+
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -39,14 +41,15 @@ class _AdminDashboardScreenState
       title: 'Gallery',
       icon: Icons.photo_library_outlined,
     ),
-    _AdminMenuItem(
-      title: 'Giving',
-      icon: Icons.volunteer_activism_outlined,
-    ),
+      _AdminMenuItem(
+    title: 'Payments',
+    icon: Icons.payments_outlined,
+  ),
     _AdminMenuItem(
       title: 'Community',
       icon: Icons.groups_outlined,
     ),
+  
     _AdminMenuItem(
       title: 'Users',
       icon: Icons.people_outline,
@@ -153,13 +156,8 @@ class _AdminDashboardScreenState
               'Manage photos and gallery content.',
         );
 
-      case 5:
-        return _buildComingSoonPage(
-          title: 'Giving',
-          icon: Icons.volunteer_activism_outlined,
-          description:
-              'Manage giving records and payment settings.',
-        );
+     case 5:
+  return const AdminPaymentsScreen();
 
       case 6:
         return _buildComingSoonPage(

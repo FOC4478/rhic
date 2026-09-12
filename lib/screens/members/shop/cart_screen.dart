@@ -2,44 +2,31 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../../models/cart_item_model.dart';
-import '../../../models/payment_settings_model.dart';
 import '../../../repositories/cart_repository.dart';
-import '../../../repositories/payment_repository.dart';
 import '../../../services/b2_upload_service.dart';
-import 'order_success_screen.dart';
+import 'payment_screen.dart';
 
 class CartScreen extends StatelessWidget {
-  const CartScreen({
-    super.key,
-  });
+  const CartScreen({super.key});
 
-  static const Color purple =
-      Color(0xFF6B1FA2);
-
-  static const Color darkPurple =
-      Color(0xFF3D004D);
-
-  static const Color orange =
-      Color(0xFFF7931E);
+  static const Color purple = Color(0xFF6B1FA2);
+  static const Color darkPurple = Color(0xFF3D004D);
+  static const Color orange = Color(0xFFF7931E);
 
   @override
   Widget build(BuildContext context) {
-    final user =
-        FirebaseAuth.instance.currentUser;
+    final user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
       return const Scaffold(
         body: Center(
-          child: Text(
-            'Please sign in.',
-          ),
+          child: Text('Please sign in.'),
         ),
       );
     }
 
     return Scaffold(
-      backgroundColor:
-          const Color(0xFFFCFAFD),
+      backgroundColor: const Color(0xFFFCFAFD),
       appBar: AppBar(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
@@ -53,11 +40,9 @@ class CartScreen extends StatelessWidget {
         ),
       ),
       body: StreamBuilder<List<CartItemModel>>(
-        stream: CartRepository.instance
-            .cartStream(user.uid),
+        stream: CartRepository.instance.cartStream(user.uid),
         builder: (context, snapshot) {
-          if (snapshot.connectionState ==
-              ConnectionState.waiting) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
               child: CircularProgressIndicator(
                 color: purple,
@@ -67,14 +52,17 @@ class CartScreen extends StatelessWidget {
 
           if (snapshot.hasError) {
             return const Center(
-              child: Text(
-                'Unable to load your cart.',
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Text(
+                  'Unable to load your cart.',
+                  textAlign: TextAlign.center,
+                ),
               ),
             );
           }
 
-          final items =
-              snapshot.data ?? [];
+          final items = snapshot.data ?? [];
 
           if (items.isEmpty) {
             return const _EmptyCart();
@@ -82,28 +70,20 @@ class CartScreen extends StatelessWidget {
 
           final total = items.fold<double>(
             0,
-            (sum, item) =>
-                sum + item.total,
+            (sum, item) => sum + item.total,
           );
 
-          final currency =
-              items.first.currency;
+          final currency = items.first.currency.trim().toUpperCase();
 
           return Column(
             children: [
               Expanded(
                 child: ListView.separated(
-                  padding:
-                      const EdgeInsets.all(20),
-                  itemCount:
-                      items.length,
-                  separatorBuilder:
-                      (_, __) =>
-                          const SizedBox(
-                    height: 12,
-                  ),
-                  itemBuilder:
-                      (context, index) {
+                  padding: const EdgeInsets.all(20),
+                  itemCount: items.length,
+                  separatorBuilder: (_, __) =>
+                      const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
                     return _CartItem(
                       item: items[index],
                       userId: user.uid,
@@ -111,21 +91,23 @@ class CartScreen extends StatelessWidget {
                   },
                 ),
               ),
+
+              // ==================================================
+              // CART SUMMARY
+              // ==================================================
+
               Container(
-                padding:
-                    const EdgeInsets.fromLTRB(
+                padding: const EdgeInsets.fromLTRB(
                   20,
                   18,
                   20,
                   20,
                 ),
-                decoration:
-                    const BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.white,
                   border: Border(
                     top: BorderSide(
-                      color:
-                          Color(0xFFEFE9F1),
+                      color: Color(0xFFEFE9F1),
                     ),
                   ),
                 ),
@@ -135,15 +117,13 @@ class CartScreen extends StatelessWidget {
                     children: [
                       Row(
                         mainAxisAlignment:
-                            MainAxisAlignment
-                                .spaceBetween,
+                            MainAxisAlignment.spaceBetween,
                         children: [
                           const Text(
                             'Total',
                             style: TextStyle(
                               fontSize: 17,
-                              fontWeight:
-                                  FontWeight.w700,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                           Text(
@@ -151,63 +131,48 @@ class CartScreen extends StatelessWidget {
                               total,
                               currency,
                             ),
-                            style:
-                                const TextStyle(
+                            style: const TextStyle(
                               fontSize: 21,
-                              fontWeight:
-                                  FontWeight.w800,
-                              color:
-                                  darkPurple,
+                              fontWeight: FontWeight.w800,
+                              color: darkPurple,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(
-                        height: 14,
-                      ),
+
+                      const SizedBox(height: 14),
+
                       SizedBox(
-                        width:
-                            double.infinity,
+                        width: double.infinity,
                         height: 52,
-                        child:
-                            ElevatedButton(
+                        child: ElevatedButton(
                           onPressed: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) =>
-                                    CheckoutScreen(
-                                  items: items,
+                                builder: (_) => PaymentScreen(
+                                  items: List<CartItemModel>.unmodifiable(
+                                    items,
+                                  ),
                                   total: total,
-                                  currency:
-                                      currency,
+                                  currency: currency,
                                 ),
                               ),
                             );
                           },
-                          style:
-                              ElevatedButton.styleFrom(
-                            backgroundColor:
-                                purple,
-                            foregroundColor:
-                                Colors.white,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: purple,
+                            foregroundColor: Colors.white,
                             elevation: 0,
-                            shape:
-                                RoundedRectangleBorder(
+                            shape: RoundedRectangleBorder(
                               borderRadius:
-                                  BorderRadius
-                                      .circular(
-                                27,
-                              ),
+                                  BorderRadius.circular(27),
                             ),
                           ),
-                          child:
-                              const Text(
-                            'Continue to Checkout',
-                            style:
-                                TextStyle(
-                              fontWeight:
-                                  FontWeight.w800,
+                          child: const Text(
+                            'Continue to Payment',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w800,
                             ),
                           ),
                         ),
@@ -249,14 +214,11 @@ class _CartItem extends StatefulWidget {
   });
 
   @override
-  State<_CartItem> createState() =>
-      _CartItemState();
+  State<_CartItem> createState() => _CartItemState();
 }
 
-class _CartItemState
-    extends State<_CartItem> {
-  final B2UploadService
-      _b2UploadService =
+class _CartItemState extends State<_CartItem> {
+  final B2UploadService _b2UploadService =
       B2UploadService.instance;
 
   String? _coverUrl;
@@ -272,12 +234,9 @@ class _CartItemState
   void didUpdateWidget(
     covariant _CartItem oldWidget,
   ) {
-    super.didUpdateWidget(
-      oldWidget,
-    );
+    super.didUpdateWidget(oldWidget);
 
-    if (oldWidget.item.bookId !=
-        widget.item.bookId) {
+    if (oldWidget.item.bookId != widget.item.bookId) {
       _coverUrl = null;
       _loadingCover = true;
       _loadCover();
@@ -285,8 +244,7 @@ class _CartItemState
   }
 
   Future<void> _loadCover() async {
-    final bookId =
-        widget.item.bookId.trim();
+    final bookId = widget.item.bookId.trim();
 
     if (bookId.isEmpty) {
       if (!mounted) return;
@@ -300,8 +258,7 @@ class _CartItemState
 
     try {
       final url =
-          await _b2UploadService
-              .getBookCoverUrl(
+          await _b2UploadService.getBookCoverUrl(
         bookId: bookId,
       );
 
@@ -315,41 +272,62 @@ class _CartItemState
       if (!mounted) return;
 
       setState(() {
+        _coverUrl = null;
         _loadingCover = false;
       });
     }
   }
 
+  Future<void> _decreaseQuantity() async {
+    final newQuantity = widget.item.quantity - 1;
+
+    await CartRepository.instance.updateQuantity(
+      userId: widget.userId,
+      bookId: widget.item.bookId,
+      quantity: newQuantity,
+    );
+  }
+
+  Future<void> _increaseQuantity() async {
+    await CartRepository.instance.updateQuantity(
+      userId: widget.userId,
+      bookId: widget.item.bookId,
+      quantity: widget.item.quantity + 1,
+    );
+  }
+
+  Future<void> _removeItem() async {
+    await CartRepository.instance.removeFromCart(
+      userId: widget.userId,
+      bookId: widget.item.bookId,
+    );
+  }
+
   @override
-  Widget build(
-    BuildContext context,
-  ) {
+  Widget build(BuildContext context) {
     return Container(
-      padding:
-          const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius:
-            BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color:
-              const Color(0xFFF0EBF2),
+          color: const Color(0xFFF0EBF2),
         ),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ClipRRect(
-            borderRadius:
-                BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(12),
             child: SizedBox(
               width: 75,
               height: 90,
               child: _buildCover(),
             ),
           ),
-          const SizedBox(
-            width: 12,
-          ),
+
+          const SizedBox(width: 12),
+
           Expanded(
             child: Column(
               crossAxisAlignment:
@@ -358,107 +336,64 @@ class _CartItemState
                 Text(
                   widget.item.title,
                   maxLines: 2,
-                  overflow:
-                      TextOverflow.ellipsis,
-                  style:
-                      const TextStyle(
-                    fontWeight:
-                        FontWeight.w800,
-                    color:
-                        Color(0xFF3D004D),
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF3D004D),
                   ),
                 ),
-                const SizedBox(
-                  height: 5,
-                ),
+
+                const SizedBox(height: 5),
+
                 Text(
                   widget.item.author,
                   maxLines: 1,
-                  overflow:
-                      TextOverflow.ellipsis,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors
-                        .grey
-                        .shade600,
+                    color: Colors.grey.shade600,
                   ),
                 ),
-                const SizedBox(
-                  height: 6,
-                ),
+
+                const SizedBox(height: 6),
+
                 Text(
-                  widget.item
-                      .formattedPrice,
-                  style:
-                      const TextStyle(
-                    color:
-                        Color(0xFF6B1FA2),
-                    fontWeight:
-                        FontWeight.w700,
+                  widget.item.formattedPrice,
+                  style: const TextStyle(
+                    color: Color(0xFF6B1FA2),
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(
-                  height: 8,
-                ),
+
+                const SizedBox(height: 8),
+
                 Row(
                   children: [
                     IconButton(
                       visualDensity:
-                          VisualDensity
-                              .compact,
-                      onPressed: () {
-                        CartRepository
-                                .instance
-                            .updateQuantity(
-                          userId:
-                              widget.userId,
-                          bookId:
-                              widget.item
-                                  .bookId,
-                          quantity:
-                              widget.item
-                                      .quantity -
-                                  1,
-                        );
-                      },
-                      icon:
-                          const Icon(
-                        Icons
-                            .remove_circle_outline,
+                          VisualDensity.compact,
+                      tooltip: 'Decrease quantity',
+                      onPressed: _decreaseQuantity,
+                      icon: const Icon(
+                        Icons.remove_circle_outline,
                         size: 20,
                       ),
                     ),
+
                     Text(
                       '${widget.item.quantity}',
-                      style:
-                          const TextStyle(
-                        fontWeight:
-                            FontWeight.w700,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
+
                     IconButton(
                       visualDensity:
-                          VisualDensity
-                              .compact,
-                      onPressed: () {
-                        CartRepository
-                                .instance
-                            .updateQuantity(
-                          userId:
-                              widget.userId,
-                          bookId:
-                              widget.item
-                                  .bookId,
-                          quantity:
-                              widget.item
-                                      .quantity +
-                                  1,
-                        );
-                      },
-                      icon:
-                          const Icon(
-                        Icons
-                            .add_circle_outline,
+                          VisualDensity.compact,
+                      tooltip: 'Increase quantity',
+                      onPressed: _increaseQuantity,
+                      icon: const Icon(
+                        Icons.add_circle_outline,
                         size: 20,
                       ),
                     ),
@@ -467,21 +402,13 @@ class _CartItemState
               ],
             ),
           ),
+
           IconButton(
-            onPressed: () {
-              CartRepository.instance
-                  .removeFromCart(
-                userId:
-                    widget.userId,
-                bookId:
-                    widget.item.bookId,
-              );
-            },
-            icon:
-                const Icon(
+            tooltip: 'Remove from cart',
+            onPressed: _removeItem,
+            icon: const Icon(
               Icons.delete_outline,
-              color:
-                  Colors.redAccent,
+              color: Colors.redAccent,
             ),
           ),
         ],
@@ -492,18 +419,13 @@ class _CartItemState
   Widget _buildCover() {
     if (_loadingCover) {
       return Container(
-        color:
-            const Color(0xFFF3EAF5),
-        alignment:
-            Alignment.center,
-        child:
-            const SizedBox(
+        color: const Color(0xFFF3EAF5),
+        alignment: Alignment.center,
+        child: const SizedBox(
           width: 22,
           height: 22,
-          child:
-              CircularProgressIndicator(
-            color:
-                Color(0xFF6B1FA2),
+          child: CircularProgressIndicator(
+            color: Color(0xFF6B1FA2),
             strokeWidth: 2,
           ),
         ),
@@ -511,9 +433,7 @@ class _CartItemState
     }
 
     if (_coverUrl == null ||
-        _coverUrl!
-            .trim()
-            .isEmpty) {
+        _coverUrl!.trim().isEmpty) {
       return _placeholder();
     }
 
@@ -522,11 +442,7 @@ class _CartItemState
       fit: BoxFit.cover,
       width: 75,
       height: 90,
-      errorBuilder: (
-        _,
-        __,
-        ___,
-      ) {
+      errorBuilder: (_, __, ___) {
         return _placeholder();
       },
     );
@@ -534,14 +450,11 @@ class _CartItemState
 
   Widget _placeholder() {
     return const ColoredBox(
-      color:
-          Color(0xFFF3EAF5),
+      color: Color(0xFFF3EAF5),
       child: Center(
         child: Icon(
-          Icons
-              .menu_book_outlined,
-          color:
-              Color(0xFF6B1FA2),
+          Icons.menu_book_outlined,
+          color: Color(0xFF6B1FA2),
         ),
       ),
     );
@@ -552,688 +465,39 @@ class _CartItemState
 // EMPTY CART
 // ============================================================
 
-class _EmptyCart
-    extends StatelessWidget {
+class _EmptyCart extends StatelessWidget {
   const _EmptyCart();
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
+  Widget build(BuildContext context) {
     return const Center(
       child: Column(
         mainAxisAlignment:
-            MainAxisAlignment
-                .center,
+            MainAxisAlignment.center,
         children: [
           Icon(
-            Icons
-                .shopping_cart_outlined,
+            Icons.shopping_cart_outlined,
             size: 65,
-            color:
-                Color(0xFFD4CAD8),
+            color: Color(0xFFD4CAD8),
           ),
-          SizedBox(
-            height: 18,
-          ),
+          SizedBox(height: 18),
           Text(
             'Your cart is empty',
-            style:
-                TextStyle(
+            style: TextStyle(
               fontSize: 18,
-              fontWeight:
-                  FontWeight.w700,
-              color:
-                  Color(0xFF777777),
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF777777),
             ),
           ),
-          SizedBox(
-            height: 7,
-          ),
+          SizedBox(height: 7),
           Text(
             'Add a digital book to get started.',
-            style:
-                TextStyle(
-              color:
-                  Color(0xFFAAAAAA),
+            style: TextStyle(
+              color: Color(0xFFAAAAAA),
             ),
           ),
         ],
       ),
-    );
-  }
-}
-
-// ============================================================
-// CHECKOUT SCREEN
-// ============================================================
-
-class CheckoutScreen
-    extends StatefulWidget {
-  final List<CartItemModel> items;
-  final double total;
-  final String currency;
-
-  const CheckoutScreen({
-    super.key,
-    required this.items,
-    required this.total,
-    required this.currency,
-  });
-
-  @override
-  State<CheckoutScreen> createState() =>
-      _CheckoutScreenState();
-}
-
-class _CheckoutScreenState
-    extends State<CheckoutScreen> {
-  static const Color purple =
-      Color(0xFF6B1FA2);
-
-  static const Color darkPurple =
-      Color(0xFF3D004D);
-
-  final TextEditingController
-      _referenceController =
-      TextEditingController();
-
-  bool _submitting = false;
-
-  @override
-  void dispose() {
-    _referenceController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _submitOrder() async {
-    final user =
-        FirebaseAuth.instance.currentUser;
-
-    if (user == null) {
-      return;
-    }
-
-    if (_referenceController.text
-        .trim()
-        .isEmpty) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Please enter your payment reference.',
-          ),
-        ),
-      );
-
-      return;
-    }
-
-    setState(() {
-      _submitting = true;
-    });
-
-    try {
-      final orderId =
-          await PaymentRepository
-              .instance
-              .createOrder(
-        userId: user.uid,
-        items: widget.items,
-        total: widget.total,
-        currency: widget.currency,
-        paymentReference:
-            _referenceController.text
-                .trim(),
-      );
-
-      await CartRepository.instance
-          .clearCart(user.uid);
-
-      if (!mounted) {
-        return;
-      }
-
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(
-          builder: (_) =>
-              OrderSuccessScreen(
-            orderId: orderId,
-          ),
-        ),
-        (route) => route.isFirst,
-      );
-    } catch (e) {
-      if (!mounted) {
-        return;
-      }
-
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
-        SnackBar(
-          content: Text(
-            'Unable to submit payment: $e',
-          ),
-        ),
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _submitting = false;
-        });
-      }
-    }
-  }
-
-  String _formatAmount() {
-    if (widget.currency == 'NGN') {
-      return '₦${widget.total.toStringAsFixed(0)}';
-    }
-
-    return '${widget.currency} ${widget.total.toStringAsFixed(2)}';
-  }
-
-  @override
-  Widget build(
-    BuildContext context,
-  ) {
-    return Scaffold(
-      backgroundColor:
-          const Color(0xFFFCFAFD),
-      appBar: AppBar(
-        backgroundColor:
-            Colors.white,
-        surfaceTintColor:
-            Colors.white,
-        elevation: 0,
-        title:
-            const Text(
-          'Checkout',
-          style:
-              TextStyle(
-            color:
-                darkPurple,
-            fontWeight:
-                FontWeight.w800,
-          ),
-        ),
-      ),
-      body:
-          StreamBuilder<
-              PaymentSettingsModel?>(
-        stream:
-            PaymentRepository
-                .instance
-                .paymentSettingsStream(),
-        builder: (
-          context,
-          snapshot,
-        ) {
-          if (snapshot
-                  .connectionState ==
-              ConnectionState.waiting) {
-            return const Center(
-              child:
-                  CircularProgressIndicator(
-                color:
-                    purple,
-              ),
-            );
-          }
-
-          if (snapshot.hasError) {
-            return const Center(
-              child: Padding(
-                padding:
-                    EdgeInsets.all(24),
-                child: Text(
-                  'Unable to load payment details.',
-                  textAlign:
-                      TextAlign.center,
-                ),
-              ),
-            );
-          }
-
-          final settings =
-              snapshot.data;
-
-          if (settings == null) {
-            return const Center(
-              child: Padding(
-                padding:
-                    EdgeInsets.all(24),
-                child: Text(
-                  'Payment is currently unavailable. Please try again later.',
-                  textAlign:
-                      TextAlign.center,
-                ),
-              ),
-            );
-          }
-
-          return SingleChildScrollView(
-            padding:
-                const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment
-                      .start,
-              children: [
-                const Text(
-                  'Complete your payment',
-                  style:
-                      TextStyle(
-                    fontSize: 25,
-                    fontWeight:
-                        FontWeight.w900,
-                    color:
-                        darkPurple,
-                  ),
-                ),
-                const SizedBox(
-                  height: 8,
-                ),
-                Text(
-                  'Transfer the exact amount below to the account details provided.',
-                  style: TextStyle(
-                    color: Colors
-                        .grey
-                        .shade700,
-                    height: 1.5,
-                  ),
-                ),
-                const SizedBox(
-                  height: 24,
-                ),
-                Container(
-                  width:
-                      double.infinity,
-                  padding:
-                      const EdgeInsets
-                          .all(
-                    20,
-                  ),
-                  decoration:
-                      BoxDecoration(
-                    color:
-                        purple,
-                    borderRadius:
-                        BorderRadius
-                            .circular(
-                      20,
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment:
-                        CrossAxisAlignment
-                            .start,
-                    children: [
-                      const Text(
-                        'Amount to pay',
-                        style:
-                            TextStyle(
-                          color:
-                              Colors
-                                  .white70,
-                        ),
-                      ),
-                      const SizedBox(
-                        height: 6,
-                      ),
-                      Text(
-                        _formatAmount(),
-                        style:
-                            const TextStyle(
-                          color:
-                              Colors
-                                  .white,
-                          fontSize:
-                              30,
-                          fontWeight:
-                              FontWeight
-                                  .w900,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(
-                  height: 24,
-                ),
-                const Text(
-                  'Bank Transfer Details',
-                  style:
-                      TextStyle(
-                    fontSize: 19,
-                    fontWeight:
-                        FontWeight
-                            .w800,
-                    color:
-                        darkPurple,
-                  ),
-                ),
-                const SizedBox(
-                  height: 12,
-                ),
-                _PaymentDetailsCard(
-                  settings:
-                      settings,
-                ),
-                const SizedBox(
-                  height: 24,
-                ),
-                const Text(
-                  'Payment Reference',
-                  style:
-                      TextStyle(
-                    fontWeight:
-                        FontWeight
-                            .w800,
-                    color:
-                        darkPurple,
-                  ),
-                ),
-                const SizedBox(
-                  height: 8,
-                ),
-                TextField(
-                  controller:
-                      _referenceController,
-                  decoration:
-                      InputDecoration(
-                    hintText:
-                        'Enter transfer reference',
-                    filled: true,
-                    fillColor:
-                        Colors.white,
-                    border:
-                        OutlineInputBorder(
-                      borderRadius:
-                          BorderRadius
-                              .circular(
-                        16,
-                      ),
-                      borderSide:
-                          const BorderSide(
-                        color:
-                            Color(
-                          0xFFE5DCE8,
-                        ),
-                      ),
-                    ),
-                    enabledBorder:
-                        OutlineInputBorder(
-                      borderRadius:
-                          BorderRadius
-                              .circular(
-                        16,
-                      ),
-                      borderSide:
-                          const BorderSide(
-                        color:
-                            Color(
-                          0xFFE5DCE8,
-                        ),
-                      ),
-                    ),
-                    focusedBorder:
-                        OutlineInputBorder(
-                      borderRadius:
-                          BorderRadius
-                              .circular(
-                        16,
-                      ),
-                      borderSide:
-                          const BorderSide(
-                        color:
-                            purple,
-                        width: 1.5,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  height: 12,
-                ),
-                Text(
-                  'After transferring, enter the payment reference and submit your order. An administrator will verify your payment.',
-                  style: TextStyle(
-                    fontSize: 12,
-                    height: 1.5,
-                    color: Colors
-                        .grey
-                        .shade600,
-                  ),
-                ),
-                const SizedBox(
-                  height: 28,
-                ),
-                SizedBox(
-                  width:
-                      double.infinity,
-                  height: 54,
-                  child:
-                      ElevatedButton(
-                    onPressed:
-                        _submitting
-                            ? null
-                            : _submitOrder,
-                    style:
-                        ElevatedButton
-                            .styleFrom(
-                      backgroundColor:
-                          purple,
-                      foregroundColor:
-                          Colors.white,
-                      shape:
-                          RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius
-                                .circular(
-                          28,
-                        ),
-                      ),
-                    ),
-                    child:
-                        _submitting
-                            ? const SizedBox(
-                              width: 22,
-                              height: 22,
-                              child:
-                                  CircularProgressIndicator(
-                                color:
-                                    Colors.white,
-                                strokeWidth:
-                                    2,
-                              ),
-                            )
-                            : const Text(
-                              'Submit Payment',
-                              style:
-                                  TextStyle(
-                                fontWeight:
-                                    FontWeight
-                                        .w800,
-                              ),
-                            ),
-                  ),
-                ),
-                const SizedBox(
-                  height: 25,
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-// ============================================================
-// PAYMENT DETAILS CARD
-// ============================================================
-
-class _PaymentDetailsCard
-    extends StatelessWidget {
-  final PaymentSettingsModel settings;
-
-  const _PaymentDetailsCard({
-    required this.settings,
-  });
-
-  @override
-  Widget build(
-    BuildContext context,
-  ) {
-    return Container(
-      width:
-          double.infinity,
-      padding:
-          const EdgeInsets.all(20),
-      decoration:
-          BoxDecoration(
-        color: Colors.white,
-        borderRadius:
-            BorderRadius.circular(20),
-        border: Border.all(
-          color:
-              const Color(0xFFECE4EF),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
-        children: [
-          _DetailRow(
-            label: 'Bank',
-            value:
-                settings.bankName,
-          ),
-          const Divider(
-            height: 28,
-          ),
-          _DetailRow(
-            label: 'Account Name',
-            value:
-                settings.accountName,
-          ),
-          const Divider(
-            height: 28,
-          ),
-          _DetailRow(
-            label: 'Account Number',
-            value:
-                settings.accountNumber,
-            canCopy: true,
-          ),
-          if (settings.instructions
-              .trim()
-              .isNotEmpty) ...[
-            const Divider(
-              height: 28,
-            ),
-            const Text(
-              'Instructions',
-              style:
-                  TextStyle(
-                fontWeight:
-                    FontWeight.w700,
-                color:
-                    Color(0xFF3D004D),
-              ),
-            ),
-            const SizedBox(
-              height: 6,
-            ),
-            Text(
-              settings.instructions,
-              style: TextStyle(
-                color: Colors
-                    .grey
-                    .shade700,
-                height: 1.5,
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-// ============================================================
-// PAYMENT DETAIL ROW
-// ============================================================
-
-class _DetailRow
-    extends StatelessWidget {
-  final String label;
-  final String value;
-  final bool canCopy;
-
-  const _DetailRow({
-    required this.label,
-    required this.value,
-    this.canCopy = false,
-  });
-
-  @override
-  Widget build(
-    BuildContext context,
-  ) {
-    return Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment
-                    .start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors
-                      .grey
-                      .shade600,
-                ),
-              ),
-              const SizedBox(
-                height: 4,
-              ),
-              Text(
-                value,
-                style:
-                    const TextStyle(
-                  fontWeight:
-                      FontWeight.w800,
-                  fontSize: 15,
-                  color:
-                      Color(
-                    0xFF3D004D,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        if (canCopy)
-          IconButton(
-            onPressed: () {
-              // Clipboard functionality
-              // can be added here.
-            },
-            icon:
-                const Icon(
-              Icons.copy_outlined,
-              color:
-                  Color(0xFF6B1FA2),
-            ),
-          ),
-      ],
     );
   }
 }

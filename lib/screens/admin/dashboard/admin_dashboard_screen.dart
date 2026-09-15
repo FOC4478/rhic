@@ -4,6 +4,7 @@ import 'package:church_app/screens/admin/sermons/admin_sermons_screen.dart';
 import 'package:church_app/services/auth_service.dart';
 import 'package:church_app/screens/admin/shop/admin_payment_settings_screen.dart';
 import 'package:church_app/screens/admin/events/admin_events_screen.dart';
+import 'package:church_app/screens/admin/gallery/admin_gallery_screen.dart';
 
 
 class AdminDashboardScreen extends StatefulWidget {
@@ -144,13 +145,8 @@ class _AdminDashboardScreenState
      case 3:
   return const AdminEventsScreen();
 
-      case 4:
-        return _buildComingSoonPage(
-          title: 'Gallery',
-          icon: Icons.photo_library_outlined,
-          description:
-              'Manage photos and gallery content.',
-        );
+     case 4:
+  return const AdminGalleryScreen();
 
      case 5:
   return const AdminPaymentsScreen();

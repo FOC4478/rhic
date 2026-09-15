@@ -160,6 +160,31 @@ function isSafeEventObjectKey(objectKey) {
   );
 }
 
+// ============================================================
+// GALLERY OBJECT KEY SECURITY
+// ============================================================
+
+function isSafeGalleryObjectKey(objectKey) {
+  if (
+    !objectKey ||
+    typeof objectKey !== "string"
+  ) {
+    return false;
+  }
+
+  if (objectKey.includes("..")) {
+    return false;
+  }
+
+  if (objectKey.startsWith("/")) {
+    return false;
+  }
+
+  return objectKey.startsWith(
+    "gallery/images/",
+  );
+}
+
 function isSafeBookObjectKey(objectKey) {
   if (
     !objectKey ||
@@ -384,24 +409,7 @@ app.get(
 
 // ============================================================
 // CREATE SECURE UPLOAD URL
-// ============================================================
-//
-// resourceType:
-//
-// sermon:
-//   video -> sermons/video/...
-//   audio -> sermons/audio/...
-//   ebook -> sermons/ebook/...
-//   image -> sermons/image/...
-//
-// book:
-//   image -> books/covers/...
-//   ebook -> books/ebooks/...
-//
-// event:
-//   image -> events/flyers/...
-//
-// ============================================================
+
 
 app.post(
   "/upload-url",
@@ -477,6 +485,7 @@ app.post(
         "sermon",
         "book",
         "event",
+        "gallery",
       ];
 
       if (
@@ -505,10 +514,6 @@ app.post(
       // ======================================================
 
       if (resourceType === "book") {
-        // ----------------------------------------------------
-        // BOOK EBOOK
-        // ----------------------------------------------------
-
         if (mediaType === "ebook") {
           if (
             normalizedContentType !==
@@ -520,13 +525,7 @@ app.post(
                 "Book ebooks must be PDF files.",
             });
           }
-        }
-
-        // ----------------------------------------------------
-        // BOOK COVER
-        // ----------------------------------------------------
-
-        else if (
+        } else if (
           mediaType === "image"
         ) {
           const allowedBookCoverTypes = [
@@ -546,13 +545,7 @@ app.post(
                 "Book covers must be JPG, PNG, or WEBP images.",
             });
           }
-        }
-
-        // ----------------------------------------------------
-        // INVALID BOOK MEDIA
-        // ----------------------------------------------------
-
-        else {
+        } else {
           return res.status(400).json({
             success: false,
             message:
@@ -566,8 +559,6 @@ app.post(
       // ======================================================
 
       if (resourceType === "event") {
-        // Events currently support flyer images only.
-
         if (mediaType !== "image") {
           return res.status(400).json({
             success: false,
@@ -591,6 +582,38 @@ app.post(
             success: false,
             message:
               "Event flyers must be JPG, PNG, or WEBP images.",
+          });
+        }
+      }
+
+      // ======================================================
+      // GALLERY UPLOAD VALIDATION
+      // ======================================================
+
+      if (resourceType === "gallery") {
+        if (mediaType !== "image") {
+          return res.status(400).json({
+            success: false,
+            message:
+              "Gallery items can only have images.",
+          });
+        }
+
+        const allowedGalleryImageTypes = [
+          "image/jpeg",
+          "image/png",
+          "image/webp",
+        ];
+
+        if (
+          !allowedGalleryImageTypes.includes(
+            normalizedContentType,
+          )
+        ) {
+          return res.status(400).json({
+            success: false,
+            message:
+              "Gallery images must be JPG, PNG, or WEBP images.",
           });
         }
       }
@@ -693,6 +716,18 @@ app.post(
       }
 
       // ------------------------------------------------------
+      // GALLERY IMAGE
+      // ------------------------------------------------------
+
+      else if (
+        resourceType === "gallery" &&
+        mediaType === "image"
+      ) {
+        objectKey =
+          `gallery/images/${timestamp}-${randomPart}-${safeFileName}`;
+      }
+
+      // ------------------------------------------------------
       // BOOK COVER
       // ------------------------------------------------------
 
@@ -787,10 +822,6 @@ app.post(
 // ============================================================
 // SECURE SERMON DOWNLOAD URL
 // ============================================================
-//
-// Used only for sermon media.
-//
-// ============================================================
 
 app.post(
   "/download-url",
@@ -867,15 +898,6 @@ app.post(
 // ============================================================
 // SECURE EVENT FLYER DOWNLOAD URL
 // ============================================================
-//
-// Used only for event flyers.
-//
-// The client sends:
-// {
-//   objectKey: "events/flyers/..."
-// }
-//
-// ============================================================
 
 app.post(
   "/event-download-url",
@@ -900,10 +922,6 @@ app.post(
       const normalizedObjectKey =
         objectKey.trim();
 
-      // ------------------------------------------------------
-      // VERIFY EVENT OBJECT KEY
-      // ------------------------------------------------------
-
       if (
         !isSafeEventObjectKey(
           normalizedObjectKey,
@@ -915,10 +933,6 @@ app.post(
             "Access to this event object is not allowed.",
         });
       }
-
-      // ------------------------------------------------------
-      // CREATE TEMPORARY EVENT URL
-      // ------------------------------------------------------
 
       const command =
         new GetObjectCommand({
@@ -958,13 +972,175 @@ app.post(
 );
 
 // ============================================================
-// SECURE BOOK COVER URL
+// SECURE GALLERY IMAGE DOWNLOAD URL
 // ============================================================
 //
-// The client sends the bookId only.
+// The client sends:
 //
-// The server loads coverObjectKey from Firestore.
+// {
+//   objectKey: "gallery/images/..."
+// }
 //
+// The backend:
+// 1. Authenticates the Firebase user.
+// 2. Verifies the object key belongs to the Gallery path.
+// 3. Finds the matching Gallery Firestore document.
+// 4. Allows published Gallery images for members.
+// 5. Allows unpublished Gallery images for admins.
+// 6. Creates a temporary B2 URL.
+//
+// ============================================================
+
+app.post(
+  "/gallery-download-url",
+  authenticateFirebase,
+  async (req, res) => {
+    try {
+      const {
+        objectKey,
+      } = req.body;
+
+      // ------------------------------------------------------
+      // OBJECT KEY
+      // ------------------------------------------------------
+
+      if (
+        typeof objectKey !== "string" ||
+        objectKey.trim().length === 0
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "A B2 gallery object key is required.",
+        });
+      }
+
+      const normalizedObjectKey =
+        objectKey.trim();
+
+      // ------------------------------------------------------
+      // VERIFY OBJECT KEY PATH
+      // ------------------------------------------------------
+
+      if (
+        !isSafeGalleryObjectKey(
+          normalizedObjectKey,
+        )
+      ) {
+        return res.status(403).json({
+          success: false,
+          message:
+            "Access to this gallery object is not allowed.",
+        });
+      }
+
+      // ------------------------------------------------------
+      // FIND GALLERY ITEM
+      // ------------------------------------------------------
+
+      const gallerySnapshot =
+        await db
+          .collection("gallery")
+          .where(
+            "imageObjectKey",
+            "==",
+            normalizedObjectKey,
+          )
+          .limit(1)
+          .get();
+
+      if (gallerySnapshot.empty) {
+        return res.status(404).json({
+          success: false,
+          message:
+            "Gallery image was not found.",
+        });
+      }
+
+      const galleryDoc =
+        gallerySnapshot.docs[0];
+
+      const galleryData =
+        galleryDoc.data() || {};
+
+      const isPublished =
+        galleryData.isPublished === true;
+
+      // ------------------------------------------------------
+      // CHECK ADMIN STATUS
+      // ------------------------------------------------------
+
+      let isAdmin = false;
+
+      const userSnapshot =
+        await db
+          .collection("users")
+          .doc(req.user.uid)
+          .get();
+
+      if (userSnapshot.exists) {
+        const userData =
+          userSnapshot.data() || {};
+
+        isAdmin =
+          userData.role === "admin";
+      }
+
+      // ------------------------------------------------------
+      // MEMBERS CAN ONLY ACCESS PUBLISHED IMAGES
+      // ------------------------------------------------------
+
+      if (!isPublished && !isAdmin) {
+        return res.status(403).json({
+          success: false,
+          message:
+            "This gallery image is not published.",
+        });
+      }
+
+      // ------------------------------------------------------
+      // CREATE TEMPORARY URL
+      // ------------------------------------------------------
+
+      const command =
+        new GetObjectCommand({
+          Bucket: B2_BUCKET,
+          Key: normalizedObjectKey,
+        });
+
+      const downloadUrl =
+        await getSignedUrl(
+          s3,
+          command,
+          {
+            expiresIn: 300,
+          },
+        );
+
+      return res.json({
+        success: true,
+        downloadUrl:
+          downloadUrl,
+        expiresIn:
+          300,
+      });
+    } catch (error) {
+      console.error(
+        "Failed to create gallery download URL:",
+        error.message,
+      );
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Unable to create gallery download URL.",
+      });
+    }
+  },
+);
+
+// ============================================================
+// SECURE BOOK COVER URL
 // ============================================================
 
 app.post(
@@ -990,10 +1166,6 @@ app.post(
       const normalizedBookId =
         bookId.trim();
 
-      // ------------------------------------------------------
-      // LOAD BOOK
-      // ------------------------------------------------------
-
       const bookSnapshot =
         await db
           .collection("books")
@@ -1011,10 +1183,6 @@ app.post(
       const bookData =
         bookSnapshot.data() || {};
 
-      // ------------------------------------------------------
-      // GET COVER OBJECT KEY
-      // ------------------------------------------------------
-
       const coverObjectKey =
         typeof bookData.coverObjectKey === "string"
           ? bookData.coverObjectKey.trim()
@@ -1028,10 +1196,6 @@ app.post(
         });
       }
 
-      // ------------------------------------------------------
-      // VERIFY COVER OBJECT KEY
-      // ------------------------------------------------------
-
       if (
         !isSafeBookCoverObjectKey(
           coverObjectKey,
@@ -1043,10 +1207,6 @@ app.post(
             "This cover image is not configured correctly.",
         });
       }
-
-      // ------------------------------------------------------
-      // CREATE TEMPORARY COVER URL
-      // ------------------------------------------------------
 
       const command =
         new GetObjectCommand({
@@ -1088,22 +1248,6 @@ app.post(
 // ============================================================
 // SECURE PURCHASED BOOK DOWNLOAD URL
 // ============================================================
-//
-// IMPORTANT:
-//
-// Client sends ONLY:
-// {
-//   bookId: "..."
-// }
-//
-// Server:
-// 1. Authenticates user.
-// 2. Loads book.
-// 3. Gets ebookObjectKey from Firestore.
-// 4. Verifies approved purchase.
-// 5. Creates temporary B2 URL.
-//
-// ============================================================
 
 app.post(
   "/book-download-url",
@@ -1113,10 +1257,6 @@ app.post(
       const {
         bookId,
       } = req.body;
-
-      // ------------------------------------------------------
-      // BOOK ID
-      // ------------------------------------------------------
 
       if (
         typeof bookId !== "string" ||
@@ -1131,10 +1271,6 @@ app.post(
 
       const normalizedBookId =
         bookId.trim();
-
-      // ------------------------------------------------------
-      // LOAD BOOK
-      // ------------------------------------------------------
 
       const bookSnapshot =
         await db
@@ -1153,10 +1289,6 @@ app.post(
       const bookData =
         bookSnapshot.data() || {};
 
-      // ------------------------------------------------------
-      // GET PRIVATE EBOOK OBJECT KEY
-      // ------------------------------------------------------
-
       const ebookObjectKey =
         typeof bookData.ebookObjectKey === "string"
           ? bookData.ebookObjectKey.trim()
@@ -1169,10 +1301,6 @@ app.post(
             "This book does not have an ebook file.",
         });
       }
-
-      // ------------------------------------------------------
-      // VERIFY OBJECT KEY
-      // ------------------------------------------------------
 
       if (
         !isSafeBookObjectKey(
@@ -1190,10 +1318,6 @@ app.post(
             "This ebook file is not configured correctly.",
         });
       }
-
-      // ------------------------------------------------------
-      // FIND APPROVED PURCHASE
-      // ------------------------------------------------------
 
       const ordersSnapshot =
         await db
@@ -1244,10 +1368,6 @@ app.post(
         }
       }
 
-      // ------------------------------------------------------
-      // DENY UNPAID ACCESS
-      // ------------------------------------------------------
-
       if (
         !hasApprovedPurchase
       ) {
@@ -1257,10 +1377,6 @@ app.post(
             "You do not have an approved purchase for this ebook.",
         });
       }
-
-      // ------------------------------------------------------
-      // CREATE TEMPORARY EBOOK URL
-      // ------------------------------------------------------
 
       const command =
         new GetObjectCommand({
@@ -1389,6 +1505,10 @@ app.listen(
 
     console.log(
       " Event flyer access: ENABLED",
+    );
+
+    console.log(
+      " Gallery image access: ENABLED",
     );
 
     console.log(

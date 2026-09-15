@@ -845,24 +845,147 @@ class ContentRepository {
   // ============================================================
 
   Stream<List<GalleryItem>> galleryStream() {
-    return _firestore
-        .collection('gallery')
-        .where(
-          'isPublished',
-          isEqualTo: true,
-        )
-        .orderBy(
-          'createdAt',
-          descending: true,
-        )
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map(GalleryItem.fromFirestore)
-              .toList(),
-        );
+  return _firestore
+      .collection('gallery')
+      .where(
+        'isPublished',
+        isEqualTo: true,
+      )
+      .orderBy(
+        'createdAt',
+        descending: true,
+      )
+      .snapshots()
+      .map(
+        (snapshot) => snapshot.docs
+            .map(GalleryItem.fromFirestore)
+            .toList(),
+      );
+}
+  
+  
+  Future<String> createGalleryItem({
+  required String title,
+  required String description,
+  required String imageObjectKey,
+  required String createdBy,
+  bool isPublished = true,
+}) async {
+  if (title.trim().isEmpty) {
+    throw Exception('Gallery title is required.');
   }
 
+  if (imageObjectKey.trim().isEmpty) {
+    throw Exception('Gallery image is required.');
+  }
+
+  if (createdBy.trim().isEmpty) {
+    throw Exception(
+      'Admin account could not be identified.',
+    );
+  }
+
+  final galleryRef =
+      _firestore.collection('gallery').doc();
+
+  await galleryRef.set({
+    'title': title.trim(),
+    'description': description.trim(),
+    'imageObjectKey': imageObjectKey.trim(),
+    'isPublished': isPublished,
+    'createdBy': createdBy.trim(),
+    'createdAt': FieldValue.serverTimestamp(),
+    'updatedAt': FieldValue.serverTimestamp(),
+  });
+
+  return galleryRef.id;
+}
+
+Future<void> updateGalleryItem({
+  required String galleryId,
+  required String title,
+  required String description,
+  required String imageObjectKey,
+  required String createdBy,
+  required bool isPublished,
+}) async {
+  if (galleryId.trim().isEmpty) {
+    throw Exception('Gallery item ID is required.');
+  }
+
+  if (title.trim().isEmpty) {
+    throw Exception('Gallery title is required.');
+  }
+
+  if (imageObjectKey.trim().isEmpty) {
+    throw Exception('Gallery image is required.');
+  }
+
+  if (createdBy.trim().isEmpty) {
+    throw Exception(
+      'Admin account could not be identified.',
+    );
+  }
+
+  await _firestore
+      .collection('gallery')
+      .doc(galleryId.trim())
+      .update({
+    'title': title.trim(),
+    'description': description.trim(),
+    'imageObjectKey': imageObjectKey.trim(),
+    'isPublished': isPublished,
+    'updatedAt': FieldValue.serverTimestamp(),
+  });
+}
+
+Future<void> setGalleryPublished({
+  required String galleryId,
+  required bool isPublished,
+}) async {
+  if (galleryId.trim().isEmpty) {
+    throw Exception('Gallery item ID is required.');
+  }
+
+  await _firestore
+      .collection('gallery')
+      .doc(galleryId.trim())
+      .update({
+    'isPublished': isPublished,
+    'updatedAt': FieldValue.serverTimestamp(),
+  });
+}
+
+Future<void> deleteGalleryItem(
+  String galleryId,
+) async {
+  if (galleryId.trim().isEmpty) {
+    throw Exception('Gallery item ID is required.');
+  }
+
+  await _firestore
+      .collection('gallery')
+      .doc(galleryId.trim())
+      .delete();
+}
+
+Stream<List<GalleryItem>> adminGalleryStream() {
+  return _firestore
+      .collection('gallery')
+      .orderBy(
+        'createdAt',
+        descending: true,
+      )
+      .snapshots()
+      .map(
+        (snapshot) => snapshot.docs
+            .map(GalleryItem.fromFirestore)
+            .toList(),
+      );
+}
+  
+
+  
   // ============================================================
   // USER PROFILE
   // ============================================================

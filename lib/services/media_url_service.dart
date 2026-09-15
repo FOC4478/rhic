@@ -9,18 +9,6 @@ class MediaUrlService {
   static final MediaUrlService instance =
       MediaUrlService._();
 
-  // ============================================================
-  // BACKEND URL
-  // ============================================================
-  //
-  // Chrome Web + backend running on the same computer:
-  //
-  // http://localhost:3000
-  //
-  // When testing on a physical phone, replace localhost
-  // with your computer's LAN IP.
-  // ============================================================
-
   static const String baseUrl =
       'http://localhost:3000';
 
@@ -146,13 +134,6 @@ class MediaUrlService {
   // ============================================================
   // GET SIGNED EVENT FLYER DOWNLOAD URL
   // ============================================================
-  //
-  // Event flyers are stored separately from sermons:
-  //
-  // events/flyers/...
-  //
-  // They must therefore use the event-specific backend endpoint.
-  // ============================================================
 
   Future<String> getEventDownloadUrl({
     required String storagePath,
@@ -263,6 +244,121 @@ class MediaUrlService {
         downloadUrl.isEmpty) {
       throw Exception(
         'Event media server did not return a download URL.',
+      );
+    }
+
+    return downloadUrl;
+  }
+
+  // ============================================================
+  // GET SIGNED GALLERY IMAGE DOWNLOAD URL
+  // ============================================================
+
+  Future<String> getGalleryDownloadUrl({
+    required String storagePath,
+  }) async {
+    final cleanedPath =
+        storagePath.trim();
+
+    if (cleanedPath.isEmpty) {
+      throw Exception(
+        'A B2 gallery image object key is required.',
+      );
+    }
+
+    // ----------------------------------------------------------
+    // CURRENT FIREBASE USER
+    // ----------------------------------------------------------
+
+    final user =
+        FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      throw Exception(
+        'You must be signed in.',
+      );
+    }
+
+    // ----------------------------------------------------------
+    // FIREBASE ID TOKEN
+    // ----------------------------------------------------------
+
+    final idToken =
+        await user.getIdToken(true);
+
+    if (idToken == null ||
+        idToken.trim().isEmpty) {
+      throw Exception(
+        'Unable to authenticate your account.',
+      );
+    }
+
+    // ----------------------------------------------------------
+    // REQUEST SIGNED GALLERY URL
+    // ----------------------------------------------------------
+
+    final response =
+        await http.post(
+      Uri.parse(
+        '$baseUrl/gallery-download-url',
+      ),
+      headers: {
+        'Content-Type':
+            'application/json',
+        'Authorization':
+            'Bearer $idToken',
+      },
+      body: jsonEncode({
+        'objectKey':
+            cleanedPath,
+      }),
+    );
+
+    // ----------------------------------------------------------
+    // HANDLE BACKEND ERRORS
+    // ----------------------------------------------------------
+
+    if (response.statusCode != 200) {
+      String message =
+          'Unable to create gallery image URL.';
+
+      try {
+        final decoded =
+            jsonDecode(response.body);
+
+        if (decoded is Map &&
+            decoded['message'] != null) {
+          message =
+              decoded['message'].toString();
+        }
+      } catch (_) {}
+
+      throw Exception(message);
+    }
+
+    // ----------------------------------------------------------
+    // DECODE RESPONSE
+    // ----------------------------------------------------------
+
+    final decoded =
+        jsonDecode(response.body);
+
+    if (decoded is! Map ||
+        decoded['success'] != true ||
+        decoded['downloadUrl'] == null) {
+      throw Exception(
+        'The gallery server returned an invalid response.',
+      );
+    }
+
+    final downloadUrl =
+        decoded['downloadUrl']
+            .toString()
+            .trim();
+
+    if (downloadUrl.isEmpty) {
+      throw Exception(
+        'The server returned an empty gallery image URL.',
       );
     }
 

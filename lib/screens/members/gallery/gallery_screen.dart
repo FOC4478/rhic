@@ -1,7 +1,9 @@
+
 import 'package:flutter/material.dart';
 
 import '../../../models/gallery_model.dart';
 import '../../../repositories/content_repository.dart';
+import '../../../services/media_url_service.dart';
 
 class GalleryScreen extends StatefulWidget {
   const GalleryScreen({super.key});
@@ -394,7 +396,7 @@ class _GalleryCard extends StatelessWidget {
                     fit: StackFit.expand,
                     children: [
                       _GalleryImage(
-                        imageUrl: item.imageUrl,
+                        objectKey: item.imageObjectKey,
                       ),
 
                       Positioned(
@@ -476,21 +478,105 @@ class _GalleryCard extends StatelessWidget {
 // GALLERY IMAGE
 // ==================================================================
 
-class _GalleryImage extends StatelessWidget {
-  final String imageUrl;
+class _GalleryImage extends StatefulWidget {
+  final String objectKey;
 
   const _GalleryImage({
-    required this.imageUrl,
+    required this.objectKey,
   });
 
   @override
+  State<_GalleryImage> createState() =>
+      _GalleryImageState();
+}
+
+class _GalleryImageState extends State<_GalleryImage> {
+  String? _imageUrl;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _loadImage();
+  }
+
+  @override
+  void didUpdateWidget(
+    covariant _GalleryImage oldWidget,
+  ) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.objectKey != widget.objectKey) {
+      _loadImage();
+    }
+  }
+
+  Future<void> _loadImage() async {
+    final objectKey = widget.objectKey.trim();
+
+    if (objectKey.isEmpty) {
+      if (!mounted) return;
+
+      setState(() {
+        _imageUrl = null;
+        _loading = false;
+      });
+
+      return;
+    }
+
+    if (mounted) {
+      setState(() {
+        _loading = true;
+        _imageUrl = null;
+      });
+    }
+
+    try {
+      final url =
+          await MediaUrlService.instance
+              .getGalleryDownloadUrl(
+        storagePath: objectKey,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _imageUrl = url;
+        _loading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+
+      setState(() {
+        _imageUrl = null;
+        _loading = false;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (imageUrl.trim().isEmpty) {
+    if (_loading) {
+      return Container(
+        color: const Color(0xFFF3EAF6),
+        child: const Center(
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: Color(0xFF6B1FA2),
+          ),
+        ),
+      );
+    }
+
+    if (_imageUrl == null ||
+        _imageUrl!.trim().isEmpty) {
       return Container(
         color: const Color(0xFFF3EAF6),
         child: const Center(
           child: Icon(
-            Icons.image_not_supported_outlined,
+            Icons.broken_image_outlined,
             color: Color(0xFF8E3FC1),
             size: 42,
           ),
@@ -499,8 +585,10 @@ class _GalleryImage extends StatelessWidget {
     }
 
     return Image.network(
-      imageUrl,
+      _imageUrl!,
       fit: BoxFit.cover,
+      width: double.infinity,
+      height: double.infinity,
       loadingBuilder: (
         context,
         child,
@@ -554,10 +642,12 @@ class _GalleryViewer extends StatefulWidget {
   });
 
   @override
-  State<_GalleryViewer> createState() => _GalleryViewerState();
+  State<_GalleryViewer> createState() =>
+      _GalleryViewerState();
 }
 
-class _GalleryViewerState extends State<_GalleryViewer> {
+class _GalleryViewerState
+    extends State<_GalleryViewer> {
   late PageController _pageController;
   late int _currentIndex;
 
@@ -615,43 +705,16 @@ class _GalleryViewerState extends State<_GalleryViewer> {
                 });
               },
               itemBuilder: (context, index) {
-                final galleryItem = widget.items[index];
+                final galleryItem =
+                    widget.items[index];
 
                 return InteractiveViewer(
                   minScale: 0.8,
                   maxScale: 4.0,
                   child: Center(
-                    child: Image.network(
-                      galleryItem.imageUrl,
-                      fit: BoxFit.contain,
-                      loadingBuilder: (
-                        context,
-                        child,
-                        loadingProgress,
-                      ) {
-                        if (loadingProgress == null) {
-                          return child;
-                        }
-
-                        return const Center(
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                          ),
-                        );
-                      },
-                      errorBuilder: (
-                        context,
-                        error,
-                        stackTrace,
-                      ) {
-                        return const Center(
-                          child: Icon(
-                            Icons.broken_image_outlined,
-                            color: Colors.white70,
-                            size: 60,
-                          ),
-                        );
-                      },
+                    child: _ViewerGalleryImage(
+                      objectKey:
+                          galleryItem.imageObjectKey,
                     ),
                   ),
                 );
@@ -711,6 +774,146 @@ class _GalleryViewerState extends State<_GalleryViewer> {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ==================================================================
+// FULL SCREEN GALLERY IMAGE
+// ==================================================================
+
+class _ViewerGalleryImage
+    extends StatefulWidget {
+  final String objectKey;
+
+  const _ViewerGalleryImage({
+    required this.objectKey,
+  });
+
+  @override
+  State<_ViewerGalleryImage> createState() =>
+      _ViewerGalleryImageState();
+}
+
+class _ViewerGalleryImageState
+    extends State<_ViewerGalleryImage> {
+  String? _imageUrl;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _loadImage();
+  }
+
+  @override
+  void didUpdateWidget(
+    covariant _ViewerGalleryImage oldWidget,
+  ) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.objectKey != widget.objectKey) {
+      _loadImage();
+    }
+  }
+
+  Future<void> _loadImage() async {
+    final objectKey = widget.objectKey.trim();
+
+    if (objectKey.isEmpty) {
+      if (!mounted) return;
+
+      setState(() {
+        _imageUrl = null;
+        _loading = false;
+      });
+
+      return;
+    }
+
+    if (mounted) {
+      setState(() {
+        _loading = true;
+        _imageUrl = null;
+      });
+    }
+
+    try {
+      final url =
+          await MediaUrlService.instance
+              .getGalleryDownloadUrl(
+        storagePath: objectKey,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _imageUrl = url;
+        _loading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+
+      setState(() {
+        _imageUrl = null;
+        _loading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) {
+      return const Center(
+        child: CircularProgressIndicator(
+          color: Colors.white,
+        ),
+      );
+    }
+
+    if (_imageUrl == null ||
+        _imageUrl!.trim().isEmpty) {
+      return const Center(
+        child: Icon(
+          Icons.broken_image_outlined,
+          color: Colors.white70,
+          size: 60,
+        ),
+      );
+    }
+
+    return Image.network(
+      _imageUrl!,
+      fit: BoxFit.contain,
+      loadingBuilder: (
+        context,
+        child,
+        loadingProgress,
+      ) {
+        if (loadingProgress == null) {
+          return child;
+        }
+
+        return const Center(
+          child: CircularProgressIndicator(
+            color: Colors.white,
+          ),
+        );
+      },
+      errorBuilder: (
+        context,
+        error,
+        stackTrace,
+      ) {
+        return const Center(
+          child: Icon(
+            Icons.broken_image_outlined,
+            color: Colors.white70,
+            size: 60,
+          ),
+        );
+      },
     );
   }
 }
@@ -878,15 +1081,18 @@ class _GalleryError extends StatelessWidget {
             ElevatedButton(
               onPressed: onRetry,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6B1FA2),
+                backgroundColor:
+                    const Color(0xFF6B1FA2),
                 foregroundColor: Colors.white,
                 elevation: 0,
-                padding: const EdgeInsets.symmetric(
+                padding:
+                    const EdgeInsets.symmetric(
                   horizontal: 24,
                   vertical: 12,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius:
+                      BorderRadius.circular(24),
                 ),
               ),
               child: const Text('Try Again'),

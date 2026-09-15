@@ -197,15 +197,7 @@ class B2UploadService {
   //
   // Use this only for sermon media.
   //
-  // Example:
-  //
-  // getDownloadUrl(
-  //   objectKey: sermonObjectKey,
-  // );
-  //
-  // Paid books must use getEbookDownloadUrl().
-  // Event flyers must use getEventDownloadUrl().
-  // ============================================================
+  
 
   Future<String> getDownloadUrl({
     required String objectKey,
@@ -279,14 +271,7 @@ class B2UploadService {
 
   // ============================================================
   // GET SIGNED EVENT FLYER DOWNLOAD URL
-  // ============================================================
-  //
-  // Event flyers are stored under:
-  //
-  // events/flyers/...
-  //
-  // They must NOT use the sermon /download-url endpoint.
-  // ============================================================
+  
 
   Future<String> getEventDownloadUrl({
     required String objectKey,
@@ -359,20 +344,7 @@ class B2UploadService {
 
   // ============================================================
   // GET SIGNED PURCHASED EBOOK URL
-  // ============================================================
-  //
-  // IMPORTANT:
-  // The client sends ONLY the book ID.
-  //
-  // The backend:
-  // 1. verifies the Firebase user
-  // 2. finds the book
-  // 3. gets ebookObjectKey from Firestore
-  // 4. checks for an approved purchase
-  // 5. creates a temporary B2 URL
-  //
-  // The client does NOT send the private object key.
-  // ============================================================
+  
 
   Future<String> getEbookDownloadUrl({
     required String bookId,
@@ -446,12 +418,7 @@ class B2UploadService {
 
   // ============================================================
   // GET SIGNED BOOK COVER URL
-  // ============================================================
-  //
-  // The client sends only the book ID.
-  // The backend gets coverObjectKey from Firestore and
-  // returns a temporary signed B2 URL.
-  // ============================================================
+ 
 
   Future<String> getBookCoverUrl({
     required String bookId,

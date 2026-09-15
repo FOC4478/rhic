@@ -1,28 +1,26 @@
+// lib/models/event_model.dart
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class EventModel {
   final String id;
   final String title;
-  final String description;
-  final String date;
-  final String time;
-  final String location;
-  final String imageUrl;
+  final DateTime eventDate;
+  final String imageObjectKey;
   final bool isFeatured;
   final bool isPublished;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final String createdBy;
 
   const EventModel({
     required this.id,
     required this.title,
-    required this.description,
-    required this.date,
-    required this.time,
-    required this.location,
-    required this.imageUrl,
+    required this.eventDate,
+    required this.imageObjectKey,
     required this.isFeatured,
     required this.isPublished,
+    required this.createdBy,
     this.createdAt,
     this.updatedAt,
   });
@@ -35,13 +33,13 @@ class EventModel {
     return EventModel(
       id: doc.id,
       title: data['title']?.toString() ?? '',
-      description: data['description']?.toString() ?? '',
-      date: data['date']?.toString() ?? '',
-      time: data['time']?.toString() ?? '',
-      location: data['location']?.toString() ?? '',
-      imageUrl: data['imageUrl']?.toString() ?? '',
+      eventDate:
+          _timestampToDateTime(data['eventDate']) ?? DateTime.now(),
+      imageObjectKey:
+          data['imageObjectKey']?.toString() ?? '',
       isFeatured: data['isFeatured'] == true,
       isPublished: data['isPublished'] == true,
+      createdBy: data['createdBy']?.toString() ?? '',
       createdAt: _timestampToDateTime(data['createdAt']),
       updatedAt: _timestampToDateTime(data['updatedAt']),
     );
@@ -50,13 +48,11 @@ class EventModel {
   Map<String, dynamic> toFirestore() {
     return {
       'title': title,
-      'description': description,
-      'date': date,
-      'time': time,
-      'location': location,
-      'imageUrl': imageUrl,
+      'eventDate': Timestamp.fromDate(eventDate),
+      'imageObjectKey': imageObjectKey,
       'isFeatured': isFeatured,
       'isPublished': isPublished,
+      'createdBy': createdBy,
       'createdAt': createdAt == null
           ? FieldValue.serverTimestamp()
           : Timestamp.fromDate(createdAt!),
@@ -69,26 +65,22 @@ class EventModel {
   EventModel copyWith({
     String? id,
     String? title,
-    String? description,
-    String? date,
-    String? time,
-    String? location,
-    String? imageUrl,
+    DateTime? eventDate,
+    String? imageObjectKey,
     bool? isFeatured,
     bool? isPublished,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? createdBy,
   }) {
     return EventModel(
       id: id ?? this.id,
       title: title ?? this.title,
-      description: description ?? this.description,
-      date: date ?? this.date,
-      time: time ?? this.time,
-      location: location ?? this.location,
-      imageUrl: imageUrl ?? this.imageUrl,
+      eventDate: eventDate ?? this.eventDate,
+      imageObjectKey: imageObjectKey ?? this.imageObjectKey,
       isFeatured: isFeatured ?? this.isFeatured,
       isPublished: isPublished ?? this.isPublished,
+      createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -97,6 +89,10 @@ class EventModel {
   static DateTime? _timestampToDateTime(dynamic value) {
     if (value is Timestamp) {
       return value.toDate();
+    }
+
+    if (value is DateTime) {
+      return value;
     }
 
     return null;

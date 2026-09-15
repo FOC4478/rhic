@@ -1,4 +1,3 @@
-
 require("dotenv").config();
 
 const express = require("express");
@@ -138,6 +137,27 @@ function isSafeSermonObjectKey(objectKey) {
   }
 
   return objectKey.startsWith("sermons/");
+}
+
+function isSafeEventObjectKey(objectKey) {
+  if (
+    !objectKey ||
+    typeof objectKey !== "string"
+  ) {
+    return false;
+  }
+
+  if (objectKey.includes("..")) {
+    return false;
+  }
+
+  if (objectKey.startsWith("/")) {
+    return false;
+  }
+
+  return objectKey.startsWith(
+    "events/flyers/",
+  );
 }
 
 function isSafeBookObjectKey(objectKey) {
@@ -378,6 +398,9 @@ app.get(
 //   image -> books/covers/...
 //   ebook -> books/ebooks/...
 //
+// event:
+//   image -> events/flyers/...
+//
 // ============================================================
 
 app.post(
@@ -453,6 +476,7 @@ app.post(
       const allowedResourceTypes = [
         "sermon",
         "book",
+        "event",
       ];
 
       if (
@@ -533,6 +557,40 @@ app.post(
             success: false,
             message:
               "Books can only have cover images or ebook PDFs.",
+          });
+        }
+      }
+
+      // ======================================================
+      // EVENT UPLOAD VALIDATION
+      // ======================================================
+
+      if (resourceType === "event") {
+        // Events currently support flyer images only.
+
+        if (mediaType !== "image") {
+          return res.status(400).json({
+            success: false,
+            message:
+              "Events can only have flyer images.",
+          });
+        }
+
+        const allowedEventImageTypes = [
+          "image/jpeg",
+          "image/png",
+          "image/webp",
+        ];
+
+        if (
+          !allowedEventImageTypes.includes(
+            normalizedContentType,
+          )
+        ) {
+          return res.status(400).json({
+            success: false,
+            message:
+              "Event flyers must be JPG, PNG, or WEBP images.",
           });
         }
       }
@@ -622,8 +680,23 @@ app.post(
 
       let objectKey;
 
-      // BOOK COVER
+      // ------------------------------------------------------
+      // EVENT FLYER
+      // ------------------------------------------------------
+
       if (
+        resourceType === "event" &&
+        mediaType === "image"
+      ) {
+        objectKey =
+          `events/flyers/${timestamp}-${randomPart}-${safeFileName}`;
+      }
+
+      // ------------------------------------------------------
+      // BOOK COVER
+      // ------------------------------------------------------
+
+      else if (
         resourceType === "book" &&
         mediaType === "image"
       ) {
@@ -631,7 +704,10 @@ app.post(
           `books/covers/${timestamp}-${randomPart}-${safeFileName}`;
       }
 
+      // ------------------------------------------------------
       // BOOK EBOOK
+      // ------------------------------------------------------
+
       else if (
         resourceType === "book" &&
         mediaType === "ebook"
@@ -640,7 +716,10 @@ app.post(
           `books/ebooks/${timestamp}-${randomPart}-${safeFileName}`;
       }
 
+      // ------------------------------------------------------
       // SERMON MEDIA
+      // ------------------------------------------------------
+
       else {
         objectKey =
           `sermons/${mediaType}/${timestamp}-${randomPart}-${safeFileName}`;
@@ -780,6 +859,99 @@ app.post(
         success: false,
         message:
           "Unable to create download URL.",
+      });
+    }
+  },
+);
+
+// ============================================================
+// SECURE EVENT FLYER DOWNLOAD URL
+// ============================================================
+//
+// Used only for event flyers.
+//
+// The client sends:
+// {
+//   objectKey: "events/flyers/..."
+// }
+//
+// ============================================================
+
+app.post(
+  "/event-download-url",
+  authenticateFirebase,
+  async (req, res) => {
+    try {
+      const {
+        objectKey,
+      } = req.body;
+
+      if (
+        typeof objectKey !== "string" ||
+        objectKey.trim().length === 0
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "A B2 event object key is required.",
+        });
+      }
+
+      const normalizedObjectKey =
+        objectKey.trim();
+
+      // ------------------------------------------------------
+      // VERIFY EVENT OBJECT KEY
+      // ------------------------------------------------------
+
+      if (
+        !isSafeEventObjectKey(
+          normalizedObjectKey,
+        )
+      ) {
+        return res.status(403).json({
+          success: false,
+          message:
+            "Access to this event object is not allowed.",
+        });
+      }
+
+      // ------------------------------------------------------
+      // CREATE TEMPORARY EVENT URL
+      // ------------------------------------------------------
+
+      const command =
+        new GetObjectCommand({
+          Bucket: B2_BUCKET,
+          Key: normalizedObjectKey,
+        });
+
+      const downloadUrl =
+        await getSignedUrl(
+          s3,
+          command,
+          {
+            expiresIn: 300,
+          },
+        );
+
+      return res.json({
+        success: true,
+        downloadUrl:
+          downloadUrl,
+        expiresIn:
+          300,
+      });
+    } catch (error) {
+      console.error(
+        "Failed to create event download URL:",
+        error.message,
+      );
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Unable to create event download URL.",
       });
     }
   },
@@ -1216,6 +1388,10 @@ app.listen(
     );
 
     console.log(
+      " Event flyer access: ENABLED",
+    );
+
+    console.log(
       " Book cover access: ENABLED",
     );
 
@@ -1230,4 +1406,3 @@ app.listen(
     console.log("");
   },
 );
-

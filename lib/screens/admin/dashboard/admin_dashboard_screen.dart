@@ -3,6 +3,7 @@ import 'package:church_app/screens/admin/books/admin_books_screen.dart';
 import 'package:church_app/screens/admin/sermons/admin_sermons_screen.dart';
 import 'package:church_app/services/auth_service.dart';
 import 'package:church_app/screens/admin/shop/admin_payment_settings_screen.dart';
+import 'package:church_app/screens/admin/events/admin_events_screen.dart';
 
 
 class AdminDashboardScreen extends StatefulWidget {
@@ -140,13 +141,8 @@ class _AdminDashboardScreenState
       case 2:
   return const AdminBooksScreen();
 
-      case 3:
-        return _buildComingSoonPage(
-          title: 'Events',
-          icon: Icons.event_outlined,
-          description:
-              'Create and manage church events.',
-        );
+     case 3:
+  return const AdminEventsScreen();
 
       case 4:
         return _buildComingSoonPage(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../models/event_model.dart';
 import '../../../repositories/content_repository.dart';
+import '../../../services/media_url_service.dart';
 
 class EventsScreen extends StatelessWidget {
   const EventsScreen({super.key});
@@ -26,8 +27,8 @@ class EventsScreen extends StatelessWidget {
           color: Color(0xFF3B1745),
         ),
       ),
-      body: StreamBuilder<List<EventModel>>(
-        stream: ContentRepository.instance.eventsStream(),
+      body: StreamBuilder<EventModel?>(
+        stream: ContentRepository.instance.eventStream(),
         builder: (context, snapshot) {
           // ======================================================
           // LOADING
@@ -46,28 +47,36 @@ class EventsScreen extends StatelessWidget {
           // ======================================================
 
           if (snapshot.hasError) {
-            return _buildErrorState();
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  'Event error:\n${snapshot.error}',
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            );
           }
 
           // ======================================================
-          // EVENTS
+          // EVENT
           // ======================================================
 
-          final events = snapshot.data ?? [];
+          final event = snapshot.data;
 
           // ======================================================
           // EMPTY
           // ======================================================
 
-          if (events.isEmpty) {
+          if (event == null || event.imageObjectKey.isEmpty) {
             return _buildEmptyState();
           }
 
           // ======================================================
-          // EVENT LIST
+          // CURRENT EVENT FLYER
           // ======================================================
 
-          return ListView.builder(
+          return ListView(
             physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(
               20,
@@ -75,25 +84,17 @@ class EventsScreen extends StatelessWidget {
               20,
               30,
             ),
-            itemCount: events.length,
-            itemBuilder: (context, index) {
-              final event = events[index];
-
-              return Padding(
-                padding: const EdgeInsets.only(
-                  bottom: 18,
-                ),
-                child: _EventCard(
-                  event: event,
-                  onTap: () {
-                    _showEventDetails(
-                      context,
-                      event,
-                    );
-                  },
-                ),
-              );
-            },
+            children: [
+              _EventCard(
+                event: event,
+                onTap: () {
+                  _showEventDetails(
+                    context,
+                    event,
+                  );
+                },
+              ),
+            ],
           );
         },
       ),
@@ -126,7 +127,7 @@ class EventsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 18),
             const Text(
-              'No Events Yet',
+              'No Event Yet',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w800,
@@ -135,56 +136,7 @@ class EventsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             const Text(
-              'There are no upcoming events at the moment.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                height: 1.5,
-                color: Color(0xFF777777),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ============================================================
-  // ERROR STATE
-  // ============================================================
-
-  Widget _buildErrorState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(30),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: const BoxDecoration(
-                color: Color(0xFFF9EAFB),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.error_outline,
-                size: 38,
-                color: Color(0xFF7B21A3),
-              ),
-            ),
-            const SizedBox(height: 18),
-            const Text(
-              'Unable to Load Events',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF3B1745),
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Something went wrong while loading events.',
+              'There is no event flyer available at the moment.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
@@ -219,105 +171,28 @@ class EventsScreen extends StatelessWidget {
         return SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(
-              24,
-              24,
-              24,
+              20,
+              20,
+              20,
               30,
             ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // ==================================================
                 // IMAGE
                 // ==================================================
 
-                if (event.imageUrl.isNotEmpty)
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(22),
-                    child: Image.network(
-                      event.imageUrl,
-                      width: double.infinity,
-                      height: 210,
-                      fit: BoxFit.cover,
-                      errorBuilder: (
-                        context,
-                        error,
-                        stackTrace,
-                      ) {
-                        return _buildImagePlaceholder(
-                          height: 210,
-                        );
-                      },
-                    ),
-                  ),
-
-                if (event.imageUrl.isNotEmpty)
-                  const SizedBox(height: 22),
-
-                // ==================================================
-                // TITLE
-                // ==================================================
-
-                Text(
-                  event.title,
-                  style: const TextStyle(
-                    fontSize: 25,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF3D004D),
-                  ),
-                ),
-
-                const SizedBox(height: 18),
-
-                // ==================================================
-                // DATE
-                // ==================================================
-
-                _DetailRow(
-                  icon: Icons.calendar_today_outlined,
-                  text: event.date,
-                ),
-
-                const SizedBox(height: 12),
-
-                // ==================================================
-                // TIME
-                // ==================================================
-
-                _DetailRow(
-                  icon: Icons.access_time_outlined,
-                  text: event.time,
-                ),
-
-                // ==================================================
-                // LOCATION
-                // ==================================================
-
-                if (event.location.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  _DetailRow(
-                    icon: Icons.location_on_outlined,
-                    text: event.location,
-                  ),
-                ],
+                if (event.imageObjectKey.isNotEmpty)
+                  _B2EventImage(
+                    storagePath: event.imageObjectKey,
+                    width: double.infinity,
+                    fit: BoxFit.contain,
+                    borderRadius: 22,
+                  )
+                else
+                  _buildImagePlaceholder(),
 
                 const SizedBox(height: 22),
-
-                // ==================================================
-                // DESCRIPTION
-                // ==================================================
-
-                if (event.description.isNotEmpty)
-                  Text(
-                    event.description,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      height: 1.6,
-                      color: Color(0xFF666666),
-                    ),
-                  ),
-
-                const SizedBox(height: 25),
 
                 // ==================================================
                 // CLOSE BUTTON
@@ -355,12 +230,10 @@ class EventsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildImagePlaceholder({
-    required double height,
-  }) {
+  Widget _buildImagePlaceholder() {
     return Container(
       width: double.infinity,
-      height: height,
+      height: 300,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22),
         gradient: const LinearGradient(
@@ -414,156 +287,16 @@ class _EventCard extends StatelessWidget {
             ),
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ======================================================
-            // IMAGE
-            // ======================================================
-
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(22),
-              ),
-              child: event.imageUrl.isNotEmpty
-                  ? Image.network(
-                      event.imageUrl,
-                      width: double.infinity,
-                      height: 190,
-                      fit: BoxFit.cover,
-                      errorBuilder: (
-                        context,
-                        error,
-                        stackTrace,
-                      ) {
-                        return _imagePlaceholder();
-                      },
-                    )
-                  : _imagePlaceholder(),
-            ),
-
-            // ======================================================
-            // CONTENT
-            // ======================================================
-
-            Padding(
-              padding: const EdgeInsets.all(17),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    event.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 19,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF3B1745),
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.calendar_today_outlined,
-                        size: 16,
-                        color: Color(0xFF6B1FA2),
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          event.date,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF555555),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.access_time_outlined,
-                        size: 16,
-                        color: Color(0xFF6B1FA2),
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          event.time,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF555555),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  if (event.location.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.location_on_outlined,
-                          size: 16,
-                          color: Color(0xFF6B1FA2),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            event.location,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF555555),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-
-                  const SizedBox(height: 15),
-
-                  Row(
-                    mainAxisAlignment:
-                        MainAxisAlignment.end,
-                    children: [
-                      Text(
-                        'View Details',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF6B1FA2),
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      const Icon(
-                        Icons.arrow_forward,
-                        size: 17,
-                        color: Color(0xFF6B1FA2),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(22),
+          child: event.imageObjectKey.isNotEmpty
+              ? _B2EventImage(
+                  storagePath: event.imageObjectKey,
+                  width: double.infinity,
+                  fit: BoxFit.contain,
+                  borderRadius: 0,
+                )
+              : _imagePlaceholder(),
         ),
       ),
     );
@@ -572,7 +305,7 @@ class _EventCard extends StatelessWidget {
   Widget _imagePlaceholder() {
     return Container(
       width: double.infinity,
-      height: 190,
+      height: 300,
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -594,40 +327,154 @@ class _EventCard extends StatelessWidget {
 }
 
 // ==================================================================
-// DETAIL ROW
+// B2 EVENT IMAGE
 // ==================================================================
 
-class _DetailRow extends StatelessWidget {
-  final IconData icon;
-  final String text;
+class _B2EventImage extends StatefulWidget {
+  final String storagePath;
+  final double? width;
+  final BoxFit fit;
+  final double borderRadius;
 
-  const _DetailRow({
-    required this.icon,
-    required this.text,
+  const _B2EventImage({
+    required this.storagePath,
+    required this.width,
+    required this.fit,
+    required this.borderRadius,
   });
 
   @override
+  State<_B2EventImage> createState() => _B2EventImageState();
+}
+
+class _B2EventImageState extends State<_B2EventImage> {
+  String? _downloadUrl;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadImage();
+  }
+
+  Future<void> _loadImage() async {
+    try {
+      final url =
+          await MediaUrlService.instance.getEventDownloadUrl(
+        storagePath: widget.storagePath,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _downloadUrl = url;
+        _loading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+
+      setState(() {
+        _loading = false;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(
-          icon,
-          size: 19,
-          color: const Color(0xFF6B1FA2),
+    // ==========================================================
+    // LOADING
+    // ==========================================================
+
+    if (_loading) {
+      return Container(
+        width: widget.width,
+        height: 300,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(
+            widget.borderRadius,
+          ),
+          color: const Color(0xFFF9EAFB),
         ),
-        const SizedBox(width: 9),
-        Expanded(
-          child: Text(
-            text,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF444444),
-            ),
+        child: const Center(
+          child: CircularProgressIndicator(
+            color: Color(0xFF6B1FA2),
           ),
         ),
-      ],
+      );
+    }
+
+    // ==========================================================
+    // DOWNLOAD URL FAILED
+    // ==========================================================
+
+    if (_downloadUrl == null || _downloadUrl!.isEmpty) {
+      return Container(
+        width: widget.width,
+        height: 300,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(
+            widget.borderRadius,
+          ),
+          gradient: const LinearGradient(
+            colors: [
+              Color(0xFF58156F),
+              Color(0xFF9B2F87),
+              Color(0xFFF36C21),
+            ],
+          ),
+        ),
+        child: const Center(
+          child: Icon(
+            Icons.image_not_supported_outlined,
+            color: Colors.white,
+            size: 48,
+          ),
+        ),
+      );
+    }
+
+    // ==========================================================
+    // DISPLAY B2 IMAGE
+    // ==========================================================
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(
+        widget.borderRadius,
+      ),
+      child: Image.network(
+        _downloadUrl!,
+        width: widget.width,
+        fit: widget.fit,
+        errorBuilder: (
+          context,
+          error,
+          stackTrace,
+        ) {
+          return Container(
+            width: widget.width,
+            height: 300,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(
+                widget.borderRadius,
+              ),
+              gradient: const LinearGradient(
+                colors: [
+                  Color(0xFF58156F),
+                  Color(0xFF9B2F87),
+                  Color(0xFFF36C21),
+                ],
+              ),
+            ),
+            child: const Center(
+              child: Icon(
+                Icons.broken_image_outlined,
+                color: Colors.white,
+                size: 48,
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }

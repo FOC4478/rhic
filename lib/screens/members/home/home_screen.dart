@@ -1,10 +1,12 @@
+
 import 'package:church_app/screens/members/resources/sermons_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:church_app/l10n/app_localizations.dart';
 
-import '../../../models/featured_event_model.dart';
+import '../../../models/event_model.dart';
 import '../../../repositories/content_repository.dart';
+import '../../../services/media_url_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -181,11 +183,11 @@ class _HomeScreenState extends State<HomeScreen>
                               Color(0xFF8E3FC1),
                             ],
                             onTap: () {
-                        Navigator.pushNamed(
-                        context,
-                        '/giving',
-                      );
-                      },
+                              Navigator.pushNamed(
+                                context,
+                                '/giving',
+                              );
+                            },
                           ),
                         ),
                         const SizedBox(width: 14),
@@ -199,10 +201,10 @@ class _HomeScreenState extends State<HomeScreen>
                               Color(0xFFFF8A45),
                             ],
                             onTap: () {
-                               Navigator.pushNamed(
-                           context,
-                          '/churches',
-                      );
+                              Navigator.pushNamed(
+                                context,
+                                '/churches',
+                              );
                             },
                           ),
                         ),
@@ -250,53 +252,49 @@ class _HomeScreenState extends State<HomeScreen>
                   sliver: SliverGrid(
                     delegate: SliverChildListDelegate(
                       [
-                       _FeatureTile(
-                     icon: Icons.record_voice_over,
-                     title: l10n.teachings,
-                     onTap: () {
-                    Navigator.push(
-                        context,
-                     MaterialPageRoute(
-                          builder: (_) =>
-                    const SermonsScreen(),
-                  ),
-);
-                      },
-                    ),
-                       _FeatureTile(
-                      icon: Icons.groups,
-                    title: l10n.rhicCommunity,
-                       onTap: () {
-                    Navigator.pushNamed(
-                      context,
-                    '/community',
-                    );
-                      },
-                   ),
-                   
-                      
+                        _FeatureTile(
+                          icon: Icons.record_voice_over,
+                          title: l10n.teachings,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    const SermonsScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                        _FeatureTile(
+                          icon: Icons.groups,
+                          title: l10n.rhicCommunity,
+                          onTap: () {
+                            Navigator.pushNamed(
+                              context,
+                              '/community',
+                            );
+                          },
+                        ),
                         _FeatureTile(
                           icon: Icons.calendar_month,
                           title: l10n.events,
                           onTap: () {
-                         Navigator.pushNamed(
-                             context,
-                     '/events',
-                    );
+                            Navigator.pushNamed(
+                              context,
+                              '/events',
+                            );
                           },
                         ),
                         _FeatureTile(
                           icon: Icons.photo_library,
                           title: l10n.gallery,
                           onTap: () {
-                             Navigator.pushNamed(
-                       context,
-                     '/gallery',
-                    );
-                      
+                            Navigator.pushNamed(
+                              context,
+                              '/gallery',
+                            );
                           },
                         ),
-                     
                       ],
                     ),
                     gridDelegate:
@@ -554,8 +552,8 @@ class _FeaturedEventCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<FeaturedEvent?>(
-      stream: ContentRepository.instance.featuredEventStream(),
+    return StreamBuilder<EventModel?>(
+      stream: ContentRepository.instance.eventStream(),
       builder: (
         context,
         snapshot,
@@ -583,12 +581,13 @@ class _FeaturedEventCard extends StatelessWidget {
 
         final event = snapshot.data;
 
-        if (event == null) {
+        if (event == null ||
+            event.imageObjectKey.trim().isEmpty) {
           return _buildFallbackCard();
         }
 
         // ==========================================================
-        // EVENT DATA
+        // CURRENT EVENT FLYER
         // ==========================================================
 
         return _AnimatedHoverContainer(
@@ -602,6 +601,7 @@ class _FeaturedEventCard extends StatelessWidget {
           },
           child: Container(
             height: 235,
+            clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(28),
               gradient: const LinearGradient(
@@ -613,137 +613,9 @@ class _FeaturedEventCard extends StatelessWidget {
                   Color(0xFFF36C21),
                 ],
               ),
-              image: event.imageUrl.isNotEmpty
-                  ? DecorationImage(
-                      image: NetworkImage(
-                        event.imageUrl,
-                      ),
-                      fit: BoxFit.cover,
-                      colorFilter: ColorFilter.mode(
-                        Colors.black.withValues(
-                          alpha: .35,
-                        ),
-                        BlendMode.darken,
-                      ),
-                    )
-                  : null,
             ),
-            child: Stack(
-              children: [
-                // ==================================================
-                // DECORATIVE CIRCLE
-                // ==================================================
-
-                Positioned(
-                  right: -35,
-                  top: -35,
-                  child: Container(
-                    width: 130,
-                    height: 130,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withValues(
-                        alpha: .12,
-                      ),
-                    ),
-                  ),
-                ),
-
-                // ==================================================
-                // ARROW
-                // ==================================================
-
-                Positioned(
-                  top: 18,
-                  right: 18,
-                  child: Container(
-                    width: 55,
-                    height: 55,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withValues(
-                        alpha: .95,
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.arrow_outward,
-                      color: Color(0xFF6B1FA2),
-                      size: 27,
-                    ),
-                  ),
-                ),
-
-                // ==================================================
-                // EVENT CONTENT
-                // ==================================================
-
-                Positioned(
-                  left: 22,
-                  right: 22,
-                  bottom: 20,
-                  child: Column(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        event.title.toUpperCase(),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 25,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-
-                      const SizedBox(height: 7),
-
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.calendar_today_outlined,
-                            color: Colors.white,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 6),
-                          Flexible(
-                            child: Text(
-                              event.date,
-                              overflow:
-                                  TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight:
-                                    FontWeight.w500,
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(width: 15),
-
-                          const Icon(
-                            Icons.access_time_outlined,
-                            color: Colors.white,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 6),
-
-                          Text(
-                            event.time,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight:
-                                  FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+            child: _B2FeaturedEventImage(
+              storagePath: event.imageObjectKey,
             ),
           ),
         );
@@ -813,7 +685,6 @@ class _FeaturedEventCard extends StatelessWidget {
               ),
             ),
           ),
-
           Positioned(
             left: 22,
             right: 22,
@@ -880,7 +751,7 @@ class _FeaturedEventCard extends StatelessWidget {
 
   static void _showEventDetails(
     BuildContext context, {
-    required FeaturedEvent event,
+    required EventModel event,
     required String closeText,
   }) {
     showModalBottomSheet(
@@ -894,81 +765,29 @@ class _FeaturedEventCard extends StatelessWidget {
       ),
       builder: (_) {
         return SafeArea(
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(
-              26,
-              28,
-              26,
-              24,
+              20,
+              20,
+              20,
+              30,
             ),
             child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
               children: [
-                Text(
-                  event.title,
-                  style: const TextStyle(
-                    fontSize: 25,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF3D004D),
-                  ),
-                ),
+                // ==================================================
+                // EVENT FLYER
+                // ==================================================
 
-                const SizedBox(height: 16),
-
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.calendar_today,
-                      size: 19,
-                      color: Color(0xFF6B1FA2),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        event.date,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 10),
-
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.access_time,
-                      size: 19,
-                      color: Color(0xFF6B1FA2),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      event.time,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 18),
-
-                Text(
-                  event.description,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    height: 1.5,
-                    color: Color(0xFF666666),
-                  ),
+                _B2FeaturedEventImage(
+                  storagePath: event.imageObjectKey,
+                  expanded: true,
                 ),
 
                 const SizedBox(height: 22),
+
+                // ==================================================
+                // CLOSE BUTTON
+                // ==================================================
 
                 SizedBox(
                   width: double.infinity,
@@ -989,10 +808,169 @@ class _FeaturedEventCard extends StatelessWidget {
                     ),
                     child: Text(
                       closeText,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ),
               ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ==================================================================
+// B2 FEATURED EVENT IMAGE
+// ==================================================================
+
+class _B2FeaturedEventImage extends StatefulWidget {
+  final String storagePath;
+  final bool expanded;
+
+  const _B2FeaturedEventImage({
+    required this.storagePath,
+    this.expanded = false,
+  });
+
+  @override
+  State<_B2FeaturedEventImage> createState() =>
+      _B2FeaturedEventImageState();
+}
+
+class _B2FeaturedEventImageState
+    extends State<_B2FeaturedEventImage> {
+  String? _downloadUrl;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadImage();
+  }
+
+  Future<void> _loadImage() async {
+    try {
+      final url =
+          await MediaUrlService.instance.getEventDownloadUrl(
+        storagePath: widget.storagePath,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _downloadUrl = url;
+        _loading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+
+      setState(() {
+        _loading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final double height = widget.expanded ? 500 : 235;
+
+    // ==========================================================
+    // LOADING
+    // ==========================================================
+
+    if (_loading) {
+      return Container(
+        width: double.infinity,
+        height: height,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF58156F),
+              Color(0xFF9B2F87),
+              Color(0xFFF36C21),
+            ],
+          ),
+        ),
+        child: const Center(
+          child: CircularProgressIndicator(
+            color: Colors.white,
+          ),
+        ),
+      );
+    }
+
+    // ==========================================================
+    // DOWNLOAD URL FAILED
+    // ==========================================================
+
+    if (_downloadUrl == null ||
+        _downloadUrl!.trim().isEmpty) {
+      return Container(
+        width: double.infinity,
+        height: height,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF58156F),
+              Color(0xFF9B2F87),
+              Color(0xFFF36C21),
+            ],
+          ),
+        ),
+        child: const Center(
+          child: Icon(
+            Icons.image_not_supported_outlined,
+            color: Colors.white,
+            size: 48,
+          ),
+        ),
+      );
+    }
+
+    // ==========================================================
+    // DISPLAY B2 IMAGE
+    // ==========================================================
+
+    return Image.network(
+      _downloadUrl!,
+      width: double.infinity,
+      height: height,
+      fit: widget.expanded
+          ? BoxFit.contain
+          : BoxFit.cover,
+      errorBuilder: (
+        context,
+        error,
+        stackTrace,
+      ) {
+        return Container(
+          width: double.infinity,
+          height: height,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF58156F),
+                Color(0xFF9B2F87),
+                Color(0xFFF36C21),
+              ],
+            ),
+          ),
+          child: const Center(
+            child: Icon(
+              Icons.broken_image_outlined,
+              color: Colors.white,
+              size: 48,
             ),
           ),
         );
@@ -1458,4 +1436,3 @@ class _AnimatedHoverContainerState
     );
   }
 }
-

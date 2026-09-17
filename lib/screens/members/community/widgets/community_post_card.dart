@@ -97,13 +97,13 @@ class CommunityPostCard extends StatelessWidget {
               ),
 
             // IMAGE
-            if (post.authorPhotoUrl.isNotEmpty) ...[
+            if (post.authorPhotoObjectKey.isNotEmpty) ...[
               const SizedBox(height: 14),
               ClipRRect(
                 borderRadius:
                     BorderRadius.circular(16),
                 child: Image.network(
-                  post.authorPhotoUrl,
+                  post.authorPhotoObjectKey,
                   width: double.infinity,
                   fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) {
@@ -229,11 +229,11 @@ class CommunityPostCard extends StatelessWidget {
   }
 
   Widget _buildAvatar() {
-    if (post.authorPhotoUrl.isNotEmpty) {
+    if (post.authorPhotoObjectKey.isNotEmpty) {
       return CircleAvatar(
         radius: 22,
         backgroundImage:
-            NetworkImage(post.authorPhotoUrl),
+            NetworkImage(post.authorPhotoObjectKey),
       );
     }
 

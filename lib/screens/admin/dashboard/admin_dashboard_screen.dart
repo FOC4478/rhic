@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:church_app/screens/admin/books/admin_books_screen.dart';
+import 'package:church_app/screens/admin/community/admin_community_screen.dart';
 import 'package:church_app/screens/admin/sermons/admin_sermons_screen.dart';
-import 'package:church_app/services/auth_service.dart';
 import 'package:church_app/screens/admin/shop/admin_payment_settings_screen.dart';
 import 'package:church_app/screens/admin/events/admin_events_screen.dart';
 import 'package:church_app/screens/admin/gallery/admin_gallery_screen.dart';
-
+import 'package:church_app/services/auth_service.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -43,15 +43,14 @@ class _AdminDashboardScreenState
       title: 'Gallery',
       icon: Icons.photo_library_outlined,
     ),
-      _AdminMenuItem(
-    title: 'Payments',
-    icon: Icons.payments_outlined,
-  ),
+    _AdminMenuItem(
+      title: 'Payments',
+      icon: Icons.payments_outlined,
+    ),
     _AdminMenuItem(
       title: 'Community',
       icon: Icons.groups_outlined,
     ),
-  
     _AdminMenuItem(
       title: 'Users',
       icon: Icons.people_outline,
@@ -80,9 +79,9 @@ class _AdminDashboardScreenState
           key: _scaffoldKey,
           backgroundColor: const Color(0xFFF7F5F8),
 
-          // ------------------------------------------------------
+          // ======================================================
           // MOBILE DRAWER
-          // ------------------------------------------------------
+          // ======================================================
 
           drawer: isDesktop
               ? null
@@ -92,20 +91,18 @@ class _AdminDashboardScreenState
                   child: _buildSidebar(context),
                 ),
 
-          // ------------------------------------------------------
+          // ======================================================
           // MAIN BODY
-          // ------------------------------------------------------
+          // ======================================================
 
           body: Row(
             children: [
-              // Desktop sidebar
               if (isDesktop)
                 SizedBox(
                   width: 260,
                   child: _buildSidebar(context),
                 ),
 
-              // Main area
               Expanded(
                 child: Column(
                   children: [
@@ -113,7 +110,6 @@ class _AdminDashboardScreenState
                       context,
                       isDesktop,
                     ),
-
                     Expanded(
                       child: _buildCurrentPage(),
                     ),
@@ -140,24 +136,23 @@ class _AdminDashboardScreenState
         return const AdminSermonsScreen();
 
       case 2:
-  return const AdminBooksScreen();
+        return const AdminBooksScreen();
 
-     case 3:
-  return const AdminEventsScreen();
+      case 3:
+        return const AdminEventsScreen();
 
-     case 4:
-  return const AdminGalleryScreen();
+      case 4:
+        return const AdminGalleryScreen();
 
-     case 5:
-  return const AdminPaymentsScreen();
+      case 5:
+        return const AdminPaymentsScreen();
+
+      // ========================================================
+      // COMMUNITY
+      // ========================================================
 
       case 6:
-        return _buildComingSoonPage(
-          title: 'Community',
-          icon: Icons.groups_outlined,
-          description:
-              'Manage community groups and posts.',
-        );
+        return const AdminCommunityScreen();
 
       case 7:
         return _buildComingSoonPage(
@@ -197,7 +192,6 @@ class _AdminDashboardScreenState
       _selectedIndex = index;
     });
 
-    // Close drawer on mobile
     if (_scaffoldKey.currentState?.isDrawerOpen ?? false) {
       Navigator.of(context).pop();
     }
@@ -213,9 +207,9 @@ class _AdminDashboardScreenState
       child: SafeArea(
         child: Column(
           children: [
-            // ----------------------------------------------------
+            // ==================================================
             // BRAND
-            // ----------------------------------------------------
+            // ==================================================
 
             Padding(
               padding: const EdgeInsets.fromLTRB(
@@ -275,9 +269,9 @@ class _AdminDashboardScreenState
               ),
             ),
 
-            // ----------------------------------------------------
+            // ==================================================
             // MENU
-            // ----------------------------------------------------
+            // ==================================================
 
             Expanded(
               child: ListView.builder(
@@ -297,19 +291,15 @@ class _AdminDashboardScreenState
                     ),
                     child: ListTile(
                       onTap: () => _selectMenu(index),
-
                       shape: RoundedRectangleBorder(
                         borderRadius:
                             BorderRadius.circular(12),
                       ),
-
                       selected: selected,
-
                       selectedTileColor:
                           Colors.white.withValues(
                         alpha: 0.14,
                       ),
-
                       leading: Icon(
                         item.icon,
                         color: selected
@@ -317,7 +307,6 @@ class _AdminDashboardScreenState
                             : Colors.white60,
                         size: 21,
                       ),
-
                       title: Text(
                         item.title,
                         style: TextStyle(
@@ -330,7 +319,6 @@ class _AdminDashboardScreenState
                               : FontWeight.w500,
                         ),
                       ),
-
                       trailing: selected
                           ? const Icon(
                               Icons.chevron_right,
@@ -344,25 +332,22 @@ class _AdminDashboardScreenState
               ),
             ),
 
-            // ----------------------------------------------------
+            // ==================================================
             // LOGOUT
-            // ----------------------------------------------------
+            // ==================================================
 
             Padding(
               padding: const EdgeInsets.all(16),
               child: ListTile(
                 onTap: _logout,
-
                 shape: RoundedRectangleBorder(
                   borderRadius:
                       BorderRadius.circular(12),
                 ),
-
                 leading: const Icon(
                   Icons.logout,
                   color: Colors.white70,
                 ),
-
                 title: const Text(
                   'Logout',
                   style: TextStyle(
@@ -404,9 +389,9 @@ class _AdminDashboardScreenState
       ),
       child: Row(
         children: [
-          // ------------------------------------------------------
-          // MOBILE MENU BUTTON
-          // ------------------------------------------------------
+          // ====================================================
+          // MOBILE MENU
+          // ====================================================
 
           if (!isDesktop)
             IconButton(
@@ -419,9 +404,9 @@ class _AdminDashboardScreenState
           if (!isDesktop)
             const SizedBox(width: 8),
 
-          // ------------------------------------------------------
+          // ====================================================
           // TITLE
-          // ------------------------------------------------------
+          // ====================================================
 
           Expanded(
             child: Column(
@@ -438,9 +423,9 @@ class _AdminDashboardScreenState
                   ),
                 ),
                 const SizedBox(height: 2),
-                Text(
+                const Text(
                   'Manage your RHIC platform',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     color: Colors.black54,
                   ),
@@ -449,9 +434,9 @@ class _AdminDashboardScreenState
             ),
           ),
 
-          // ------------------------------------------------------
+          // ====================================================
           // NOTIFICATION
-          // ------------------------------------------------------
+          // ====================================================
 
           IconButton(
             onPressed: () {
@@ -464,9 +449,9 @@ class _AdminDashboardScreenState
 
           const SizedBox(width: 8),
 
-          // ------------------------------------------------------
+          // ====================================================
           // ADMIN PROFILE
-          // ------------------------------------------------------
+          // ====================================================
 
           Container(
             padding: const EdgeInsets.symmetric(
@@ -490,9 +475,7 @@ class _AdminDashboardScreenState
                     size: 18,
                   ),
                 ),
-
                 SizedBox(width: 9),
-
                 Text(
                   'Administrator',
                   style: TextStyle(
@@ -539,57 +522,59 @@ class _AdminDashboardScreenState
 
           const SizedBox(height: 28),
 
-          // ------------------------------------------------------
+          // ====================================================
           // STATISTICS
-          // ------------------------------------------------------
+          // ====================================================
 
           LayoutBuilder(
             builder: (context, constraints) {
-            return GridView.builder(
-            shrinkWrap: true,
-  physics: const NeverScrollableScrollPhysics(),
-  itemCount: 4,
-  gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-    maxCrossAxisExtent: 300,
-    crossAxisSpacing: 18,
-    mainAxisSpacing: 18,
-    mainAxisExtent: 105,
-  ),
-  itemBuilder: (context, index) {
-    const cards = [
-      _StatCard(
-        title: 'Total Users',
-        value: '—',
-        icon: Icons.people_outline,
-      ),
-      _StatCard(
-        title: 'Sermons',
-        value: '—',
-        icon: Icons.play_circle_outline,
-      ),
-      _StatCard(
-        title: 'Books',
-        value: '—',
-        icon: Icons.library_books_outlined,
-      ),
-      _StatCard(
-        title: 'Events',
-        value: '—',
-        icon: Icons.event_outlined,
-      ),
-    ];
+              return GridView.builder(
+                shrinkWrap: true,
+                physics:
+                    const NeverScrollableScrollPhysics(),
+                itemCount: 4,
+                gridDelegate:
+                    const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 300,
+                  crossAxisSpacing: 18,
+                  mainAxisSpacing: 18,
+                  mainAxisExtent: 105,
+                ),
+                itemBuilder: (context, index) {
+                  const cards = [
+                    _StatCard(
+                      title: 'Total Users',
+                      value: '—',
+                      icon: Icons.people_outline,
+                    ),
+                    _StatCard(
+                      title: 'Sermons',
+                      value: '—',
+                      icon: Icons.play_circle_outline,
+                    ),
+                    _StatCard(
+                      title: 'Books',
+                      value: '—',
+                      icon: Icons.library_books_outlined,
+                    ),
+                    _StatCard(
+                      title: 'Events',
+                      value: '—',
+                      icon: Icons.event_outlined,
+                    ),
+                  ];
 
-    return cards[index];
-  },
-);
+                  return cards[index];
+                },
+              );
             },
           ),
 
           const SizedBox(height: 30),
 
-          // ------------------------------------------------------
+          // ====================================================
           // QUICK ACTIONS
-          // ------------------------------------------------------
+          // ====================================================
 
           const Text(
             'Quick Actions',
@@ -648,11 +633,11 @@ class _AdminDashboardScreenState
                   ),
 
                   _QuickAction(
-                    title: 'Manage Users',
+                    title: 'Manage Community',
                     icon:
-                        Icons.people_outline,
+                        Icons.groups_outlined,
                     onTap: () =>
-                        _selectMenu(7),
+                        _selectMenu(6),
                   ),
                 ],
               );
@@ -661,9 +646,9 @@ class _AdminDashboardScreenState
 
           const SizedBox(height: 30),
 
-          // ------------------------------------------------------
+          // ====================================================
           // RECENT ACTIVITY
-          // ------------------------------------------------------
+          // ====================================================
 
           const Text(
             'Recent Activity',
@@ -693,9 +678,7 @@ class _AdminDashboardScreenState
                   size: 38,
                   color: Colors.black26,
                 ),
-
                 SizedBox(height: 10),
-
                 Text(
                   'No recent activity yet.',
                   style: TextStyle(
@@ -704,9 +687,7 @@ class _AdminDashboardScreenState
                     color: Colors.black54,
                   ),
                 ),
-
                 SizedBox(height: 4),
-
                 Text(
                   'Admin activity will appear here.',
                   style: TextStyle(
@@ -720,9 +701,9 @@ class _AdminDashboardScreenState
 
           const SizedBox(height: 30),
 
-          // ------------------------------------------------------
+          // ====================================================
           // SYSTEM STATUS
-          // ------------------------------------------------------
+          // ====================================================
 
           const Text(
             'System Overview',
@@ -753,22 +734,18 @@ class _AdminDashboardScreenState
                   icon:
                       Icons.cloud_done_outlined,
                 ),
-
                 Divider(height: 24),
-
                 _SystemStatusRow(
                   title: 'Authentication',
                   status: 'Active',
                   icon: Icons.lock_outline,
                 ),
-
                 Divider(height: 24),
-
                 _SystemStatusRow(
                   title: 'Admin Portal',
                   status: 'Active',
-                  icon: Icons
-                      .admin_panel_settings_outlined,
+                  icon:
+                      Icons.admin_panel_settings_outlined,
                 ),
               ],
             ),
@@ -889,11 +866,9 @@ class _AdminDashboardScreenState
       builder: (dialogContext) {
         return AlertDialog(
           title: const Text('Logout'),
-
           content: const Text(
             'Are you sure you want to logout?',
           ),
-
           actions: [
             TextButton(
               onPressed: () {
@@ -904,7 +879,6 @@ class _AdminDashboardScreenState
               },
               child: const Text('Cancel'),
             ),
-
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(

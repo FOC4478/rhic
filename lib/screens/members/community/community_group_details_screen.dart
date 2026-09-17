@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../../models/community_group_model.dart';
 import '../../../repositories/content_repository.dart';
+import '../../../services/media_url_service.dart';
 import 'community_group_members_screen.dart';
 import 'create_community_post_screen.dart';
 import 'widgets/community_post_feed.dart';
@@ -228,8 +229,7 @@ class _CommunityGroupDetailsScreenState
       backgroundColor: Colors.white,
       body: SafeArea(
         child: StreamBuilder<CommunityGroupModel?>(
-          stream: ContentRepository.instance
-              .communityGroupStream(
+          stream: ContentRepository.instance.communityGroupStream(
             widget.groupId,
           ),
           builder: (context, snapshot) {
@@ -237,8 +237,7 @@ class _CommunityGroupDetailsScreenState
             // LOADING
             // ==================================================
 
-            if (snapshot.connectionState ==
-                ConnectionState.waiting) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(
                 child: CircularProgressIndicator(
                   color: Color(0xFF6B1FA2),
@@ -309,9 +308,9 @@ class _CommunityGroupDetailsScreenState
                       child: StreamBuilder<bool>(
                         stream: ContentRepository.instance
                             .isCommunityGroupMember(
-                          groupId: group.id,
-                          uid: user.uid,
-                        ),
+                              groupId: group.id,
+                              uid: user.uid,
+                            ),
                         builder: (
                           context,
                           memberSnapshot,
@@ -427,17 +426,12 @@ class _CommunityGroupDetailsScreenState
       child: Stack(
         children: [
           Positioned.fill(
-            child: group.coverImageUrl.isNotEmpty
-                ? Image.network(
-                    group.coverImageUrl,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) {
-                      return _buildHeaderFallback();
-                    },
-                  )
-                : _buildHeaderFallback(),
+            child: _CommunityGroupCoverImage(
+              objectKey: group.coverImageObjectKey,
+            ),
           ),
 
+          // HEADER GRADIENT
           Positioned.fill(
             child: DecoratedBox(
               decoration: BoxDecoration(
@@ -457,6 +451,7 @@ class _CommunityGroupDetailsScreenState
             ),
           ),
 
+          // BACK BUTTON
           Positioned(
             top: 16,
             left: 16,
@@ -481,6 +476,7 @@ class _CommunityGroupDetailsScreenState
             ),
           ),
 
+          // GROUP TITLE
           Positioned(
             left: 20,
             right: 20,
@@ -491,8 +487,7 @@ class _CommunityGroupDetailsScreenState
               children: [
                 if (group.department.isNotEmpty)
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(
+                    padding: const EdgeInsets.symmetric(
                       horizontal: 10,
                       vertical: 5,
                     ),
@@ -529,32 +524,6 @@ class _CommunityGroupDetailsScreenState
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  // ============================================================
-  // HEADER FALLBACK
-  // ============================================================
-
-  Widget _buildHeaderFallback() {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF58156F),
-            Color(0xFF9B2F87),
-          ],
-        ),
-      ),
-      child: const Center(
-        child: Icon(
-          Icons.groups,
-          color: Colors.white,
-          size: 70,
-        ),
       ),
     );
   }
@@ -751,6 +720,188 @@ class _CommunityGroupDetailsScreenState
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ================================================================
+// COMMUNITY GROUP COVER IMAGE
+// ================================================================
+//
+// IMPORTANT:
+// Firestore stores ONLY the B2 object key.
+// Example:
+// community/groups/my-group-cover.jpg
+//
+// This widget resolves that object key into a temporary signed URL
+// through MediaUrlService before Image.network is used.
+// ================================================================
+
+class _CommunityGroupCoverImage extends StatefulWidget {
+  final String objectKey;
+
+  const _CommunityGroupCoverImage({
+    required this.objectKey,
+  });
+
+  @override
+  State<_CommunityGroupCoverImage> createState() =>
+      _CommunityGroupCoverImageState();
+}
+
+class _CommunityGroupCoverImageState
+    extends State<_CommunityGroupCoverImage> {
+  Future<String>? _urlFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUrl();
+  }
+
+  @override
+  void didUpdateWidget(
+    covariant _CommunityGroupCoverImage oldWidget,
+  ) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.objectKey != widget.objectKey) {
+      _loadUrl();
+    }
+  }
+
+  void _loadUrl() {
+    final key = widget.objectKey.trim();
+
+    if (key.isEmpty) {
+      _urlFuture = null;
+      return;
+    }
+
+    _urlFuture = MediaUrlService.instance.getCommunityMediaUrl(
+      objectKey: key,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final key = widget.objectKey.trim();
+
+    if (key.isEmpty) {
+      return _buildFallback();
+    }
+
+    return FutureBuilder<String>(
+      future: _urlFuture,
+      builder: (
+        context,
+        snapshot,
+      ) {
+        // --------------------------------------------------------
+        // RESOLVING B2 URL
+        // --------------------------------------------------------
+
+        if (snapshot.connectionState ==
+            ConnectionState.waiting) {
+          return _buildFallback(
+            loading: true,
+          );
+        }
+
+        // --------------------------------------------------------
+        // FAILED TO RESOLVE
+        // --------------------------------------------------------
+
+        if (snapshot.hasError ||
+            !snapshot.hasData ||
+            snapshot.data!.trim().isEmpty) {
+          return _buildFallback();
+        }
+
+        final signedUrl = snapshot.data!.trim();
+
+        // --------------------------------------------------------
+        // DISPLAY TEMPORARY SIGNED URL
+        // --------------------------------------------------------
+
+        return Image.network(
+          signedUrl,
+          width: double.infinity,
+          height: double.infinity,
+          fit: BoxFit.cover,
+          loadingBuilder: (
+            context,
+            child,
+            loadingProgress,
+          ) {
+            if (loadingProgress == null) {
+              return child;
+            }
+
+            return _buildFallback(
+              loading: true,
+            );
+          },
+          errorBuilder: (
+            context,
+            error,
+            stackTrace,
+          ) {
+            return _buildFallback();
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildFallback({
+    bool loading = false,
+  }) {
+    if (loading) {
+      return Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF58156F),
+              Color(0xFF9B2F87),
+            ],
+          ),
+        ),
+        alignment: Alignment.center,
+        child: const SizedBox(
+          width: 30,
+          height: 30,
+          child: CircularProgressIndicator(
+            strokeWidth: 2.5,
+            color: Colors.white,
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF58156F),
+            Color(0xFF9B2F87),
+          ],
+        ),
+      ),
+      alignment: Alignment.center,
+      child: const Icon(
+        Icons.groups,
+        color: Colors.white,
+        size: 70,
       ),
     );
   }

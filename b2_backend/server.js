@@ -161,6 +161,32 @@ function isSafeEventObjectKey(objectKey) {
 }
 
 // ============================================================
+// COMMUNITY OBJECT KEY SECURITY
+// ============================================================
+
+function isSafeCommunityObjectKey(objectKey) {
+  if (
+    !objectKey ||
+    typeof objectKey !== "string"
+  ) {
+    return false;
+  }
+
+  if (objectKey.includes("..")) {
+    return false;
+  }
+
+  if (objectKey.startsWith("/")) {
+    return false;
+  }
+
+  return (
+    objectKey.startsWith("community/groups/") ||
+    objectKey.startsWith("community/posts/")
+  );
+}
+
+// ============================================================
 // GALLERY OBJECT KEY SECURITY
 // ============================================================
 
@@ -463,6 +489,7 @@ app.post(
         "audio",
         "ebook",
         "image",
+        "community"
       ];
 
       if (
@@ -486,6 +513,7 @@ app.post(
         "book",
         "event",
         "gallery",
+        "community"
       ];
 
       if (
@@ -617,6 +645,40 @@ app.post(
           });
         }
       }
+
+
+      // ======================================================
+// COMMUNITY UPLOAD VALIDATION
+// ======================================================
+
+if (resourceType === "community") {
+  if (mediaType !== "image") {
+    return res.status(400).json({
+      success: false,
+      message:
+        "Community media can only be images.",
+    });
+  }
+
+  const allowedCommunityImageTypes = [
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+  ];
+
+  if (
+    !allowedCommunityImageTypes.includes(
+      normalizedContentType,
+    )
+  ) {
+    return res.status(400).json({
+      success: false,
+      message:
+        "Community images must be JPG, PNG, or WEBP images.",
+    });
+  }
+}
+
 
       // ======================================================
       // SERMON UPLOAD VALIDATION
@@ -750,6 +812,18 @@ app.post(
         objectKey =
           `books/ebooks/${timestamp}-${randomPart}-${safeFileName}`;
       }
+
+
+      
+        // COMMUNITY IMAGE
+else if (
+  resourceType === "community" &&
+  mediaType === "image"
+) {
+  objectKey =
+    `community/groups/${timestamp}-${randomPart}-${safeFileName}`;
+}
+
 
       // ------------------------------------------------------
       // SERMON MEDIA
@@ -971,25 +1045,99 @@ app.post(
   },
 );
 
+
+// ============================================================
+// SECURE COMMUNITY MEDIA DOWNLOAD URL
+// ============================================================
+
+app.post(
+  "/community-download-url",
+  authenticateFirebase,
+  async (req, res) => {
+    try {
+      const {
+        objectKey,
+      } = req.body;
+
+      // ------------------------------------------------------
+      // OBJECT KEY
+      // ------------------------------------------------------
+
+      if (
+        typeof objectKey !== "string" ||
+        objectKey.trim().length === 0
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "A B2 community object key is required.",
+        });
+      }
+
+      const normalizedObjectKey =
+        objectKey.trim();
+
+      // ------------------------------------------------------
+      // VERIFY COMMUNITY OBJECT KEY
+      // ------------------------------------------------------
+
+      if (
+        !isSafeCommunityObjectKey(
+          normalizedObjectKey,
+        )
+      ) {
+        return res.status(403).json({
+          success: false,
+          message:
+            "Access to this community object is not allowed.",
+        });
+      }
+
+      // ------------------------------------------------------
+      // CREATE TEMPORARY B2 URL
+      // ------------------------------------------------------
+
+      const command =
+        new GetObjectCommand({
+          Bucket: B2_BUCKET,
+          Key: normalizedObjectKey,
+        });
+
+      const downloadUrl =
+        await getSignedUrl(
+          s3,
+          command,
+          {
+            expiresIn: 300,
+          },
+        );
+
+      return res.json({
+        success: true,
+        downloadUrl:
+          downloadUrl,
+        expiresIn:
+          300,
+      });
+    } catch (error) {
+      console.error(
+        "Failed to create community download URL:",
+        error.message,
+      );
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Unable to create community download URL.",
+      });
+    }
+  },
+);
+
 // ============================================================
 // SECURE GALLERY IMAGE DOWNLOAD URL
 // ============================================================
-//
-// The client sends:
-//
-// {
-//   objectKey: "gallery/images/..."
-// }
-//
-// The backend:
-// 1. Authenticates the Firebase user.
-// 2. Verifies the object key belongs to the Gallery path.
-// 3. Finds the matching Gallery Firestore document.
-// 4. Allows published Gallery images for members.
-// 5. Allows unpublished Gallery images for admins.
-// 6. Creates a temporary B2 URL.
-//
-// ============================================================
+
 
 app.post(
   "/gallery-download-url",
@@ -1513,11 +1661,19 @@ app.listen(
 
     console.log(
       " Book cover access: ENABLED",
-    );
+    ); 
 
     console.log(
       " Secure purchased ebook access: ENABLED",
     );
+
+    console.log(
+  " Community media upload: ENABLED",
+);
+
+console.log(
+  " Community media access: ENABLED",
+);
 
     console.log(
       "============================================",

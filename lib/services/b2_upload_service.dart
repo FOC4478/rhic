@@ -70,9 +70,6 @@ class B2UploadService {
     required String contentType,
     required String mediaType,
 
-    // sermon = normal sermon media
-    // book   = private bookstore ebook PDF
-    // event  = event flyer image
     String resourceType = 'sermon',
   }) async {
     if (bytes.isEmpty) {
@@ -84,8 +81,7 @@ class B2UploadService {
     final idToken =
         await _getIdToken();
 
-    // ==========================================================
-    // STEP 1
+    // ====================================================
     // REQUEST TEMPORARY B2 UPLOAD URL
     // ==========================================================
 
@@ -126,7 +122,6 @@ class B2UploadService {
     }
 
     // ==========================================================
-    // STEP 2
     // VALIDATE RESPONSE
     // ==========================================================
 
@@ -155,7 +150,7 @@ class B2UploadService {
         decoded['region']?.toString() ?? '';
 
     // ==========================================================
-    // STEP 3
+    
     // UPLOAD DIRECTLY TO B2
     // ==========================================================
 
@@ -176,9 +171,6 @@ class B2UploadService {
         '(${uploadResponse.statusCode}).',
       );
     }
-
-    // ==========================================================
-    // STEP 4
     // RETURN OBJECT INFORMATION
     // ==========================================================
 
@@ -193,10 +185,6 @@ class B2UploadService {
 
   // ============================================================
   // GET SIGNED SERMON DOWNLOAD URL
-  // ============================================================
-  //
-  // Use this only for sermon media.
-  //
   
 
   Future<String> getDownloadUrl({
@@ -269,7 +257,6 @@ class B2UploadService {
     return downloadUrl;
   }
 
-  // ============================================================
   // GET SIGNED EVENT FLYER DOWNLOAD URL
   
 
@@ -342,10 +329,83 @@ class B2UploadService {
     return downloadUrl;
   }
 
-  // ============================================================
-  // GET SIGNED PURCHASED EBOOK URL
-  
 
+   // ============================================================
+// COMMUNITY MEDIA
+// ============================================================
+
+Future<String> getCommunityDownloadUrl({
+  required String objectKey,
+}) async {
+  if (objectKey.trim().isEmpty) {
+    throw Exception(
+      'A B2 community media object key is required.',
+    );
+  }
+
+  final idToken = await _getIdToken();
+
+  final response = await http.post(
+    Uri.parse(
+      '$backendBaseUrl/community-download-url',
+    ),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $idToken',
+    },
+    body: jsonEncode({
+      'objectKey': objectKey.trim(),
+    }),
+  );
+
+  if (response.statusCode != 200) {
+    String message =
+        'Unable to create community media URL.';
+
+    try {
+      final decoded =
+          jsonDecode(response.body);
+
+      if (
+        decoded is Map &&
+        decoded['message'] != null
+      ) {
+        message =
+            decoded['message'].toString();
+      }
+    } catch (_) {}
+
+    throw Exception(message);
+  }
+
+  final decoded =
+      jsonDecode(response.body);
+
+  if (
+    decoded is! Map ||
+    decoded['success'] != true ||
+    decoded['downloadUrl'] == null
+  ) {
+    throw Exception(
+      'The community media server returned an invalid response.',
+    );
+  }
+
+  final downloadUrl =
+      decoded['downloadUrl']
+          .toString()
+          .trim();
+
+  if (downloadUrl.isEmpty) {
+    throw Exception(
+      'The server returned an empty community media URL.',
+    );
+  }
+
+  return downloadUrl;
+}
+  
+  // GET SIGNED PURCHASED EBOOK URL
   Future<String> getEbookDownloadUrl({
     required String bookId,
   }) async {

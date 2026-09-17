@@ -3,23 +3,22 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class CommunityCommentModel {
   final String id;
   final String postId;
-
   final String authorId;
   final String authorName;
-  final String authorPhotoUrl;
-
+  final String authorPhotoObjectKey;
   final String content;
-
   final Timestamp? createdAt;
+  final Timestamp? updatedAt;
 
   const CommunityCommentModel({
     required this.id,
     required this.postId,
     required this.authorId,
     required this.authorName,
-    required this.authorPhotoUrl,
+    required this.authorPhotoObjectKey,
     required this.content,
     required this.createdAt,
+    required this.updatedAt,
   });
 
   factory CommunityCommentModel.fromFirestore(
@@ -33,21 +32,30 @@ class CommunityCommentModel {
       authorId: data['authorId']?.toString() ?? '',
       authorName:
           data['authorName']?.toString() ?? 'RHIC Member',
-      authorPhotoUrl:
-          data['authorPhotoUrl']?.toString() ?? '',
+      authorPhotoObjectKey:
+          data['authorPhotoObjectKey']?.toString() ?? '',
       content: data['content']?.toString() ?? '',
-      createdAt: data['createdAt'] as Timestamp?,
+      createdAt: data['createdAt'] is Timestamp
+          ? data['createdAt'] as Timestamp
+          : null,
+      updatedAt: data['updatedAt'] is Timestamp
+          ? data['updatedAt'] as Timestamp
+          : null,
     );
   }
 
   Map<String, dynamic> toFirestore() {
     return {
-      'postId': postId,
-      'authorId': authorId,
-      'authorName': authorName,
-      'authorPhotoUrl': authorPhotoUrl,
-      'content': content,
-      'createdAt': createdAt,
+      'postId': postId.trim(),
+      'authorId': authorId.trim(),
+      'authorName': authorName.trim(),
+      'authorPhotoObjectKey':
+          authorPhotoObjectKey.trim(),
+      'content': content.trim(),
+      'createdAt':
+          createdAt ?? FieldValue.serverTimestamp(),
+      'updatedAt':
+          updatedAt ?? FieldValue.serverTimestamp(),
     };
   }
 }

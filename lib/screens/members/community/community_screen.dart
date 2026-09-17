@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../services/media_url_service.dart';
 import '../../../models/community_group_model.dart';
 import '../../../repositories/content_repository.dart';
 
@@ -21,6 +22,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
     super.initState();
 
     _searchController.addListener(() {
+      if (!mounted) return;
+
       setState(() {
         _searchQuery =
             _searchController.text.trim().toLowerCase();
@@ -170,30 +173,26 @@ class _CommunityScreenState extends State<CommunityScreen> {
                       Icons.search,
                       color: Color(0xFF6B1FA2),
                     ),
-                    suffixIcon:
-                        _searchQuery.isNotEmpty
-                            ? IconButton(
-                                onPressed: () {
-                                  _searchController.clear();
-                                },
-                                icon: const Icon(Icons.clear),
-                              )
-                            : null,
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            onPressed: () {
+                              _searchController.clear();
+                            },
+                            icon: const Icon(Icons.clear),
+                          )
+                        : null,
                     filled: true,
                     fillColor: const Color(0xFFF8F4FA),
                     border: OutlineInputBorder(
-                      borderRadius:
-                          BorderRadius.circular(18),
+                      borderRadius: BorderRadius.circular(18),
                       borderSide: BorderSide.none,
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius:
-                          BorderRadius.circular(18),
+                      borderRadius: BorderRadius.circular(18),
                       borderSide: BorderSide.none,
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius:
-                          BorderRadius.circular(18),
+                      borderRadius: BorderRadius.circular(18),
                       borderSide: const BorderSide(
                         color: Color(0xFF8E3FC1),
                         width: 1.3,
@@ -245,7 +244,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                     child: _buildErrorState(
                       snapshot.error.toString(),
                     ),
-                    );
+                  );
                 }
 
                 final groups =
@@ -377,7 +376,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
               Icons.error_outline,
               size: 50,
               color: Colors.redAccent,
-              ),
+            ),
             const SizedBox(height: 15),
             const Text(
               'Unable to load community',
@@ -482,16 +481,10 @@ class _CommunityGroupCardState
                 child: SizedBox(
                   width: 82,
                   height: 82,
-                  child: group.coverImageUrl.isNotEmpty
-                      ? Image.network(
-                          group.coverImageUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder:
-                              (_, __, ___) {
-                            return _buildImageFallback();
-                          },
-                        )
-                      : _buildImageFallback(),
+                  child: _CommunityCoverImage(
+                    objectKey:
+                        group.coverImageObjectKey,
+                  ),
                 ),
               ),
 
@@ -517,20 +510,19 @@ class _CommunityGroupCardState
                       ),
                     ),
 
-                    const SizedBox(height: 5),
-
-                    if (group.department.isNotEmpty)
-                    Text(
+                    if (group.department.isNotEmpty) ...[
+                      const SizedBox(height: 5),
+                      Text(
                         group.department,
                         maxLines: 1,
-                        overflow:
-                            TextOverflow.ellipsis,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: Color(0xFF8E3FC1),
                         ),
                       ),
+                    ],
 
                     const SizedBox(height: 7),
 
@@ -555,12 +547,17 @@ class _CommunityGroupCardState
                           color: Color(0xFF6B1FA2),
                         ),
                         const SizedBox(width: 5),
-                        Text(
-                          '${group.memberCount} ${group.memberCount == 1 ? 'member' : 'members'}',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF555555),
+                        Flexible(
+                          child: Text(
+                            '${group.memberCount} ${group.memberCount == 1 ? 'member' : 'members'}',
+                            maxLines: 1,
+                            overflow:
+                                TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF555555),
+                            ),
                           ),
                         ),
                       ],
@@ -594,15 +591,141 @@ class _CommunityGroupCardState
       ),
     );
   }
+}
 
-  Widget _buildImageFallback() {
+// ==================================================================
+// COMMUNITY COVER IMAGE
+// ==================================================================
+
+class _CommunityCoverImage extends StatefulWidget {
+  final String objectKey;
+
+  const _CommunityCoverImage({
+    required this.objectKey,
+  });
+
+  @override
+  State<_CommunityCoverImage> createState() =>
+      _CommunityCoverImageState();
+}
+
+class _CommunityCoverImageState
+    extends State<_CommunityCoverImage> {
+  Future<String>? _urlFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadImage();
+  }
+
+  @override
+  void didUpdateWidget(
+    covariant _CommunityCoverImage oldWidget,
+  ) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.objectKey != widget.objectKey) {
+      _loadImage();
+    }
+  }
+
+  void _loadImage() {
+    final key = widget.objectKey.trim();
+
+    if (key.isEmpty) {
+      _urlFuture = null;
+      return;
+    }
+
+    _urlFuture =
+        MediaUrlService.instance.getCommunityMediaUrl(
+      objectKey: key,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final key = widget.objectKey.trim();
+
+    if (key.isEmpty) {
+      return const _CommunityImageFallback();
+    }
+
+    return FutureBuilder<String>(
+      future: _urlFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState ==
+            ConnectionState.waiting) {
+          return const _CommunityImageFallback(
+            loading: true,
+          );
+        }
+
+        if (snapshot.hasError ||
+            !snapshot.hasData ||
+            snapshot.data!.trim().isEmpty) {
+          return const _CommunityImageFallback();
+        }
+
+        return Image.network(
+          snapshot.data!,
+          width: double.infinity,
+          height: double.infinity,
+          fit: BoxFit.cover,
+          loadingBuilder:
+              (context, child, loadingProgress) {
+            if (loadingProgress == null) {
+              return child;
+            }
+
+            return const _CommunityImageFallback(
+              loading: true,
+            );
+          },
+          errorBuilder:
+              (context, error, stackTrace) {
+            return const _CommunityImageFallback();
+          },
+        );
+      },
+    );
+  }
+}
+
+// ==================================================================
+// IMAGE FALLBACK
+// ==================================================================
+
+class _CommunityImageFallback
+    extends StatelessWidget {
+  final bool loading;
+
+  const _CommunityImageFallback({
+    this.loading = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
+      height: double.infinity,
       color: const Color(0xFFF7EAF9),
-      child: const Icon(
-        Icons.groups,
-        size: 38,
-        color: Color(0xFF6B1FA2),
-      ),
+      alignment: Alignment.center,
+      child: loading
+          ? const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                color: Color(0xFF6B1FA2),
+              ),
+            )
+          : const Icon(
+              Icons.groups,
+              size: 38,
+              color: Color(0xFF6B1FA2),
+            ),
     );
   }
 }

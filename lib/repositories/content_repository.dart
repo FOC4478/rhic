@@ -12,11 +12,9 @@ import '../models/community_comment_model.dart';
 class ContentRepository {
   ContentRepository._();
 
-  static final ContentRepository instance =
-      ContentRepository._();
+  static final ContentRepository instance = ContentRepository._();
 
-  final FirebaseFirestore _firestore =
-      FirebaseFirestore.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // ============================================================
   // FEATURED EVENT
@@ -32,8 +30,7 @@ class ContentRepository {
         return null;
       }
 
-      final event =
-          FeaturedEvent.fromFirestore(snapshot);
+      final event = FeaturedEvent.fromFirestore(snapshot);
 
       if (!event.isActive) {
         return null;
@@ -88,55 +85,29 @@ class ContentRepository {
     required String createdBy,
   }) async {
     if (imageObjectKey.trim().isEmpty) {
-      throw Exception(
-        'Please upload an event flyer.',
-      );
+      throw Exception('Please upload an event flyer.');
     }
 
     if (createdBy.trim().isEmpty) {
-      throw Exception(
-        'Admin account could not be identified.',
-      );
+      throw Exception('Admin account could not be identified.');
     }
 
-    final eventRef = _firestore
-        .collection('events')
-        .doc('current');
+    final eventRef = _firestore.collection('events').doc('current');
 
     final existing = await eventRef.get();
 
     await eventRef.set(
       {
-        'imageObjectKey':
-            imageObjectKey.trim(),
-
-        'createdBy':
-            createdBy.trim(),
-
+        'imageObjectKey': imageObjectKey.trim(),
+        'createdBy': createdBy.trim(),
         'isPublished': true,
-
         'isFeatured': false,
-
-        'updatedAt':
-            FieldValue.serverTimestamp(),
-
+        'updatedAt': FieldValue.serverTimestamp(),
         if (!existing.exists)
-          'createdAt':
-              FieldValue.serverTimestamp(),
-
-        // Keep eventDate because it remains
-        // part of EventModel and is used
-        // for other purposes.
+          'createdAt': FieldValue.serverTimestamp(),
         if (!existing.exists)
-          'eventDate':
-              Timestamp.fromDate(
-            DateTime.now(),
-          ),
-
-        // Keep title for compatibility with
-        // EventModel and older functionality.
-        if (!existing.exists)
-          'title': 'Current Event',
+          'eventDate': Timestamp.fromDate(DateTime.now()),
+        if (!existing.exists) 'title': 'Current Event',
       },
       SetOptions(merge: true),
     );
@@ -147,12 +118,9 @@ class ContentRepository {
   // ============================================================
 
   Future<void> deleteCurrentEvent() async {
-    final eventRef = _firestore
-        .collection('events')
-        .doc('current');
+    final eventRef = _firestore.collection('events').doc('current');
 
-    final snapshot =
-        await eventRef.get();
+    final snapshot = await eventRef.get();
 
     if (!snapshot.exists) {
       return;
@@ -166,19 +134,12 @@ class ContentRepository {
   // ============================================================
 
   Stream<List<EventModel>> eventsStream() {
-    final now =
-        Timestamp.fromDate(DateTime.now());
+    final now = Timestamp.fromDate(DateTime.now());
 
     return _firestore
         .collection('events')
-        .where(
-          'isPublished',
-          isEqualTo: true,
-        )
-        .where(
-          'eventDate',
-          isGreaterThanOrEqualTo: now,
-        )
+        .where('isPublished', isEqualTo: true)
+        .where('eventDate', isGreaterThanOrEqualTo: now)
         .orderBy('eventDate')
         .snapshots()
         .map(
@@ -217,95 +178,62 @@ class ContentRepository {
     required String createdBy,
   }) async {
     if (title.trim().isEmpty) {
-      throw Exception(
-        'Please enter the event name.',
-      );
+      throw Exception('Please enter the event name.');
     }
 
     if (imageObjectKey.trim().isEmpty) {
-      throw Exception(
-        'Please upload an event flyer.',
-      );
+      throw Exception('Please upload an event flyer.');
     }
 
     if (createdBy.trim().isEmpty) {
-      throw Exception(
-        'Admin account could not be identified.',
-      );
+      throw Exception('Admin account could not be identified.');
     }
 
     if (isFeatured && !isPublished) {
-      throw Exception(
-        'Only a published event can be featured.',
-      );
+      throw Exception('Only a published event can be featured.');
     }
 
-    final events =
-        _firestore.collection('events');
-
+    final events = _firestore.collection('events');
     final eventRef = events.doc();
-
     final batch = _firestore.batch();
-
-    // ----------------------------------------------------------
-    // ONLY ONE EVENT CAN BE FEATURED
-    // ----------------------------------------------------------
 
     if (isFeatured) {
       final featuredSnapshot = await events
-          .where(
-            'isFeatured',
-            isEqualTo: true,
-          )
+          .where('isFeatured', isEqualTo: true)
           .get();
 
-      for (final doc
-          in featuredSnapshot.docs) {
+      for (final doc in featuredSnapshot.docs) {
         batch.update(
           doc.reference,
           {
             'isFeatured': false,
-            'updatedAt':
-                FieldValue.serverTimestamp(),
+            'updatedAt': FieldValue.serverTimestamp(),
           },
         );
       }
     }
 
-    // ----------------------------------------------------------
-    // CREATE EVENT
-    // ----------------------------------------------------------
-
     batch.set(
       eventRef,
       {
         'title': title.trim(),
-        'eventDate':
-            Timestamp.fromDate(eventDate),
-        'imageObjectKey':
-            imageObjectKey.trim(),
+        'eventDate': Timestamp.fromDate(eventDate),
+        'imageObjectKey': imageObjectKey.trim(),
         'isFeatured': isFeatured,
         'isPublished': isPublished,
-        'createdAt':
-            FieldValue.serverTimestamp(),
-        'updatedAt':
-            FieldValue.serverTimestamp(),
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
         'createdBy': createdBy.trim(),
       },
     );
 
     await batch.commit();
 
-    // ----------------------------------------------------------
-    // SYNC FEATURED EVENT
-    // ----------------------------------------------------------
-
     if (isFeatured && isPublished) {
       await _syncFeaturedEventFromData(
         eventId: eventRef.id,
         title: title.trim(),
-        imageObjectKey:
-            imageObjectKey.trim(),
+        imageObjectKey: imageObjectKey.trim(),
         eventDate: eventDate,
       );
     }
@@ -326,121 +254,76 @@ class ContentRepository {
     required bool isPublished,
   }) async {
     if (eventId.trim().isEmpty) {
-      throw Exception(
-        'Event could not be identified.',
-      );
+      throw Exception('Event could not be identified.');
     }
 
     if (title.trim().isEmpty) {
-      throw Exception(
-        'Please enter the event name.',
-      );
+      throw Exception('Please enter the event name.');
     }
 
     if (imageObjectKey.trim().isEmpty) {
-      throw Exception(
-        'Please upload an event flyer.',
-      );
+      throw Exception('Please upload an event flyer.');
     }
 
     if (isFeatured && !isPublished) {
-      throw Exception(
-        'Only a published event can be featured.',
-      );
+      throw Exception('Only a published event can be featured.');
     }
 
-    final events =
-        _firestore.collection('events');
+    final events = _firestore.collection('events');
+    final eventRef = events.doc(eventId);
 
-    final eventRef =
-        events.doc(eventId);
-
-    // ----------------------------------------------------------
-    // CHECK THAT EVENT EXISTS
-    // ----------------------------------------------------------
-
-    final existingSnapshot =
-        await eventRef.get();
+    final existingSnapshot = await eventRef.get();
 
     if (!existingSnapshot.exists) {
-      throw Exception(
-        'Event not found.',
-      );
+      throw Exception('Event not found.');
     }
 
-    final existingData =
-        existingSnapshot.data() ?? {};
+    final existingData = existingSnapshot.data() ?? {};
+    final wasFeatured = existingData['isFeatured'] == true;
 
-    final wasFeatured =
-        existingData['isFeatured'] == true;
-
-    final batch =
-        _firestore.batch();
-
-    // ----------------------------------------------------------
-    // ONLY ONE EVENT CAN BE FEATURED
-    // ----------------------------------------------------------
+    final batch = _firestore.batch();
 
     if (isFeatured) {
       final featuredSnapshot = await events
-          .where(
-            'isFeatured',
-            isEqualTo: true,
-          )
+          .where('isFeatured', isEqualTo: true)
           .get();
 
-      for (final doc
-          in featuredSnapshot.docs) {
+      for (final doc in featuredSnapshot.docs) {
         if (doc.id != eventId) {
           batch.update(
             doc.reference,
             {
               'isFeatured': false,
-              'updatedAt':
-                  FieldValue.serverTimestamp(),
+              'updatedAt': FieldValue.serverTimestamp(),
             },
           );
         }
       }
     }
 
-    // ----------------------------------------------------------
-    // UPDATE EVENT
-    // ----------------------------------------------------------
-
     batch.update(
       eventRef,
       {
         'title': title.trim(),
-        'eventDate':
-            Timestamp.fromDate(eventDate),
-        'imageObjectKey':
-            imageObjectKey.trim(),
+        'eventDate': Timestamp.fromDate(eventDate),
+        'imageObjectKey': imageObjectKey.trim(),
         'isFeatured': isFeatured,
         'isPublished': isPublished,
-        'updatedAt':
-            FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
       },
     );
 
     await batch.commit();
 
-    // ----------------------------------------------------------
-    // SYNC FEATURED EVENT
-    // ----------------------------------------------------------
-
     if (isFeatured && isPublished) {
       await _syncFeaturedEventFromData(
         eventId: eventId,
         title: title.trim(),
-        imageObjectKey:
-            imageObjectKey.trim(),
+        imageObjectKey: imageObjectKey.trim(),
         eventDate: eventDate,
       );
     } else if (wasFeatured) {
-      await _deactivateFeaturedEvent(
-        eventId,
-      );
+      await _deactivateFeaturedEvent(eventId);
     }
   }
 
@@ -448,42 +331,26 @@ class ContentRepository {
   // DELETE EVENT
   // ============================================================
 
-  Future<void> deleteEvent(
-    String eventId,
-  ) async {
+  Future<void> deleteEvent(String eventId) async {
     if (eventId.trim().isEmpty) {
-      throw Exception(
-        'Event could not be identified.',
-      );
+      throw Exception('Event could not be identified.');
     }
 
-    final eventRef = _firestore
-        .collection('events')
-        .doc(eventId);
+    final eventRef = _firestore.collection('events').doc(eventId);
 
-    final snapshot =
-        await eventRef.get();
+    final snapshot = await eventRef.get();
 
     if (!snapshot.exists) {
       return;
     }
 
-    final data =
-        snapshot.data() ?? {};
-
-    final wasFeatured =
-        data['isFeatured'] == true;
+    final data = snapshot.data() ?? {};
+    final wasFeatured = data['isFeatured'] == true;
 
     await eventRef.delete();
 
-    // ----------------------------------------------------------
-    // REMOVE FROM HOME FEATURED EVENT
-    // ----------------------------------------------------------
-
     if (wasFeatured) {
-      await _deactivateFeaturedEvent(
-        eventId,
-      );
+      await _deactivateFeaturedEvent(eventId);
     }
   }
 
@@ -496,76 +363,48 @@ class ContentRepository {
     required bool isPublished,
   }) async {
     if (eventId.trim().isEmpty) {
-      throw Exception(
-        'Event could not be identified.',
-      );
+      throw Exception('Event could not be identified.');
     }
 
-    final eventRef = _firestore
-        .collection('events')
-        .doc(eventId);
+    final eventRef = _firestore.collection('events').doc(eventId);
 
-    final snapshot =
-        await eventRef.get();
+    final snapshot = await eventRef.get();
 
     if (!snapshot.exists) {
-      throw Exception(
-        'Event not found.',
-      );
+      throw Exception('Event not found.');
     }
 
-    final data =
-        snapshot.data() ?? {};
-
-    final isFeatured =
-        data['isFeatured'] == true;
-
-    // ----------------------------------------------------------
-    // UNPUBLISH
-    // ----------------------------------------------------------
+    final data = snapshot.data() ?? {};
+    final isFeatured = data['isFeatured'] == true;
 
     if (!isPublished) {
       await eventRef.update({
         'isPublished': false,
         'isFeatured': false,
-        'updatedAt':
-            FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
       });
 
       if (isFeatured) {
-        await _deactivateFeaturedEvent(
-          eventId,
-        );
+        await _deactivateFeaturedEvent(eventId);
       }
 
       return;
     }
 
-    // ----------------------------------------------------------
-    // PUBLISH
-    // ----------------------------------------------------------
-
     await eventRef.update({
       'isPublished': true,
-      'updatedAt':
-          FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
     });
 
     if (isFeatured) {
-      final eventDate =
-          _timestampToDateTime(
-        data['eventDate'],
-      );
+      final eventDate = _timestampToDateTime(data['eventDate']);
 
       if (eventDate != null) {
         await _syncFeaturedEventFromData(
           eventId: eventId,
-          title:
-              data['title']?.toString() ?? '',
+          title: data['title']?.toString() ?? '',
           imageObjectKey:
-              data['imageObjectKey']
-                      ?.toString() ??
-                  '',
+              data['imageObjectKey']?.toString() ?? '',
           eventDate: eventDate,
         );
       }
@@ -581,59 +420,38 @@ class ContentRepository {
     required bool isFeatured,
   }) async {
     if (eventId.trim().isEmpty) {
-      throw Exception(
-        'Event could not be identified.',
-      );
+      throw Exception('Event could not be identified.');
     }
 
-    final events =
-        _firestore.collection('events');
+    final events = _firestore.collection('events');
+    final eventRef = events.doc(eventId);
 
-    final eventRef =
-        events.doc(eventId);
-
-    final eventSnapshot =
-        await eventRef.get();
+    final eventSnapshot = await eventRef.get();
 
     if (!eventSnapshot.exists) {
-      throw Exception(
-        'Event not found.',
-      );
+      throw Exception('Event not found.');
     }
 
-    final eventData =
-        eventSnapshot.data() ?? {};
-
-    // ----------------------------------------------------------
-    // FEATURE EVENT
-    // ----------------------------------------------------------
+    final eventData = eventSnapshot.data() ?? {};
 
     if (isFeatured) {
       if (eventData['isPublished'] != true) {
-        throw Exception(
-          'Only a published event can be featured.',
-        );
+        throw Exception('Only a published event can be featured.');
       }
 
       final featuredSnapshot = await events
-          .where(
-            'isFeatured',
-            isEqualTo: true,
-          )
+          .where('isFeatured', isEqualTo: true)
           .get();
 
-      final batch =
-          _firestore.batch();
+      final batch = _firestore.batch();
 
-      for (final doc
-          in featuredSnapshot.docs) {
+      for (final doc in featuredSnapshot.docs) {
         if (doc.id != eventId) {
           batch.update(
             doc.reference,
             {
               'isFeatured': false,
-              'updatedAt':
-                  FieldValue.serverTimestamp(),
+              'updatedAt': FieldValue.serverTimestamp(),
             },
           );
         }
@@ -643,28 +461,21 @@ class ContentRepository {
         eventRef,
         {
           'isFeatured': true,
-          'updatedAt':
-              FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
         },
       );
 
       await batch.commit();
 
       final eventDate =
-          _timestampToDateTime(
-        eventData['eventDate'],
-      );
+          _timestampToDateTime(eventData['eventDate']);
 
       if (eventDate != null) {
         await _syncFeaturedEventFromData(
           eventId: eventId,
-          title:
-              eventData['title']?.toString() ??
-                  '',
+          title: eventData['title']?.toString() ?? '',
           imageObjectKey:
-              eventData['imageObjectKey']
-                      ?.toString() ??
-                  '',
+              eventData['imageObjectKey']?.toString() ?? '',
           eventDate: eventDate,
         );
       }
@@ -672,31 +483,16 @@ class ContentRepository {
       return;
     }
 
-    // ----------------------------------------------------------
-    // UNFEATURE EVENT
-    // ----------------------------------------------------------
-
     await eventRef.update({
       'isFeatured': false,
-      'updatedAt':
-          FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
     });
 
-    await _deactivateFeaturedEvent(
-      eventId,
-    );
+    await _deactivateFeaturedEvent(eventId);
   }
 
   // ============================================================
-  // SYNC FEATURED EVENT TO HOME
-  // ============================================================
-  //
-  // The Home screen can resolve imageObjectKey through B2.
-  //
-  // Compatibility fields imageUrl/date/time are retained so
-  // existing FeaturedEvent documents/models do not immediately
-  // break.
-  //
+  // SYNC FEATURED EVENT
   // ============================================================
 
   Future<void> _syncFeaturedEventFromData({
@@ -712,22 +508,13 @@ class ContentRepository {
       {
         'eventId': eventId,
         'title': title,
-
-        // Actual B2 flyer object key.
         'imageObjectKey': imageObjectKey,
-
-        // Compatibility with older model/code.
-        'imageUrl': '',
         'date': _formatEventDate(eventDate),
         'time': '',
-
         'actionRoute': '/events',
         'isActive': true,
-
-        'createdAt':
-            FieldValue.serverTimestamp(),
-        'updatedAt':
-            FieldValue.serverTimestamp(),
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
       },
       SetOptions(merge: true),
     );
@@ -737,35 +524,26 @@ class ContentRepository {
   // DEACTIVATE FEATURED EVENT
   // ============================================================
 
-  Future<void> _deactivateFeaturedEvent(
-    String eventId,
-  ) async {
-    final featuredRef = _firestore
-        .collection('featured_events')
-        .doc('current');
+  Future<void> _deactivateFeaturedEvent(String eventId) async {
+    final featuredRef =
+        _firestore.collection('featured_events').doc('current');
 
-    final snapshot =
-        await featuredRef.get();
+    final snapshot = await featuredRef.get();
 
     if (!snapshot.exists) {
       return;
     }
 
-    final data =
-        snapshot.data() ?? {};
-
+    final data = snapshot.data() ?? {};
     final featuredEventId =
         data['eventId']?.toString() ?? '';
 
-    // Only deactivate the Home featured document if it
-    // belongs to this event.
     if (featuredEventId == eventId ||
         featuredEventId.isEmpty) {
       await featuredRef.set(
         {
           'isActive': false,
-          'updatedAt':
-              FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
         },
         SetOptions(merge: true),
       );
@@ -776,9 +554,7 @@ class ContentRepository {
   // FORMAT EVENT DATE
   // ============================================================
 
-  String _formatEventDate(
-    DateTime date,
-  ) {
+  String _formatEventDate(DateTime date) {
     const months = [
       'January',
       'February',
@@ -794,18 +570,14 @@ class ContentRepository {
       'December',
     ];
 
-    return '${months[date.month - 1]} '
-        '${date.day}, '
-        '${date.year}';
+    return '${months[date.month - 1]} ${date.day}, ${date.year}';
   }
 
   // ============================================================
-  // SAFE TIMESTAMP → DATETIME
+  // SAFE TIMESTAMP
   // ============================================================
 
-  DateTime? _timestampToDateTime(
-    dynamic value,
-  ) {
+  DateTime? _timestampToDateTime(dynamic value) {
     if (value is Timestamp) {
       return value.toDate();
     }
@@ -824,14 +596,8 @@ class ContentRepository {
   Stream<List<TeachingModel>> teachingsStream() {
     return _firestore
         .collection('teachings')
-        .where(
-          'isPublished',
-          isEqualTo: true,
-        )
-        .orderBy(
-          'createdAt',
-          descending: true,
-        )
+        .where('isPublished', isEqualTo: true)
+        .orderBy('createdAt', descending: true)
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
@@ -845,147 +611,149 @@ class ContentRepository {
   // ============================================================
 
   Stream<List<GalleryItem>> galleryStream() {
-  return _firestore
-      .collection('gallery')
-      .where(
-        'isPublished',
-        isEqualTo: true,
-      )
-      .orderBy(
-        'createdAt',
-        descending: true,
-      )
-      .snapshots()
-      .map(
-        (snapshot) => snapshot.docs
-            .map(GalleryItem.fromFirestore)
-            .toList(),
-      );
-}
-  
-  
+    return _firestore
+        .collection('gallery')
+        .where('isPublished', isEqualTo: true)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map(GalleryItem.fromFirestore)
+              .toList(),
+        );
+  }
+
+  // ============================================================
+  // CREATE GALLERY ITEM
+  // ============================================================
+
   Future<String> createGalleryItem({
-  required String title,
-  required String description,
-  required String imageObjectKey,
-  required String createdBy,
-  bool isPublished = true,
-}) async {
-  if (title.trim().isEmpty) {
-    throw Exception('Gallery title is required.');
+    required String title,
+    required String description,
+    required String imageObjectKey,
+    required String createdBy,
+    bool isPublished = true,
+  }) async {
+    if (title.trim().isEmpty) {
+      throw Exception('Gallery title is required.');
+    }
+
+    if (imageObjectKey.trim().isEmpty) {
+      throw Exception('Gallery image is required.');
+    }
+
+    if (createdBy.trim().isEmpty) {
+      throw Exception('Admin account could not be identified.');
+    }
+
+    final galleryRef =
+        _firestore.collection('gallery').doc();
+
+    await galleryRef.set({
+      'title': title.trim(),
+      'description': description.trim(),
+      'imageObjectKey': imageObjectKey.trim(),
+      'isPublished': isPublished,
+      'createdBy': createdBy.trim(),
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+
+    return galleryRef.id;
   }
 
-  if (imageObjectKey.trim().isEmpty) {
-    throw Exception('Gallery image is required.');
+  // ============================================================
+  // UPDATE GALLERY ITEM
+  // ============================================================
+
+  Future<void> updateGalleryItem({
+    required String galleryId,
+    required String title,
+    required String description,
+    required String imageObjectKey,
+    required String createdBy,
+    required bool isPublished,
+  }) async {
+    if (galleryId.trim().isEmpty) {
+      throw Exception('Gallery item ID is required.');
+    }
+
+    if (title.trim().isEmpty) {
+      throw Exception('Gallery title is required.');
+    }
+
+    if (imageObjectKey.trim().isEmpty) {
+      throw Exception('Gallery image is required.');
+    }
+
+    if (createdBy.trim().isEmpty) {
+      throw Exception('Admin account could not be identified.');
+    }
+
+    await _firestore
+        .collection('gallery')
+        .doc(galleryId.trim())
+        .update({
+      'title': title.trim(),
+      'description': description.trim(),
+      'imageObjectKey': imageObjectKey.trim(),
+      'isPublished': isPublished,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 
-  if (createdBy.trim().isEmpty) {
-    throw Exception(
-      'Admin account could not be identified.',
-    );
+  // ============================================================
+  // SET GALLERY PUBLISHED
+  // ============================================================
+
+  Future<void> setGalleryPublished({
+    required String galleryId,
+    required bool isPublished,
+  }) async {
+    if (galleryId.trim().isEmpty) {
+      throw Exception('Gallery item ID is required.');
+    }
+
+    await _firestore
+        .collection('gallery')
+        .doc(galleryId.trim())
+        .update({
+      'isPublished': isPublished,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 
-  final galleryRef =
-      _firestore.collection('gallery').doc();
+  // ============================================================
+  // DELETE GALLERY ITEM
+  // ============================================================
 
-  await galleryRef.set({
-    'title': title.trim(),
-    'description': description.trim(),
-    'imageObjectKey': imageObjectKey.trim(),
-    'isPublished': isPublished,
-    'createdBy': createdBy.trim(),
-    'createdAt': FieldValue.serverTimestamp(),
-    'updatedAt': FieldValue.serverTimestamp(),
-  });
+  Future<void> deleteGalleryItem(String galleryId) async {
+    if (galleryId.trim().isEmpty) {
+      throw Exception('Gallery item ID is required.');
+    }
 
-  return galleryRef.id;
-}
-
-Future<void> updateGalleryItem({
-  required String galleryId,
-  required String title,
-  required String description,
-  required String imageObjectKey,
-  required String createdBy,
-  required bool isPublished,
-}) async {
-  if (galleryId.trim().isEmpty) {
-    throw Exception('Gallery item ID is required.');
+    await _firestore
+        .collection('gallery')
+        .doc(galleryId.trim())
+        .delete();
   }
 
-  if (title.trim().isEmpty) {
-    throw Exception('Gallery title is required.');
+  // ============================================================
+  // ADMIN GALLERY
+  // ============================================================
+
+  Stream<List<GalleryItem>> adminGalleryStream() {
+    return _firestore
+        .collection('gallery')
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map(GalleryItem.fromFirestore)
+              .toList(),
+        );
   }
 
-  if (imageObjectKey.trim().isEmpty) {
-    throw Exception('Gallery image is required.');
-  }
-
-  if (createdBy.trim().isEmpty) {
-    throw Exception(
-      'Admin account could not be identified.',
-    );
-  }
-
-  await _firestore
-      .collection('gallery')
-      .doc(galleryId.trim())
-      .update({
-    'title': title.trim(),
-    'description': description.trim(),
-    'imageObjectKey': imageObjectKey.trim(),
-    'isPublished': isPublished,
-    'updatedAt': FieldValue.serverTimestamp(),
-  });
-}
-
-Future<void> setGalleryPublished({
-  required String galleryId,
-  required bool isPublished,
-}) async {
-  if (galleryId.trim().isEmpty) {
-    throw Exception('Gallery item ID is required.');
-  }
-
-  await _firestore
-      .collection('gallery')
-      .doc(galleryId.trim())
-      .update({
-    'isPublished': isPublished,
-    'updatedAt': FieldValue.serverTimestamp(),
-  });
-}
-
-Future<void> deleteGalleryItem(
-  String galleryId,
-) async {
-  if (galleryId.trim().isEmpty) {
-    throw Exception('Gallery item ID is required.');
-  }
-
-  await _firestore
-      .collection('gallery')
-      .doc(galleryId.trim())
-      .delete();
-}
-
-Stream<List<GalleryItem>> adminGalleryStream() {
-  return _firestore
-      .collection('gallery')
-      .orderBy(
-        'createdAt',
-        descending: true,
-      )
-      .snapshots()
-      .map(
-        (snapshot) => snapshot.docs
-            .map(GalleryItem.fromFirestore)
-            .toList(),
-      );
-}
-  
-
-  
   // ============================================================
   // USER PROFILE
   // ============================================================
@@ -1004,24 +772,32 @@ Stream<List<GalleryItem>> adminGalleryStream() {
   // RHIC COMMUNITY
   // ============================================================
 
-  Stream<List<CommunityGroupModel>>
-      communityGroupsStream() {
+  Stream<List<CommunityGroupModel>> communityGroupsStream() {
     return _firestore
         .collection('community_groups')
-        .where(
-          'isPublished',
-          isEqualTo: true,
-        )
-        .orderBy(
-          'createdAt',
-          descending: true,
-        )
+        .where('isPublished', isEqualTo: true)
+        .orderBy('createdAt', descending: true)
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-              .map(
-                CommunityGroupModel.fromFirestore,
-              )
+              .map(CommunityGroupModel.fromFirestore)
+              .toList(),
+        );
+  }
+
+  // ============================================================
+  // ADMIN COMMUNITY GROUPS
+  // ============================================================
+
+  Stream<List<CommunityGroupModel>>
+      adminCommunityGroupsStream() {
+    return _firestore
+        .collection('community_groups')
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map(CommunityGroupModel.fromFirestore)
               .toList(),
         );
   }
@@ -1030,8 +806,7 @@ Stream<List<GalleryItem>> adminGalleryStream() {
   // GET SINGLE COMMUNITY GROUP
   // ============================================================
 
-  Stream<CommunityGroupModel?>
-      communityGroupStream(
+  Stream<CommunityGroupModel?> communityGroupStream(
     String groupId,
   ) {
     return _firestore
@@ -1043,10 +818,156 @@ Stream<List<GalleryItem>> adminGalleryStream() {
         return null;
       }
 
-      return CommunityGroupModel.fromFirestore(
-        snapshot,
-      );
+      return CommunityGroupModel.fromFirestore(snapshot);
     });
+  }
+
+  // ============================================================
+  // ADMIN GET SINGLE COMMUNITY GROUP
+  // ============================================================
+
+  Stream<CommunityGroupModel?> adminCommunityGroupStream(
+    String groupId,
+  ) {
+    return _firestore
+        .collection('community_groups')
+        .doc(groupId)
+        .snapshots()
+        .map((snapshot) {
+      if (!snapshot.exists) {
+        return null;
+      }
+
+      return CommunityGroupModel.fromFirestore(snapshot);
+    });
+  }
+
+  // ============================================================
+  // CREATE COMMUNITY GROUP
+  // ============================================================
+
+  Future<String> createCommunityGroup({
+    required String name,
+    required String description,
+    required String department,
+    required String coverImageObjectKey,
+    required String adminId,
+    required String adminName,
+    required bool requiresApproval,
+    bool isPublished = true,
+  }) async {
+    if (name.trim().isEmpty) {
+      throw Exception('Community group name is required.');
+    }
+
+    if (adminId.trim().isEmpty) {
+      throw Exception('Community group admin is required.');
+    }
+
+    if (adminName.trim().isEmpty) {
+      throw Exception('Community group admin name is required.');
+    }
+
+    final groupRef =
+        _firestore.collection('community_groups').doc();
+
+    await groupRef.set({
+      'name': name.trim(),
+      'description': description.trim(),
+      'department': department.trim(),
+      'coverImageObjectKey': coverImageObjectKey.trim(),
+      'requiresApproval': requiresApproval,
+      'adminId': adminId.trim(),
+      'adminName': adminName.trim(),
+      'memberCount': 0,
+      'isPublished': isPublished,
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+
+    return groupRef.id;
+  }
+
+  // ============================================================
+  // UPDATE COMMUNITY GROUP
+  // ============================================================
+
+  Future<void> updateCommunityGroup({
+    required String groupId,
+    required String name,
+    required String description,
+    required String department,
+    required String coverImageObjectKey,
+    required bool requiresApproval,
+  }) async {
+    if (groupId.trim().isEmpty) {
+      throw Exception('Community group ID is required.');
+    }
+
+    if (name.trim().isEmpty) {
+      throw Exception('Community group name is required.');
+    }
+
+    await _firestore
+        .collection('community_groups')
+        .doc(groupId.trim())
+        .update({
+      'name': name.trim(),
+      'description': description.trim(),
+      'department': department.trim(),
+      'coverImageObjectKey': coverImageObjectKey.trim(),
+      'requiresApproval': requiresApproval,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  // ============================================================
+  // DELETE COMMUNITY GROUP
+  // ============================================================
+
+  Future<void> deleteCommunityGroup(String groupId) async {
+    if (groupId.trim().isEmpty) {
+      throw Exception('Community group ID is required.');
+    }
+
+    final groupRef =
+        _firestore.collection('community_groups').doc(
+              groupId.trim(),
+            );
+
+    final membersSnapshot =
+        await groupRef.collection('members').get();
+
+    final postsSnapshot =
+        await groupRef.collection('posts').get();
+
+    final batch = _firestore.batch();
+
+    for (final member in membersSnapshot.docs) {
+      batch.delete(member.reference);
+    }
+
+    for (final post in postsSnapshot.docs) {
+      final commentsSnapshot =
+          await post.reference.collection('comments').get();
+
+      final likesSnapshot =
+          await post.reference.collection('likes').get();
+
+      for (final comment in commentsSnapshot.docs) {
+        batch.delete(comment.reference);
+      }
+
+      for (final like in likesSnapshot.docs) {
+        batch.delete(like.reference);
+      }
+
+      batch.delete(post.reference);
+    }
+
+    batch.delete(groupRef);
+
+    await batch.commit();
   }
 
   // ============================================================
@@ -1057,13 +978,11 @@ Stream<List<GalleryItem>> adminGalleryStream() {
     required String groupId,
     required String uid,
   }) async {
-    final groupRef = _firestore
-        .collection('community_groups')
-        .doc(groupId);
+    final groupRef =
+        _firestore.collection('community_groups').doc(groupId);
 
-    final memberRef = groupRef
-        .collection('members')
-        .doc(uid);
+    final memberRef =
+        groupRef.collection('members').doc(uid);
 
     final userRef =
         _firestore.collection('users').doc(uid);
@@ -1071,52 +990,40 @@ Stream<List<GalleryItem>> adminGalleryStream() {
     await _firestore.runTransaction(
       (transaction) async {
         final memberSnapshot =
-            await transaction.get(
-          memberRef,
-        );
+            await transaction.get(memberRef);
 
         if (memberSnapshot.exists) {
           return;
         }
 
         final userSnapshot =
-            await transaction.get(
-          userRef,
-        );
+            await transaction.get(userRef);
 
         final userData =
             userSnapshot.data() ?? {};
 
         final name =
-            userData['displayName']
-                    ?.toString() ??
-                userData['name']
-                    ?.toString() ??
+            userData['displayName']?.toString() ??
+                userData['name']?.toString() ??
                 'RHIC Member';
 
-        final photoUrl =
-            userData['photoUrl']
-                    ?.toString() ??
-                userData['photoURL']
-                    ?.toString() ??
-                '';
+        final photoObjectKey =
+            userData['photoObjectKey']?.toString() ?? '';
 
         transaction.set(
           memberRef,
           {
             'uid': uid,
             'name': name,
-            'photoUrl': photoUrl,
-            'joinedAt':
-                FieldValue.serverTimestamp(),
+            'photoObjectKey': photoObjectKey,
+            'joinedAt': FieldValue.serverTimestamp(),
           },
         );
 
         transaction.update(
           groupRef,
           {
-            'memberCount':
-                FieldValue.increment(1),
+            'memberCount': FieldValue.increment(1),
           },
         );
       },
@@ -1131,20 +1038,16 @@ Stream<List<GalleryItem>> adminGalleryStream() {
     required String groupId,
     required String uid,
   }) async {
-    final groupRef = _firestore
-        .collection('community_groups')
-        .doc(groupId);
+    final groupRef =
+        _firestore.collection('community_groups').doc(groupId);
 
-    final memberRef = groupRef
-        .collection('members')
-        .doc(uid);
+    final memberRef =
+        groupRef.collection('members').doc(uid);
 
     await _firestore.runTransaction(
       (transaction) async {
         final memberSnapshot =
-            await transaction.get(
-          memberRef,
-        );
+            await transaction.get(memberRef);
 
         if (!memberSnapshot.exists) {
           return;
@@ -1155,8 +1058,7 @@ Stream<List<GalleryItem>> adminGalleryStream() {
         transaction.update(
           groupRef,
           {
-            'memberCount':
-                FieldValue.increment(-1),
+            'memberCount': FieldValue.increment(-1),
           },
         );
       },
@@ -1177,9 +1079,7 @@ Stream<List<GalleryItem>> adminGalleryStream() {
         .collection('members')
         .doc(uid)
         .snapshots()
-        .map(
-          (snapshot) => snapshot.exists,
-        );
+        .map((snapshot) => snapshot.exists);
   }
 
   // ============================================================
@@ -1194,16 +1094,32 @@ Stream<List<GalleryItem>> adminGalleryStream() {
         .collection('community_groups')
         .doc(groupId)
         .collection('members')
-        .orderBy(
-          'joinedAt',
-          descending: false,
-        )
+        .orderBy('joinedAt', descending: false)
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-              .map(
-                CommunityMemberModel.fromFirestore,
-              )
+              .map(CommunityMemberModel.fromFirestore)
+              .toList(),
+        );
+  }
+
+  // ============================================================
+  // ADMIN GROUP MEMBERS
+  // ============================================================
+
+  Stream<List<CommunityMemberModel>>
+      adminCommunityGroupMembersStream(
+    String groupId,
+  ) {
+    return _firestore
+        .collection('community_groups')
+        .doc(groupId)
+        .collection('members')
+        .orderBy('joinedAt', descending: false)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map(CommunityMemberModel.fromFirestore)
               .toList(),
         );
   }
@@ -1212,24 +1128,39 @@ Stream<List<GalleryItem>> adminGalleryStream() {
   // STREAM GROUP POSTS
   // ============================================================
 
-  Stream<List<CommunityPostModel>>
-      communityPostsStream(
+  Stream<List<CommunityPostModel>> communityPostsStream(
     String groupId,
   ) {
     return _firestore
         .collection('community_groups')
         .doc(groupId)
         .collection('posts')
-        .orderBy(
-          'createdAt',
-          descending: true,
-        )
+        .orderBy('createdAt', descending: true)
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-              .map(
-                CommunityPostModel.fromFirestore,
-              )
+              .map(CommunityPostModel.fromFirestore)
+              .toList(),
+        );
+  }
+
+  // ============================================================
+  // ADMIN GROUP POSTS
+  // ============================================================
+
+  Stream<List<CommunityPostModel>>
+      adminCommunityPostsStream(
+    String groupId,
+  ) {
+    return _firestore
+        .collection('community_groups')
+        .doc(groupId)
+        .collection('posts')
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map(CommunityPostModel.fromFirestore)
               .toList(),
         );
   }
@@ -1241,6 +1172,10 @@ Stream<List<GalleryItem>> adminGalleryStream() {
   Future<String> createCommunityPost({
     required CommunityPostModel post,
   }) async {
+    if (post.groupId.trim().isEmpty) {
+      throw Exception('Community group ID is required.');
+    }
+
     final postsRef = _firestore
         .collection('community_groups')
         .doc(post.groupId)
@@ -1248,8 +1183,7 @@ Stream<List<GalleryItem>> adminGalleryStream() {
 
     final postRef = postsRef.doc();
 
-    final data =
-        post.toFirestore();
+    final data = post.toFirestore();
 
     data['createdAt'] =
         FieldValue.serverTimestamp();
@@ -1270,19 +1204,29 @@ Stream<List<GalleryItem>> adminGalleryStream() {
     required String groupId,
     required String postId,
     required String content,
-    required List<String> imageUrls,
+    required List<String> imageObjectKeys,
   }) async {
+    if (groupId.trim().isEmpty) {
+      throw Exception('Community group ID is required.');
+    }
+
+    if (postId.trim().isEmpty) {
+      throw Exception('Post ID is required.');
+    }
+
     await _firestore
         .collection('community_groups')
         .doc(groupId)
         .collection('posts')
         .doc(postId)
         .update({
-      'content': content,
-      'imageUrls': imageUrls,
+      'content': content.trim(),
+      'imageObjectKeys': imageObjectKeys
+          .where((key) => key.trim().isNotEmpty)
+          .map((key) => key.trim())
+          .toList(),
       'isEdited': true,
-      'updatedAt':
-          FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
     });
   }
 
@@ -1294,12 +1238,31 @@ Stream<List<GalleryItem>> adminGalleryStream() {
     required String groupId,
     required String postId,
   }) async {
-    await _firestore
+    final postRef = _firestore
         .collection('community_groups')
         .doc(groupId)
         .collection('posts')
-        .doc(postId)
-        .delete();
+        .doc(postId);
+
+    final commentsSnapshot =
+        await postRef.collection('comments').get();
+
+    final likesSnapshot =
+        await postRef.collection('likes').get();
+
+    final batch = _firestore.batch();
+
+    for (final comment in commentsSnapshot.docs) {
+      batch.delete(comment.reference);
+    }
+
+    for (final like in likesSnapshot.docs) {
+      batch.delete(like.reference);
+    }
+
+    batch.delete(postRef);
+
+    await batch.commit();
   }
 
   // ============================================================
@@ -1317,16 +1280,35 @@ Stream<List<GalleryItem>> adminGalleryStream() {
         .collection('posts')
         .doc(postId)
         .collection('comments')
-        .orderBy(
-          'createdAt',
-          descending: false,
-        )
+        .orderBy('createdAt', descending: false)
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-              .map(
-                CommunityCommentModel.fromFirestore,
-              )
+              .map(CommunityCommentModel.fromFirestore)
+              .toList(),
+        );
+  }
+
+  // ============================================================
+  // ADMIN POST COMMENTS
+  // ============================================================
+
+  Stream<List<CommunityCommentModel>>
+      adminCommunityCommentsStream({
+    required String groupId,
+    required String postId,
+  }) {
+    return _firestore
+        .collection('community_groups')
+        .doc(groupId)
+        .collection('posts')
+        .doc(postId)
+        .collection('comments')
+        .orderBy('createdAt', descending: false)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map(CommunityCommentModel.fromFirestore)
               .toList(),
         );
   }
@@ -1346,11 +1328,9 @@ Stream<List<GalleryItem>> adminGalleryStream() {
         .doc(comment.postId)
         .collection('comments');
 
-    final commentRef =
-        commentsRef.doc();
+    final commentRef = commentsRef.doc();
 
-    final data =
-        comment.toFirestore();
+    final data = comment.toFirestore();
 
     data['createdAt'] =
         FieldValue.serverTimestamp();
@@ -1363,8 +1343,7 @@ Stream<List<GalleryItem>> adminGalleryStream() {
         .collection('posts')
         .doc(comment.postId)
         .update({
-      'commentCount':
-          FieldValue.increment(1),
+      'commentCount': FieldValue.increment(1),
     });
 
     return commentRef.id;
@@ -1402,8 +1381,7 @@ Stream<List<GalleryItem>> adminGalleryStream() {
         .collection('posts')
         .doc(postId)
         .update({
-      'commentCount':
-          FieldValue.increment(-1),
+      'commentCount': FieldValue.increment(-1),
     });
   }
 
@@ -1424,9 +1402,7 @@ Stream<List<GalleryItem>> adminGalleryStream() {
         .collection('likes')
         .doc(uid)
         .snapshots()
-        .map(
-          (snapshot) => snapshot.exists,
-        );
+        .map((snapshot) => snapshot.exists);
   }
 
   // ============================================================
@@ -1444,16 +1420,13 @@ Stream<List<GalleryItem>> adminGalleryStream() {
         .collection('posts')
         .doc(postId);
 
-    final likeRef = postRef
-        .collection('likes')
-        .doc(uid);
+    final likeRef =
+        postRef.collection('likes').doc(uid);
 
     await _firestore.runTransaction(
       (transaction) async {
         final likeSnapshot =
-            await transaction.get(
-          likeRef,
-        );
+            await transaction.get(likeRef);
 
         if (likeSnapshot.exists) {
           transaction.delete(likeRef);
@@ -1504,11 +1477,9 @@ Stream<List<GalleryItem>> adminGalleryStream() {
         return false;
       }
 
-      final data =
-          snapshot.data();
+      final data = snapshot.data();
 
-      return data?['adminId']?.toString() ==
-          uid;
+      return data?['adminId']?.toString() == uid;
     });
   }
 
@@ -1528,33 +1499,26 @@ Stream<List<GalleryItem>> adminGalleryStream() {
       return null;
     }
 
-    return snapshot
-        .data()?['adminId']
-        ?.toString();
+    return snapshot.data()?['adminId']?.toString();
   }
 
   // ============================================================
-  // UPDATE GROUP INFORMATION
+  // GET GROUP ADMIN NAME
   // ============================================================
 
-  Future<void> updateCommunityGroup({
-    required String groupId,
-    required String name,
-    required String description,
-    required String department,
-    required String coverImageUrl,
-  }) async {
-    await _firestore
+  Future<String?> getCommunityGroupAdminName(
+    String groupId,
+  ) async {
+    final snapshot = await _firestore
         .collection('community_groups')
         .doc(groupId)
-        .update({
-      'name': name,
-      'description': description,
-      'department': department,
-      'coverImageUrl': coverImageUrl,
-      'updatedAt':
-          FieldValue.serverTimestamp(),
-    });
+        .get();
+
+    if (!snapshot.exists) {
+      return null;
+    }
+
+    return snapshot.data()?['adminName']?.toString();
   }
 
   // ============================================================
@@ -1565,20 +1529,16 @@ Stream<List<GalleryItem>> adminGalleryStream() {
     required String groupId,
     required String uid,
   }) async {
-    final groupRef = _firestore
-        .collection('community_groups')
-        .doc(groupId);
+    final groupRef =
+        _firestore.collection('community_groups').doc(groupId);
 
-    final memberRef = groupRef
-        .collection('members')
-        .doc(uid);
+    final memberRef =
+        groupRef.collection('members').doc(uid);
 
     await _firestore.runTransaction(
       (transaction) async {
         final memberSnapshot =
-            await transaction.get(
-          memberRef,
-        );
+            await transaction.get(memberRef);
 
         if (!memberSnapshot.exists) {
           return;
@@ -1598,7 +1558,7 @@ Stream<List<GalleryItem>> adminGalleryStream() {
   }
 
   // ============================================================
-  // MAKE MEMBER ADMIN
+  // MAKE MEMBER ADMIN / CHANGE HOD
   // ============================================================
 
   Future<void> changeCommunityGroupAdmin({
@@ -1606,14 +1566,41 @@ Stream<List<GalleryItem>> adminGalleryStream() {
     required String newAdminId,
     required String newAdminName,
   }) async {
-    await _firestore
-        .collection('community_groups')
-        .doc(groupId)
-        .update({
-      'adminId': newAdminId,
-      'adminName': newAdminName,
-      'updatedAt':
-          FieldValue.serverTimestamp(),
+    if (groupId.trim().isEmpty) {
+      throw Exception('Community group ID is required.');
+    }
+
+    if (newAdminId.trim().isEmpty) {
+      throw Exception('New admin ID is required.');
+    }
+
+    if (newAdminName.trim().isEmpty) {
+      throw Exception('New admin name is required.');
+    }
+
+    final groupRef =
+        _firestore
+            .collection('community_groups')
+            .doc(groupId.trim());
+
+    final memberRef =
+        groupRef
+            .collection('members')
+            .doc(newAdminId.trim());
+
+    final memberSnapshot =
+        await memberRef.get();
+
+    if (!memberSnapshot.exists) {
+      throw Exception(
+        'The selected user must be a member of this community group.',
+      );
+    }
+
+    await groupRef.update({
+      'adminId': newAdminId.trim(),
+      'adminName': newAdminName.trim(),
+      'updatedAt': FieldValue.serverTimestamp(),
     });
   }
 
@@ -1633,8 +1620,7 @@ Stream<List<GalleryItem>> adminGalleryStream() {
         .doc(postId)
         .update({
       'isPinned': isPinned,
-      'updatedAt':
-          FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
     });
   }
 
@@ -1646,13 +1632,223 @@ Stream<List<GalleryItem>> adminGalleryStream() {
     required String groupId,
     required bool isPublished,
   }) async {
+    if (groupId.trim().isEmpty) {
+      throw Exception('Community group ID is required.');
+    }
+
     await _firestore
         .collection('community_groups')
-        .doc(groupId)
+        .doc(groupId.trim())
         .update({
       'isPublished': isPublished,
-      'updatedAt':
-          FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
     });
+  }
+
+  // ============================================================
+  // GET COMMUNITY GROUP MEMBER COUNT
+  // ============================================================
+
+  Future<int> getCommunityGroupMemberCount(
+    String groupId,
+  ) async {
+    final snapshot = await _firestore
+        .collection('community_groups')
+        .doc(groupId)
+        .collection('members')
+        .count()
+        .get();
+
+    return snapshot.count ?? 0;
+  }
+
+  // ============================================================
+  // GET COMMUNITY GROUP POST COUNT
+  // ============================================================
+
+  Future<int> getCommunityGroupPostCount(
+    String groupId,
+  ) async {
+    final snapshot = await _firestore
+        .collection('community_groups')
+        .doc(groupId)
+        .collection('posts')
+        .count()
+        .get();
+
+    return snapshot.count ?? 0;
+  }
+
+  // ============================================================
+  // GET COMMUNITY GROUP
+  // ============================================================
+
+  Future<CommunityGroupModel?> getCommunityGroup(
+    String groupId,
+  ) async {
+    if (groupId.trim().isEmpty) {
+      return null;
+    }
+
+    final snapshot = await _firestore
+        .collection('community_groups')
+        .doc(groupId.trim())
+        .get();
+
+    if (!snapshot.exists) {
+      return null;
+    }
+
+    return CommunityGroupModel.fromFirestore(snapshot);
+  }
+
+  // ============================================================
+  // CHECK IF USER IS GROUP MEMBER
+  // ============================================================
+
+  Future<bool> checkCommunityGroupMember({
+    required String groupId,
+    required String uid,
+  }) async {
+    if (groupId.trim().isEmpty ||
+        uid.trim().isEmpty) {
+      return false;
+    }
+
+    final snapshot = await _firestore
+        .collection('community_groups')
+        .doc(groupId.trim())
+        .collection('members')
+        .doc(uid.trim())
+        .get();
+
+    return snapshot.exists;
+  }
+
+  // ============================================================
+  // ADMIN ADD EXISTING USER TO GROUP
+  // ============================================================
+
+  Future<void> addCommunityGroupMember({
+    required String groupId,
+    required String uid,
+  }) async {
+    if (groupId.trim().isEmpty) {
+      throw Exception('Community group ID is required.');
+    }
+
+    if (uid.trim().isEmpty) {
+      throw Exception('Member ID is required.');
+    }
+
+    final groupRef =
+        _firestore
+            .collection('community_groups')
+            .doc(groupId.trim());
+
+    final memberRef =
+        groupRef
+            .collection('members')
+            .doc(uid.trim());
+
+    final userRef =
+        _firestore
+            .collection('users')
+            .doc(uid.trim());
+
+    await _firestore.runTransaction(
+      (transaction) async {
+        final groupSnapshot =
+            await transaction.get(groupRef);
+
+        if (!groupSnapshot.exists) {
+          throw Exception('Community group not found.');
+        }
+
+        final memberSnapshot =
+            await transaction.get(memberRef);
+
+        if (memberSnapshot.exists) {
+          return;
+        }
+
+        final userSnapshot =
+            await transaction.get(userRef);
+
+        if (!userSnapshot.exists) {
+          throw Exception('User not found.');
+        }
+
+        final userData =
+            userSnapshot.data() ?? {};
+
+        final name =
+            userData['displayName']?.toString() ??
+                userData['name']?.toString() ??
+                'RHIC Member';
+
+        final photoObjectKey =
+            userData['photoObjectKey']?.toString() ?? '';
+
+        transaction.set(
+          memberRef,
+          {
+            'uid': uid.trim(),
+            'name': name,
+            'photoObjectKey': photoObjectKey,
+            'joinedAt':
+                FieldValue.serverTimestamp(),
+          },
+        );
+
+        transaction.update(
+          groupRef,
+          {
+            'memberCount':
+                FieldValue.increment(1),
+          },
+        );
+      },
+    );
+  }
+
+  // ============================================================
+  // SEARCH USERS FOR COMMUNITY ADMIN
+  // ============================================================
+
+  Future<List<DocumentSnapshot<Map<String, dynamic>>>>
+      searchCommunityUsers(
+    String searchTerm,
+  ) async {
+    final query =
+        searchTerm.trim().toLowerCase();
+
+    if (query.isEmpty) {
+      return [];
+    }
+
+    final snapshot = await _firestore
+        .collection('users')
+        .limit(100)
+        .get();
+
+    return snapshot.docs.where((doc) {
+      final data = doc.data();
+
+      final name =
+          (data['displayName'] ??
+                  data['name'] ??
+                  '')
+              .toString()
+              .toLowerCase();
+
+      final email =
+          (data['email'] ?? '')
+              .toString()
+              .toLowerCase();
+
+      return name.contains(query) ||
+          email.contains(query);
+    }).toList();
   }
 }

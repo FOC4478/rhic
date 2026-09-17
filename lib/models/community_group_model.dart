@@ -4,17 +4,13 @@ class CommunityGroupModel {
   final String id;
   final String name;
   final String description;
-  final String coverImageUrl;
-
+  final String department;
+  final String coverImageObjectKey;
+  final bool requiresApproval;
   final String adminId;
   final String adminName;
-
-  final String department;
-  final bool requiresApproval;
-  final bool isPublished;
-
   final int memberCount;
-
+  final bool isPublished;
   final Timestamp? createdAt;
   final Timestamp? updatedAt;
 
@@ -22,20 +18,16 @@ class CommunityGroupModel {
     required this.id,
     required this.name,
     required this.description,
-    required this.coverImageUrl,
+    required this.department,
+    required this.coverImageObjectKey,
+    required this.requiresApproval,
     required this.adminId,
     required this.adminName,
-    required this.department,
-    required this.requiresApproval,
-    required this.isPublished,
     required this.memberCount,
+    required this.isPublished,
     required this.createdAt,
     required this.updatedAt,
   });
-
-  // ============================================================
-  // FIRESTORE → MODEL
-  // ============================================================
 
   factory CommunityGroupModel.fromFirestore(
     DocumentSnapshot<Map<String, dynamic>> snapshot,
@@ -46,55 +38,53 @@ class CommunityGroupModel {
       id: snapshot.id,
       name: data['name']?.toString() ?? '',
       description: data['description']?.toString() ?? '',
-      coverImageUrl: data['coverImageUrl']?.toString() ?? '',
+      department: data['department']?.toString() ?? '',
+      coverImageObjectKey:
+          data['coverImageObjectKey']?.toString() ?? '',
+          requiresApproval: data['requiresApproval'] as bool? ?? false,
       adminId: data['adminId']?.toString() ?? '',
       adminName: data['adminName']?.toString() ?? '',
-      department: data['department']?.toString() ?? '',
-      requiresApproval: data['requiresApproval'] == true,
+      memberCount: _toInt(data['memberCount']),
       isPublished: data['isPublished'] == true,
-      memberCount: data['memberCount'] is int
-          ? data['memberCount'] as int
-          : 0,
-      createdAt: data['createdAt'] as Timestamp?,
-      updatedAt: data['updatedAt'] as Timestamp?,
+      createdAt: data['createdAt'] is Timestamp
+          ? data['createdAt'] as Timestamp
+          : null,
+      updatedAt: data['updatedAt'] is Timestamp
+          ? data['updatedAt'] as Timestamp
+          : null,
     );
   }
 
-  // ============================================================
-  // MODEL → FIRESTORE
-  // ============================================================
-
-  Map<String, dynamic> toFirestore() {
-    return {
-      'name': name,
-      'description': description,
-      'coverImageUrl': coverImageUrl,
-      'adminId': adminId,
-      'adminName': adminName,
-      'department': department,
-      'requiresApproval': requiresApproval,
-      'isPublished': isPublished,
-      'memberCount': memberCount,
-      'createdAt': createdAt,
-      'updatedAt': updatedAt,
-    };
-  }
-
-  // ============================================================
-  // COPY WITH
-  // ============================================================
+Map<String, dynamic> toFirestore() {
+  return {
+    'name': name.trim(),
+    'description': description.trim(),
+    'department': department.trim(),
+    'coverImageObjectKey':
+        coverImageObjectKey.trim(),
+    'requiresApproval': requiresApproval,
+    'adminId': adminId.trim(),
+    'adminName': adminName.trim(),
+    'memberCount': memberCount,
+    'isPublished': isPublished,
+    'createdAt':
+        createdAt ?? FieldValue.serverTimestamp(),
+    'updatedAt':
+        updatedAt ?? FieldValue.serverTimestamp(),
+  };
+}
 
   CommunityGroupModel copyWith({
     String? id,
     String? name,
     String? description,
-    String? coverImageUrl,
+    String? department,
+    String? coverImageObjectKey,
     String? adminId,
     String? adminName,
-    String? department,
-    bool? requiresApproval,
-    bool? isPublished,
     int? memberCount,
+    bool? isPublished,
+    bool? requiresApproval,
     Timestamp? createdAt,
     Timestamp? updatedAt,
   }) {
@@ -102,20 +92,26 @@ class CommunityGroupModel {
       id: id ?? this.id,
       name: name ?? this.name,
       description: description ?? this.description,
-      coverImageUrl: coverImageUrl ?? this.coverImageUrl,
+      department: department ?? this.department,
+      coverImageObjectKey:
+          coverImageObjectKey ?? this.coverImageObjectKey,
+          requiresApproval: requiresApproval ?? this.requiresApproval,
       adminId: adminId ?? this.adminId,
       adminName: adminName ?? this.adminName,
-      department: department ?? this.department,
-      requiresApproval:
-          requiresApproval ?? this.requiresApproval,
-      isPublished:
-          isPublished ?? this.isPublished,
-      memberCount:
-          memberCount ?? this.memberCount,
-      createdAt:
-          createdAt ?? this.createdAt,
-      updatedAt:
-          updatedAt ?? this.updatedAt,
+      memberCount: memberCount ?? this.memberCount,
+      isPublished: isPublished ?? this.isPublished,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
+  }
+
+  static int _toInt(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+
+    return int.tryParse(
+          value?.toString() ?? '',
+        ) ??
+        0;
   }
 }

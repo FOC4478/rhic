@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../../models/community_group_model.dart';
 import '../../../repositories/content_repository.dart';
+import '../../../services/media_url_service.dart';
 
 class CommunityGroupManagementScreen extends StatelessWidget {
   final CommunityGroupModel group;
@@ -14,12 +15,10 @@ class CommunityGroupManagementScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currentUser =
-        FirebaseAuth.instance.currentUser;
+    final currentUser = FirebaseAuth.instance.currentUser;
 
     final isAdmin =
-        currentUser != null &&
-        currentUser.uid == group.adminId;
+        currentUser != null && currentUser.uid == group.adminId;
 
     if (!isAdmin) {
       return Scaffold(
@@ -88,10 +87,6 @@ class CommunityGroupManagementScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          // =====================================================
-          // GROUP HEADER
-          // =====================================================
-
           _buildGroupHeader(),
 
           const SizedBox(height: 24),
@@ -107,10 +102,7 @@ class CommunityGroupManagementScreen extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          // =====================================================
           // MEMBERS
-          // =====================================================
-
           _ManagementTile(
             icon: Icons.people_outline,
             title: 'Members',
@@ -125,15 +117,11 @@ class CommunityGroupManagementScreen extends StatelessWidget {
             },
           ),
 
-          // =====================================================
           // POSTS
-          // =====================================================
-
           _ManagementTile(
             icon: Icons.article_outlined,
             title: 'Manage Posts',
-            subtitle:
-                'Edit, delete and pin community posts',
+            subtitle: 'Edit, delete and pin community posts',
             onTap: () {
               Navigator.pushNamed(
                 context,
@@ -143,10 +131,7 @@ class CommunityGroupManagementScreen extends StatelessWidget {
             },
           ),
 
-          // =====================================================
           // EDIT GROUP
-          // =====================================================
-
           _ManagementTile(
             icon: Icons.edit_outlined,
             title: 'Edit Group',
@@ -161,15 +146,11 @@ class CommunityGroupManagementScreen extends StatelessWidget {
             },
           ),
 
-          // =====================================================
           // CHANGE HOD
-          // =====================================================
-
           _ManagementTile(
             icon: Icons.admin_panel_settings_outlined,
             title: 'Change HOD',
-            subtitle:
-                'Transfer group administration',
+            subtitle: 'Transfer group administration',
             onTap: () {
               Navigator.pushNamed(
                 context,
@@ -180,10 +161,6 @@ class CommunityGroupManagementScreen extends StatelessWidget {
           ),
 
           const SizedBox(height: 30),
-
-          // =====================================================
-          // GROUP INFORMATION
-          // =====================================================
 
           const Text(
             'Group Information',
@@ -216,6 +193,13 @@ class CommunityGroupManagementScreen extends StatelessWidget {
               ),
               const Divider(height: 24),
               _InfoRow(
+                label: 'Membership',
+                value: group.requiresApproval
+                    ? 'Approval required'
+                    : 'Open membership',
+              ),
+              const Divider(height: 24),
+              _InfoRow(
                 label: 'Status',
                 value: group.isPublished
                     ? 'Published'
@@ -225,10 +209,6 @@ class CommunityGroupManagementScreen extends StatelessWidget {
           ),
 
           const SizedBox(height: 30),
-
-          // =====================================================
-          // DANGER ZONE
-          // =====================================================
 
           const Text(
             'Danger Zone',
@@ -241,17 +221,30 @@ class CommunityGroupManagementScreen extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          _ManagementTile(
-            icon: Icons.visibility_off_outlined,
-            title: 'Disable Group',
-            subtitle:
-                'Hide this group from the RHIC Community',
-            iconColor: Colors.red,
-            titleColor: Colors.red,
-            onTap: () {
-              _showDisableConfirmation(context);
-            },
-          ),
+          if (group.isPublished)
+            _ManagementTile(
+              icon: Icons.visibility_off_outlined,
+              title: 'Disable Group',
+              subtitle:
+                  'Hide this group from the RHIC Community',
+              iconColor: Colors.red,
+              titleColor: Colors.red,
+              onTap: () {
+                _showDisableConfirmation(context);
+              },
+            )
+          else
+            _ManagementTile(
+              icon: Icons.visibility_outlined,
+              title: 'Enable Group',
+              subtitle:
+                  'Make this group visible in the RHIC Community',
+              iconColor: const Color(0xFF6B1FA2),
+              titleColor: const Color(0xFF6B1FA2),
+              onTap: () {
+                _showEnableConfirmation(context);
+              },
+            ),
 
           const SizedBox(height: 30),
         ],
@@ -279,19 +272,15 @@ class CommunityGroupManagementScreen extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Group image
           ClipRRect(
             borderRadius: BorderRadius.circular(16),
             child: SizedBox(
               width: 70,
               height: 70,
-              child: group.coverImageUrl.isNotEmpty
-                  ? Image.network(
-                      group.coverImageUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) {
-                        return _groupImageFallback();
-                      },
+              child: group.coverImageObjectKey.isNotEmpty
+                  ? _CommunityGroupCover(
+                      objectKey: group.coverImageObjectKey,
+                      fallback: _groupImageFallback(),
                     )
                   : _groupImageFallback(),
             ),
@@ -301,8 +290,7 @@ class CommunityGroupManagementScreen extends StatelessWidget {
 
           Expanded(
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   group.name,
@@ -321,6 +309,31 @@ class CommunityGroupManagementScreen extends StatelessWidget {
                     fontSize: 13,
                     color: Colors.grey.shade600,
                     fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: group.isPublished
+                        ? Colors.green.withValues(alpha: .10)
+                        : Colors.red.withValues(alpha: .10),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    group.isPublished
+                        ? 'Published'
+                        : 'Unpublished',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: group.isPublished
+                          ? Colors.green.shade700
+                          : Colors.red.shade700,
+                    ),
                   ),
                 ),
               ],
@@ -349,8 +362,7 @@ class CommunityGroupManagementScreen extends StatelessWidget {
   Future<void> _showDisableConfirmation(
     BuildContext context,
   ) async {
-    final shouldDisable =
-        await showDialog<bool>(
+    final shouldDisable = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
@@ -358,7 +370,9 @@ class CommunityGroupManagementScreen extends StatelessWidget {
             'Disable group?',
           ),
           content: const Text(
-            'This will hide the group from the RHIC Community. You can enable it again later.',
+            'This will hide the group from the RHIC Community. '
+            'The group and its members will not be deleted. '
+            'You can enable it again later.',
           ),
           actions: [
             TextButton(
@@ -396,12 +410,9 @@ class CommunityGroupManagementScreen extends StatelessWidget {
 
     try {
       await ContentRepository.instance
-          .updateCommunityGroup(
+          .setCommunityGroupPublished(
         groupId: group.id,
-        name: group.name,
-        description: group.description,
-        department: group.department,
-        coverImageUrl: group.coverImageUrl,
+        isPublished: false,
       );
 
       if (!context.mounted) return;
@@ -409,21 +420,219 @@ class CommunityGroupManagementScreen extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Group settings updated.',
+            'Group disabled successfully.',
           ),
         ),
       );
+
+      Navigator.pop(context);
     } catch (e) {
       if (!context.mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Unable to update group.',
+            'Unable to disable group: ${e.toString()}',
           ),
         ),
       );
     }
+  }
+
+  // ============================================================
+  // ENABLE GROUP
+  // ============================================================
+
+  Future<void> _showEnableConfirmation(
+    BuildContext context,
+  ) async {
+    final shouldEnable = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text(
+            'Enable group?',
+          ),
+          content: const Text(
+            'This will make the group visible again in the RHIC Community.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(
+                  dialogContext,
+                  false,
+                );
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(
+                  dialogContext,
+                  true,
+                );
+              },
+              child: const Text(
+                'Enable',
+                style: TextStyle(
+                  color: Color(0xFF6B1FA2),
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldEnable != true) {
+      return;
+    }
+
+    try {
+      await ContentRepository.instance
+          .setCommunityGroupPublished(
+        groupId: group.id,
+        isPublished: true,
+      );
+
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Group enabled successfully.',
+          ),
+        ),
+      );
+
+      Navigator.pop(context);
+    } catch (e) {
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Unable to enable group: ${e.toString()}',
+          ),
+        ),
+      );
+    }
+  }
+}
+
+// ============================================================
+// COMMUNITY GROUP COVER
+// ============================================================
+
+class _CommunityGroupCover extends StatefulWidget {
+  final String objectKey;
+  final Widget fallback;
+
+  const _CommunityGroupCover({
+    required this.objectKey,
+    required this.fallback,
+  });
+
+  @override
+  State<_CommunityGroupCover> createState() =>
+      _CommunityGroupCoverState();
+}
+
+class _CommunityGroupCoverState
+    extends State<_CommunityGroupCover> {
+  String? _downloadUrl;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadImage();
+  }
+
+  @override
+  void didUpdateWidget(
+    covariant _CommunityGroupCover oldWidget,
+  ) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.objectKey != widget.objectKey) {
+      _loadImage();
+    }
+  }
+
+  Future<void> _loadImage() async {
+    final objectKey = widget.objectKey.trim();
+
+    if (objectKey.isEmpty) {
+      if (!mounted) return;
+
+      setState(() {
+        _downloadUrl = null;
+        _loading = false;
+      });
+
+      return;
+    }
+
+    setState(() {
+      _loading = true;
+      _downloadUrl = null;
+    });
+
+    try {
+      final url = await MediaUrlService.instance
+          .getCommunityMediaUrl(
+        objectKey: objectKey,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _downloadUrl = url;
+        _loading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+
+      setState(() {
+        _downloadUrl = null;
+        _loading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) {
+      return Container(
+        color: const Color(0xFFF1D9F7),
+        alignment: Alignment.center,
+        child: const SizedBox(
+          width: 22,
+          height: 22,
+          child: CircularProgressIndicator(
+            strokeWidth: 2.5,
+            color: Color(0xFF6B1FA2),
+          ),
+        ),
+      );
+    }
+
+    final url = _downloadUrl;
+
+    if (url == null || url.isEmpty) {
+      return widget.fallback;
+    }
+
+    return Image.network(
+      url,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) {
+        return widget.fallback;
+      },
+    );
   }
 }
 
@@ -451,6 +660,9 @@ class _ManagementTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final resolvedIconColor =
+        iconColor ?? const Color(0xFF6B1FA2);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
@@ -466,15 +678,12 @@ class _ManagementTile extends StatelessWidget {
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: (iconColor ??
-                    const Color(0xFF6B1FA2))
-                .withValues(alpha: .10),
+            color: resolvedIconColor.withValues(alpha: .10),
             shape: BoxShape.circle,
           ),
           child: Icon(
             icon,
-            color:
-                iconColor ?? const Color(0xFF6B1FA2),
+            color: resolvedIconColor,
             size: 22,
           ),
         ),

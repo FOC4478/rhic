@@ -70,9 +70,9 @@ class _CreateCommunityPostScreenState
             user.displayName?.trim().isNotEmpty == true
                 ? user.displayName!.trim()
                 : 'RHIC Member',
-        authorPhotoUrl: user.photoURL ?? '',
+        authorPhotoObjectKey: user.photoURL ?? '',
         content: content,
-        imageUrls: const [],
+        imageObjectKeys: const [],
         likeCount: 0,
         commentCount: 0,
         isEdited: false,

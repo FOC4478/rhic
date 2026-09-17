@@ -13,27 +13,11 @@ class MediaUrlService {
       'http://localhost:3000';
 
   // ============================================================
-  // GET SIGNED SERMON DOWNLOAD URL
+  // INTERNAL AUTH TOKEN
   // ============================================================
 
-  Future<String> getDownloadUrl({
-    required String storagePath,
-  }) async {
-    final cleanedPath =
-        storagePath.trim();
-
-    if (cleanedPath.isEmpty) {
-      throw Exception(
-        'Media storage path is empty.',
-      );
-    }
-
-    // ----------------------------------------------------------
-    // CURRENT FIREBASE USER
-    // ----------------------------------------------------------
-
-    final user =
-        FirebaseAuth.instance.currentUser;
+  Future<String> _getIdToken() async {
+    final user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
       throw Exception(
@@ -41,44 +25,114 @@ class MediaUrlService {
       );
     }
 
-    // ----------------------------------------------------------
-    // FIREBASE ID TOKEN
-    // ----------------------------------------------------------
+    final idToken = await user.getIdToken(true);
 
-    final idToken =
-        await user.getIdToken(true);
-
-    if (idToken == null ||
-        idToken.trim().isEmpty) {
+    if (idToken == null || idToken.trim().isEmpty) {
       throw Exception(
         'Unable to authenticate with the media server.',
       );
     }
 
-    // ----------------------------------------------------------
-    // REQUEST SIGNED URL FROM BACKEND
-    // ----------------------------------------------------------
+    return idToken;
+  }
 
-    final response =
-        await http.post(
-      Uri.parse(
-        '$baseUrl/download-url',
-      ),
+  // ============================================================
+  // GENERIC B2 OBJECT KEY DOWNLOAD URL
+  // ============================================================
+
+  Future<String> getDownloadUrl({
+    required String storagePath,
+  }) async {
+    return _getSignedUrl(
+      endpoint: '/download-url',
+      objectKey: storagePath,
+      emptyKeyMessage:
+          'Media storage path is empty.',
+      serverErrorMessage:
+          'Media server did not return a download URL.',
+    );
+  }
+
+  // ============================================================
+  // COMMUNITY MEDIA
+  // ============================================================
+ 
+
+  Future<String> getCommunityMediaUrl({
+    required String objectKey,
+  }) async {
+    return _getSignedUrl(
+      endpoint: '/community-download-url',
+      objectKey: objectKey,
+      emptyKeyMessage:
+          'A B2 community media object key is required.',
+      serverErrorMessage:
+          'The community media server did not return a download URL.',
+    );
+  }
+
+  // ============================================================
+  // EVENT FLYER
+  // ============================================================
+
+  Future<String> getEventDownloadUrl({
+    required String storagePath,
+  }) async {
+    return _getSignedUrl(
+      endpoint: '/event-download-url',
+      objectKey: storagePath,
+      emptyKeyMessage:
+          'Event flyer storage path is empty.',
+      serverErrorMessage:
+          'Event media server did not return a download URL.',
+    );
+  }
+
+  // ============================================================
+  // GALLERY IMAGE
+  // ============================================================
+
+  Future<String> getGalleryDownloadUrl({
+    required String storagePath,
+  }) async {
+    return _getSignedUrl(
+      endpoint: '/gallery-download-url',
+      objectKey: storagePath,
+      emptyKeyMessage:
+          'A B2 gallery image object key is required.',
+      serverErrorMessage:
+          'The gallery server did not return a download URL.',
+    );
+  }
+
+  // ============================================================
+  // INTERNAL SIGNED URL REQUEST
+  // ============================================================
+
+  Future<String> _getSignedUrl({
+    required String endpoint,
+    required String objectKey,
+    required String emptyKeyMessage,
+    required String serverErrorMessage,
+  }) async {
+    final cleanedKey = objectKey.trim();
+
+    if (cleanedKey.isEmpty) {
+      throw Exception(emptyKeyMessage);
+    }
+
+    final idToken = await _getIdToken();
+
+    final response = await http.post(
+      Uri.parse('$baseUrl$endpoint'),
       headers: {
-        'Content-Type':
-            'application/json',
-        'Authorization':
-            'Bearer $idToken',
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $idToken',
       },
       body: jsonEncode({
-        'objectKey':
-            cleanedPath,
+        'objectKey': cleanedKey,
       }),
     );
-
-    // ----------------------------------------------------------
-    // HANDLE BACKEND ERRORS
-    // ----------------------------------------------------------
 
     if (response.statusCode < 200 ||
         response.statusCode >= 300) {
@@ -86,16 +140,13 @@ class MediaUrlService {
           'Media server returned ${response.statusCode}.';
 
       try {
-        final decoded =
-            jsonDecode(response.body);
+        final decoded = jsonDecode(response.body);
 
         if (decoded is Map) {
           if (decoded['message'] != null) {
-            message =
-                decoded['message'].toString();
+            message = decoded['message'].toString();
           } else if (decoded['error'] != null) {
-            message =
-                decoded['error'].toString();
+            message = decoded['error'].toString();
           }
         }
       } catch (_) {}
@@ -103,12 +154,7 @@ class MediaUrlService {
       throw Exception(message);
     }
 
-    // ----------------------------------------------------------
-    // DECODE RESPONSE
-    // ----------------------------------------------------------
-
-    final decoded =
-        jsonDecode(response.body);
+    final decoded = jsonDecode(response.body);
 
     if (decoded is! Map) {
       throw Exception(
@@ -117,249 +163,10 @@ class MediaUrlService {
     }
 
     final downloadUrl =
-        decoded['downloadUrl']
-            ?.toString()
-            .trim();
+        decoded['downloadUrl']?.toString().trim();
 
-    if (downloadUrl == null ||
-        downloadUrl.isEmpty) {
-      throw Exception(
-        'Media server did not return a download URL.',
-      );
-    }
-
-    return downloadUrl;
-  }
-
-  // ============================================================
-  // GET SIGNED EVENT FLYER DOWNLOAD URL
-  // ============================================================
-
-  Future<String> getEventDownloadUrl({
-    required String storagePath,
-  }) async {
-    final cleanedPath =
-        storagePath.trim();
-
-    if (cleanedPath.isEmpty) {
-      throw Exception(
-        'Event flyer storage path is empty.',
-      );
-    }
-
-    // ----------------------------------------------------------
-    // CURRENT FIREBASE USER
-    // ----------------------------------------------------------
-
-    final user =
-        FirebaseAuth.instance.currentUser;
-
-    if (user == null) {
-      throw Exception(
-        'Please sign in to access this event.',
-      );
-    }
-
-    // ----------------------------------------------------------
-    // FIREBASE ID TOKEN
-    // ----------------------------------------------------------
-
-    final idToken =
-        await user.getIdToken(true);
-
-    if (idToken == null ||
-        idToken.trim().isEmpty) {
-      throw Exception(
-        'Unable to authenticate with the media server.',
-      );
-    }
-
-    // ----------------------------------------------------------
-    // REQUEST SIGNED EVENT URL
-    // ----------------------------------------------------------
-
-    final response =
-        await http.post(
-      Uri.parse(
-        '$baseUrl/event-download-url',
-      ),
-      headers: {
-        'Content-Type':
-            'application/json',
-        'Authorization':
-            'Bearer $idToken',
-      },
-      body: jsonEncode({
-        'objectKey':
-            cleanedPath,
-      }),
-    );
-
-    // ----------------------------------------------------------
-    // HANDLE BACKEND ERRORS
-    // ----------------------------------------------------------
-
-    if (response.statusCode < 200 ||
-        response.statusCode >= 300) {
-      String message =
-          'Event media server returned ${response.statusCode}.';
-
-      try {
-        final decoded =
-            jsonDecode(response.body);
-
-        if (decoded is Map) {
-          if (decoded['message'] != null) {
-            message =
-                decoded['message'].toString();
-          } else if (decoded['error'] != null) {
-            message =
-                decoded['error'].toString();
-          }
-        }
-      } catch (_) {}
-
-      throw Exception(message);
-    }
-
-    // ----------------------------------------------------------
-    // DECODE RESPONSE
-    // ----------------------------------------------------------
-
-    final decoded =
-        jsonDecode(response.body);
-
-    if (decoded is! Map) {
-      throw Exception(
-        'Invalid response from event media server.',
-      );
-    }
-
-    final downloadUrl =
-        decoded['downloadUrl']
-            ?.toString()
-            .trim();
-
-    if (downloadUrl == null ||
-        downloadUrl.isEmpty) {
-      throw Exception(
-        'Event media server did not return a download URL.',
-      );
-    }
-
-    return downloadUrl;
-  }
-
-  // ============================================================
-  // GET SIGNED GALLERY IMAGE DOWNLOAD URL
-  // ============================================================
-
-  Future<String> getGalleryDownloadUrl({
-    required String storagePath,
-  }) async {
-    final cleanedPath =
-        storagePath.trim();
-
-    if (cleanedPath.isEmpty) {
-      throw Exception(
-        'A B2 gallery image object key is required.',
-      );
-    }
-
-    // ----------------------------------------------------------
-    // CURRENT FIREBASE USER
-    // ----------------------------------------------------------
-
-    final user =
-        FirebaseAuth.instance.currentUser;
-
-    if (user == null) {
-      throw Exception(
-        'You must be signed in.',
-      );
-    }
-
-    // ----------------------------------------------------------
-    // FIREBASE ID TOKEN
-    // ----------------------------------------------------------
-
-    final idToken =
-        await user.getIdToken(true);
-
-    if (idToken == null ||
-        idToken.trim().isEmpty) {
-      throw Exception(
-        'Unable to authenticate your account.',
-      );
-    }
-
-    // ----------------------------------------------------------
-    // REQUEST SIGNED GALLERY URL
-    // ----------------------------------------------------------
-
-    final response =
-        await http.post(
-      Uri.parse(
-        '$baseUrl/gallery-download-url',
-      ),
-      headers: {
-        'Content-Type':
-            'application/json',
-        'Authorization':
-            'Bearer $idToken',
-      },
-      body: jsonEncode({
-        'objectKey':
-            cleanedPath,
-      }),
-    );
-
-    // ----------------------------------------------------------
-    // HANDLE BACKEND ERRORS
-    // ----------------------------------------------------------
-
-    if (response.statusCode != 200) {
-      String message =
-          'Unable to create gallery image URL.';
-
-      try {
-        final decoded =
-            jsonDecode(response.body);
-
-        if (decoded is Map &&
-            decoded['message'] != null) {
-          message =
-              decoded['message'].toString();
-        }
-      } catch (_) {}
-
-      throw Exception(message);
-    }
-
-    // ----------------------------------------------------------
-    // DECODE RESPONSE
-    // ----------------------------------------------------------
-
-    final decoded =
-        jsonDecode(response.body);
-
-    if (decoded is! Map ||
-        decoded['success'] != true ||
-        decoded['downloadUrl'] == null) {
-      throw Exception(
-        'The gallery server returned an invalid response.',
-      );
-    }
-
-    final downloadUrl =
-        decoded['downloadUrl']
-            .toString()
-            .trim();
-
-    if (downloadUrl.isEmpty) {
-      throw Exception(
-        'The server returned an empty gallery image URL.',
-      );
+    if (downloadUrl == null || downloadUrl.isEmpty) {
+      throw Exception(serverErrorMessage);
     }
 
     return downloadUrl;

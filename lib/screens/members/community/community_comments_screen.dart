@@ -56,9 +56,10 @@ class _CommunityCommentsScreenState
         postId: widget.post.id,
         authorId: user.uid,
         authorName: user.displayName ?? 'RHIC Member',
-        authorPhotoUrl: user.photoURL ?? '',
+        authorPhotoObjectKey: user.photoURL ?? '',
         content: text,
         createdAt: null,
+        updatedAt: null,
       );
 
       await ContentRepository.instance.addCommunityComment(
@@ -384,12 +385,12 @@ class _CommentTile extends StatelessWidget {
           CircleAvatar(
             radius: 20,
             backgroundColor: const Color(0xFFF1D9F7),
-            backgroundImage: comment.authorPhotoUrl.isNotEmpty
+            backgroundImage: comment.authorPhotoObjectKey.isNotEmpty
                 ? NetworkImage(
-                    comment.authorPhotoUrl,
+                    comment.authorPhotoObjectKey,
                   )
                 : null,
-            child: comment.authorPhotoUrl.isEmpty
+            child: comment.authorPhotoObjectKey.isEmpty
                 ? const Icon(
                     Icons.person,
                     color: Color(0xFF6B1FA2),

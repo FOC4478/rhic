@@ -1,21 +1,19 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CommunityMemberModel {
+  final String id;
   final String uid;
   final String name;
-  final String photoUrl;
+  final String photoObjectKey;
   final Timestamp? joinedAt;
 
   const CommunityMemberModel({
+    required this.id,
     required this.uid,
     required this.name,
-    required this.photoUrl,
+    required this.photoObjectKey,
     required this.joinedAt,
   });
-
-  // ============================================================
-  // FIRESTORE → MODEL
-  // ============================================================
 
   factory CommunityMemberModel.fromFirestore(
     DocumentSnapshot<Map<String, dynamic>> snapshot,
@@ -23,45 +21,24 @@ class CommunityMemberModel {
     final data = snapshot.data() ?? {};
 
     return CommunityMemberModel(
+      id: snapshot.id,
       uid: data['uid']?.toString() ?? snapshot.id,
-      name: data['name']?.toString() ??
-          data['displayName']?.toString() ??
-          'RHIC Member',
-      photoUrl: data['photoUrl']?.toString() ??
-          data['photoURL']?.toString() ??
-          '',
-      joinedAt: data['joinedAt'] as Timestamp?,
+      name: data['name']?.toString() ?? 'RHIC Member',
+      photoObjectKey:
+          data['photoObjectKey']?.toString() ?? '',
+      joinedAt: data['joinedAt'] is Timestamp
+          ? data['joinedAt'] as Timestamp
+          : null,
     );
   }
-
-  // ============================================================
-  // MODEL → FIRESTORE
-  // ============================================================
 
   Map<String, dynamic> toFirestore() {
     return {
-      'uid': uid,
-      'name': name,
-      'photoUrl': photoUrl,
-      'joinedAt': joinedAt,
+      'uid': uid.trim(),
+      'name': name.trim(),
+      'photoObjectKey': photoObjectKey.trim(),
+      'joinedAt':
+          joinedAt ?? FieldValue.serverTimestamp(),
     };
-  }
-
-  // ============================================================
-  // COPY WITH
-  // ============================================================
-
-  CommunityMemberModel copyWith({
-    String? uid,
-    String? name,
-    String? photoUrl,
-    Timestamp? joinedAt,
-  }) {
-    return CommunityMemberModel(
-      uid: uid ?? this.uid,
-      name: name ?? this.name,
-      photoUrl: photoUrl ?? this.photoUrl,
-      joinedAt: joinedAt ?? this.joinedAt,
-    );
   }
 }

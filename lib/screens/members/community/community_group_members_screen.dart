@@ -307,7 +307,7 @@ class _MemberTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final uid = member.uid;
     final name = member.name;
-    final photoUrl = member.photoUrl;
+    final photoUrl = member.photoObjectKey;
 
     final memberIsAdmin =
         uid == group.adminId;

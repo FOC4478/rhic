@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/community_post_model.dart';
 import '../models/teaching_model.dart';
 import '../models/event_model.dart';
@@ -1851,4 +1851,173 @@ class ContentRepository {
           email.contains(query);
     }).toList();
   }
+
+    // ============================================================
+  // ADMIN USERS
+  // ============================================================
+
+  Stream<List<DocumentSnapshot<Map<String, dynamic>>>>
+      adminUsersStream() {
+    return _firestore
+        .collection('users')
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs);
+  }
+
+  // ============================================================
+  // GET SINGLE USER
+  // ============================================================
+
+  Future<DocumentSnapshot<Map<String, dynamic>>> getUser(
+    String uid,
+  ) async {
+    if (uid.trim().isEmpty) {
+      throw Exception('User ID is required.');
+    }
+
+    return _firestore
+        .collection('users')
+        .doc(uid.trim())
+        .get();
+  }
+
+  // ============================================================
+  // UPDATE USER ROLE
+  // ============================================================
+
+  Future<void> updateUserRole({
+    required String uid,
+    required String role,
+  }) async {
+    final cleanUid = uid.trim();
+    final cleanRole = role.trim().toLowerCase();
+
+    if (cleanUid.isEmpty) {
+      throw Exception('User ID is required.');
+    }
+
+    if (cleanRole != 'member' && cleanRole != 'admin') {
+      throw Exception('Invalid user role.');
+    }
+
+    await _firestore
+        .collection('users')
+        .doc(cleanUid)
+        .update({
+      'role': cleanRole,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  // ============================================================
+  // UPDATE USER ACCOUNT STATUS
+  // ============================================================
+
+  Future<void> updateUserAccountStatus({
+    required String uid,
+    required String accountStatus,
+  }) async {
+    final cleanUid = uid.trim();
+    final cleanStatus = accountStatus.trim().toLowerCase();
+
+    if (cleanUid.isEmpty) {
+      throw Exception('User ID is required.');
+    }
+
+    const allowedStatuses = <String>{
+      'active',
+      'disabled',
+    };
+
+    if (!allowedStatuses.contains(cleanStatus)) {
+      throw Exception('Invalid account status.');
+    }
+
+    await _firestore
+        .collection('users')
+        .doc(cleanUid)
+        .update({
+      'accountStatus': cleanStatus,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  // ============================================================
+  // DELETE USER FIRESTORE PROFILE
+  //
+  // IMPORTANT:
+  // This deletes the Firestore profile only.
+  // Firebase Authentication deletion for another user must be
+  // performed by a trusted backend using Firebase Admin SDK.
+  // ============================================================
+
+  Future<void> deleteUserProfile(String uid) async {
+    final cleanUid = uid.trim();
+
+    if (cleanUid.isEmpty) {
+      throw Exception('User ID is required.');
+    }
+
+    final currentUid =
+        FirebaseAuth.instance.currentUser?.uid;
+
+    if (currentUid == cleanUid) {
+      throw Exception(
+        'You cannot delete the currently signed-in admin account from this screen.',
+      );
+    }
+
+    await _firestore
+        .collection('users')
+        .doc(cleanUid)
+        .delete();
+  }
+
+  // ============================================================
+  // UPDATE USER PROFILE
+  // ============================================================
+
+  Future<void> updateAdminUserProfile({
+    required String uid,
+    required String firstName,
+    required String lastName,
+    required String language,
+  }) async {
+    final cleanUid = uid.trim();
+    final cleanFirstName = firstName.trim();
+    final cleanLastName = lastName.trim();
+    final cleanLanguage = language.trim();
+
+    if (cleanUid.isEmpty) {
+      throw Exception('User ID is required.');
+    }
+
+    if (cleanFirstName.isEmpty) {
+      throw Exception('First name is required.');
+    }
+
+    if (cleanLastName.isEmpty) {
+      throw Exception('Last name is required.');
+    }
+
+    if (cleanLanguage.isEmpty) {
+      throw Exception('Language is required.');
+    }
+
+    await _firestore
+        .collection('users')
+        .doc(cleanUid)
+        .update({
+      'firstName': cleanFirstName,
+      'lastName': cleanLastName,
+      'fullName': '$cleanFirstName $cleanLastName',
+      'language': cleanLanguage,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+
+
+
 }

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+
 import 'package:church_app/screens/admin/books/admin_books_screen.dart';
 import 'package:church_app/screens/admin/community/admin_community_screen.dart';
 import 'package:church_app/screens/admin/sermons/admin_sermons_screen.dart';
 import 'package:church_app/screens/admin/shop/admin_payment_settings_screen.dart';
 import 'package:church_app/screens/admin/events/admin_events_screen.dart';
 import 'package:church_app/screens/admin/gallery/admin_gallery_screen.dart';
+import 'package:church_app/screens/admin/users/admin_users_screen.dart';
 import 'package:church_app/services/auth_service.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
@@ -147,27 +149,18 @@ class _AdminDashboardScreenState
       case 5:
         return const AdminPaymentsScreen();
 
-      // ========================================================
-      // COMMUNITY
-      // ========================================================
-
       case 6:
         return const AdminCommunityScreen();
 
       case 7:
-        return _buildComingSoonPage(
-          title: 'Users',
-          icon: Icons.people_outline,
-          description:
-              'Manage registered users.',
-        );
+        return const AdminUsersScreen();
 
       case 8:
         return _buildComingSoonPage(
           title: 'Notifications',
           icon: Icons.notifications_none_outlined,
           description:
-              'Send and manage notifications.',
+              'Send and manage notifications for the RHIC community.',
         );
 
       case 9:
@@ -175,7 +168,7 @@ class _AdminDashboardScreenState
           title: 'Settings',
           icon: Icons.settings_outlined,
           description:
-              'Manage your RHIC admin settings.',
+              'Manage your RHIC admin settings and platform configuration.',
         );
 
       default:
@@ -396,7 +389,8 @@ class _AdminDashboardScreenState
           if (!isDesktop)
             IconButton(
               onPressed: () {
-                _scaffoldKey.currentState?.openDrawer();
+                _scaffoldKey.currentState
+                    ?.openDrawer();
               },
               icon: const Icon(Icons.menu),
             ),
@@ -439,6 +433,7 @@ class _AdminDashboardScreenState
           // ====================================================
 
           IconButton(
+            tooltip: 'Notifications',
             onPressed: () {
               _selectMenu(8);
             },
@@ -545,22 +540,26 @@ class _AdminDashboardScreenState
                     _StatCard(
                       title: 'Total Users',
                       value: '—',
-                      icon: Icons.people_outline,
+                      icon:
+                          Icons.people_outline,
                     ),
                     _StatCard(
                       title: 'Sermons',
                       value: '—',
-                      icon: Icons.play_circle_outline,
+                      icon: Icons
+                          .play_circle_outline,
                     ),
                     _StatCard(
                       title: 'Books',
                       value: '—',
-                      icon: Icons.library_books_outlined,
+                      icon: Icons
+                          .library_books_outlined,
                     ),
                     _StatCard(
                       title: 'Events',
                       value: '—',
-                      icon: Icons.event_outlined,
+                      icon:
+                          Icons.event_outlined,
                     ),
                   ];
 
@@ -639,6 +638,22 @@ class _AdminDashboardScreenState
                     onTap: () =>
                         _selectMenu(6),
                   ),
+
+                  _QuickAction(
+                    title: 'Manage Users',
+                    icon:
+                        Icons.people_outline,
+                    onTap: () =>
+                        _selectMenu(7),
+                  ),
+
+                  _QuickAction(
+                    title: 'Payment Settings',
+                    icon:
+                        Icons.payments_outlined,
+                    onTap: () =>
+                        _selectMenu(5),
+                  ),
                 ],
               );
             },
@@ -668,7 +683,8 @@ class _AdminDashboardScreenState
               borderRadius:
                   BorderRadius.circular(18),
               border: Border.all(
-                color: const Color(0xFFE9E5EA),
+                color:
+                    const Color(0xFFE9E5EA),
               ),
             ),
             child: const Column(
@@ -723,7 +739,8 @@ class _AdminDashboardScreenState
               borderRadius:
                   BorderRadius.circular(18),
               border: Border.all(
-                color: const Color(0xFFE9E5EA),
+                color:
+                    const Color(0xFFE9E5EA),
               ),
             ),
             child: const Column(
@@ -731,21 +748,22 @@ class _AdminDashboardScreenState
                 _SystemStatusRow(
                   title: 'Firebase',
                   status: 'Connected',
-                  icon:
-                      Icons.cloud_done_outlined,
+                  icon: Icons
+                      .cloud_done_outlined,
                 ),
                 Divider(height: 24),
                 _SystemStatusRow(
                   title: 'Authentication',
                   status: 'Active',
-                  icon: Icons.lock_outline,
+                  icon:
+                      Icons.lock_outline,
                 ),
                 Divider(height: 24),
                 _SystemStatusRow(
                   title: 'Admin Portal',
                   status: 'Active',
-                  icon:
-                      Icons.admin_panel_settings_outlined,
+                  icon: Icons
+                      .admin_panel_settings_outlined,
                 ),
               ],
             ),
@@ -770,7 +788,8 @@ class _AdminDashboardScreenState
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Container(
-          constraints: const BoxConstraints(
+          constraints:
+              const BoxConstraints(
             maxWidth: 600,
           ),
           width: double.infinity,
@@ -780,7 +799,8 @@ class _AdminDashboardScreenState
             borderRadius:
                 BorderRadius.circular(24),
             border: Border.all(
-              color: const Color(0xFFE9E5EA),
+              color:
+                  const Color(0xFFE9E5EA),
             ),
           ),
           child: Column(
@@ -790,8 +810,9 @@ class _AdminDashboardScreenState
                 width: 80,
                 height: 80,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF350044)
-                      .withValues(alpha: 0.08),
+                  color:
+                      const Color(0xFF350044)
+                          .withValues(alpha: 0.08),
                   borderRadius:
                       BorderRadius.circular(20),
                 ),
@@ -809,7 +830,8 @@ class _AdminDashboardScreenState
                 title,
                 style: const TextStyle(
                   fontSize: 26,
-                  fontWeight: FontWeight.w800,
+                  fontWeight:
+                      FontWeight.w800,
                 ),
               ),
 
@@ -817,7 +839,8 @@ class _AdminDashboardScreenState
 
               Text(
                 description,
-                textAlign: TextAlign.center,
+                textAlign:
+                    TextAlign.center,
                 style: const TextStyle(
                   fontSize: 14,
                   color: Colors.black54,
@@ -833,7 +856,8 @@ class _AdminDashboardScreenState
                   vertical: 9,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF7F5F8),
+                  color:
+                      const Color(0xFFF7F5F8),
                   borderRadius:
                       BorderRadius.circular(30),
                 ),
@@ -865,7 +889,8 @@ class _AdminDashboardScreenState
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Logout'),
+          title:
+              const Text('Logout'),
           content: const Text(
             'Are you sure you want to logout?',
           ),
@@ -877,7 +902,8 @@ class _AdminDashboardScreenState
                   false,
                 );
               },
-              child: const Text('Cancel'),
+              child:
+                  const Text('Cancel'),
             ),
             ElevatedButton(
               onPressed: () {
@@ -893,7 +919,8 @@ class _AdminDashboardScreenState
                 foregroundColor:
                     Colors.white,
               ),
-              child: const Text('Logout'),
+              child:
+                  const Text('Logout'),
             ),
           ],
         );
@@ -948,13 +975,15 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding:
+          const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius:
             BorderRadius.circular(18),
         border: Border.all(
-          color: const Color(0xFFE9E5EA),
+          color:
+              const Color(0xFFE9E5EA),
         ),
       ),
       child: Row(
@@ -963,8 +992,9 @@ class _StatCard extends StatelessWidget {
             width: 46,
             height: 46,
             decoration: BoxDecoration(
-              color: const Color(0xFF350044)
-                  .withValues(alpha: 0.08),
+              color:
+                  const Color(0xFF350044)
+                      .withValues(alpha: 0.08),
               borderRadius:
                   BorderRadius.circular(12),
             ),
@@ -987,9 +1017,11 @@ class _StatCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style:
+                      const TextStyle(
                     fontSize: 12,
-                    color: Colors.black54,
+                    color:
+                        Colors.black54,
                   ),
                 ),
 
@@ -997,7 +1029,8 @@ class _StatCard extends StatelessWidget {
 
                 Text(
                   value,
-                  style: const TextStyle(
+                  style:
+                      const TextStyle(
                     fontSize: 22,
                     fontWeight:
                         FontWeight.w800,
@@ -1016,7 +1049,8 @@ class _StatCard extends StatelessWidget {
 // QUICK ACTION
 // ================================================================
 
-class _QuickAction extends StatelessWidget {
+class _QuickAction
+    extends StatelessWidget {
   final String title;
   final IconData icon;
   final VoidCallback onTap;
@@ -1042,7 +1076,8 @@ class _QuickAction extends StatelessWidget {
               const EdgeInsets.symmetric(
             horizontal: 16,
           ),
-          decoration: BoxDecoration(
+          decoration:
+              BoxDecoration(
             borderRadius:
                 BorderRadius.circular(15),
             border: Border.all(
@@ -1064,7 +1099,8 @@ class _QuickAction extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: const TextStyle(
+                  style:
+                      const TextStyle(
                     fontSize: 13,
                     fontWeight:
                         FontWeight.w700,
@@ -1089,7 +1125,8 @@ class _QuickAction extends StatelessWidget {
 // SYSTEM STATUS
 // ================================================================
 
-class _SystemStatusRow extends StatelessWidget {
+class _SystemStatusRow
+    extends StatelessWidget {
   final String title;
   final String status;
   final IconData icon;
@@ -1108,8 +1145,9 @@ class _SystemStatusRow extends StatelessWidget {
           width: 42,
           height: 42,
           decoration: BoxDecoration(
-            color: const Color(0xFF350044)
-                .withValues(alpha: 0.08),
+            color:
+                const Color(0xFF350044)
+                    .withValues(alpha: 0.08),
             borderRadius:
                 BorderRadius.circular(10),
           ),
@@ -1126,7 +1164,8 @@ class _SystemStatusRow extends StatelessWidget {
         Expanded(
           child: Text(
             title,
-            style: const TextStyle(
+            style:
+                const TextStyle(
               fontSize: 14,
               fontWeight:
                   FontWeight.w600,
@@ -1141,15 +1180,18 @@ class _SystemStatusRow extends StatelessWidget {
             vertical: 6,
           ),
           decoration: BoxDecoration(
-            color: const Color(0xFF087F75)
-                .withValues(alpha: 0.10),
+            color:
+                const Color(0xFF087F75)
+                    .withValues(alpha: 0.10),
             borderRadius:
                 BorderRadius.circular(20),
           ),
           child: Text(
             status,
-            style: const TextStyle(
-              color: Color(0xFF087F75),
+            style:
+                const TextStyle(
+              color:
+                  Color(0xFF087F75),
               fontSize: 11,
               fontWeight:
                   FontWeight.w700,

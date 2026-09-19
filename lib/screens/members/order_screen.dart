@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../../models/order_model.dart';
+import '../../../services/media_url_service.dart';
 
 class OrderScreen extends StatelessWidget {
   const OrderScreen({
@@ -16,7 +17,10 @@ class OrderScreen extends StatelessWidget {
     return FirebaseFirestore.instance
         .collection('book_orders')
         .where('userId', isEqualTo: userId)
-        .orderBy('createdAt', descending: true)
+        .orderBy(
+          'createdAt',
+          descending: true,
+        )
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
@@ -181,9 +185,7 @@ class _OrderCard extends StatelessWidget {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: const Color(
-                      0xFFF3EAF5,
-                    ),
+                    color: const Color(0xFFF3EAF5),
                     borderRadius:
                         BorderRadius.circular(13),
                   ),
@@ -192,9 +194,7 @@ class _OrderCard extends StatelessWidget {
                     color: purple,
                   ),
                 ),
-
                 const SizedBox(width: 12),
-
                 Expanded(
                   child: Column(
                     crossAxisAlignment:
@@ -203,14 +203,11 @@ class _OrderCard extends StatelessWidget {
                       Text(
                         'Order #${order.id.length > 8 ? order.id.substring(0, 8).toUpperCase() : order.id}',
                         style: const TextStyle(
-                          fontWeight:
-                              FontWeight.w800,
+                          fontWeight: FontWeight.w800,
                           color: darkPurple,
                         ),
                       ),
-
                       const SizedBox(height: 4),
-
                       Text(
                         '${order.items.length} item${order.items.length == 1 ? '' : 's'}',
                         style: TextStyle(
@@ -221,7 +218,6 @@ class _OrderCard extends StatelessWidget {
                     ],
                   ),
                 ),
-
                 Container(
                   padding:
                       const EdgeInsets.symmetric(
@@ -235,23 +231,19 @@ class _OrderCard extends StatelessWidget {
                         BorderRadius.circular(20),
                   ),
                   child: Row(
-                    mainAxisSize:
-                        MainAxisSize.min,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
                         _statusIcon(),
                         size: 15,
                         color: _statusColor(),
                       ),
-
                       const SizedBox(width: 5),
-
                       Text(
                         _statusText(),
                         style: TextStyle(
                           fontSize: 11,
-                          fontWeight:
-                              FontWeight.w700,
+                          fontWeight: FontWeight.w700,
                           color: _statusColor(),
                         ),
                       ),
@@ -267,50 +259,17 @@ class _OrderCard extends StatelessWidget {
               height: 1,
               color: Color(0xFFF0EDF1),
             ),
-
             Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  ClipRRect(
-                    borderRadius:
-                        BorderRadius.circular(10),
-                    child: SizedBox(
-                      width: 55,
-                      height: 70,
-                      child: firstItem
-                              .coverUrl.isNotEmpty
-                          ? Image.network(
-                              firstItem.coverUrl,
-                              fit: BoxFit.cover,
-                              errorBuilder:
-                                  (_, __, ___) {
-                                return const ColoredBox(
-                                  color: Color(
-                                    0xFFF3EAF5,
-                                  ),
-                                  child: Icon(
-                                    Icons
-                                        .menu_book_outlined,
-                                    color: purple,
-                                  ),
-                                );
-                              },
-                            )
-                          : const ColoredBox(
-                              color:
-                                  Color(0xFFF3EAF5),
-                              child: Icon(
-                                Icons
-                                    .menu_book_outlined,
-                                color: purple,
-                              ),
-                            ),
-                    ),
+                  _OrderBookCover(
+                    objectKey:
+                        firstItem.coverObjectKey,
+                    width: 55,
+                    height: 70,
                   ),
-
                   const SizedBox(width: 12),
-
                   Expanded(
                     child: Column(
                       crossAxisAlignment:
@@ -322,16 +281,12 @@ class _OrderCard extends StatelessWidget {
                           overflow:
                               TextOverflow.ellipsis,
                           style: const TextStyle(
-                            fontWeight:
-                                FontWeight.w800,
+                            fontWeight: FontWeight.w800,
                             color: darkPurple,
                           ),
                         ),
-
                         const SizedBox(height: 4),
-
-                        if (firstItem.author
-                            .isNotEmpty)
+                        if (firstItem.author.isNotEmpty)
                           Text(
                             firstItem.author,
                             maxLines: 1,
@@ -343,11 +298,8 @@ class _OrderCard extends StatelessWidget {
                                   Colors.grey.shade600,
                             ),
                           ),
-
-                        if (order.items.length >
-                            1) ...[
+                        if (order.items.length > 1) ...[
                           const SizedBox(height: 5),
-
                           Text(
                             '+ ${order.items.length - 1} more item${order.items.length - 1 == 1 ? '' : 's'}',
                             style: const TextStyle(
@@ -393,21 +345,17 @@ class _OrderCard extends StatelessWidget {
                         color: Colors.grey.shade600,
                       ),
                     ),
-
                     const SizedBox(height: 3),
-
                     Text(
                       '${_currencySymbol(order.currency)}${order.total.toStringAsFixed(0)}',
                       style: const TextStyle(
                         fontSize: 18,
-                        fontWeight:
-                            FontWeight.w800,
+                        fontWeight: FontWeight.w800,
                         color: darkPurple,
                       ),
                     ),
                   ],
                 ),
-
                 TextButton(
                   onPressed: () {
                     Navigator.push(
@@ -424,8 +372,7 @@ class _OrderCard extends StatelessWidget {
                     'View Details',
                     style: TextStyle(
                       color: purple,
-                      fontWeight:
-                          FontWeight.w700,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
@@ -441,19 +388,134 @@ class _OrderCard extends StatelessWidget {
     switch (currency.toUpperCase()) {
       case 'NGN':
         return '₦';
-
       case 'USD':
         return '\$';
-
       case 'GBP':
         return '£';
-
       case 'EUR':
         return '€';
-
       default:
         return '';
     }
+  }
+}
+
+class _OrderBookCover extends StatefulWidget {
+  final String objectKey;
+  final double width;
+  final double height;
+
+  const _OrderBookCover({
+    required this.objectKey,
+    required this.width,
+    required this.height,
+  });
+
+  @override
+  State<_OrderBookCover> createState() =>
+      _OrderBookCoverState();
+}
+
+class _OrderBookCoverState
+    extends State<_OrderBookCover> {
+  Future<String>? _urlFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadImage();
+  }
+
+  @override
+  void didUpdateWidget(
+    covariant _OrderBookCover oldWidget,
+  ) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.objectKey != widget.objectKey) {
+      _loadImage();
+    }
+  }
+
+  void _loadImage() {
+    final key = widget.objectKey.trim();
+
+    if (key.isEmpty) {
+      _urlFuture = null;
+      return;
+    }
+
+    _urlFuture = MediaUrlService.instance
+        .getDownloadUrl(
+      storagePath: key,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(10),
+      child: SizedBox(
+        width: widget.width,
+        height: widget.height,
+        child: _urlFuture == null
+            ? const _BookCoverPlaceholder()
+            : FutureBuilder<String>(
+                future: _urlFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState ==
+                      ConnectionState.waiting) {
+                    return const ColoredBox(
+                      color: Color(0xFFF3EAF5),
+                      child: Center(
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child:
+                              CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Color(0xFF6B1FA2),
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+
+                  if (snapshot.hasError ||
+                      !snapshot.hasData ||
+                      snapshot.data!.trim().isEmpty) {
+                    return const _BookCoverPlaceholder();
+                  }
+
+                  return Image.network(
+                    snapshot.data!,
+                    fit: BoxFit.cover,
+                    errorBuilder:
+                        (_, __, ___) {
+                      return const _BookCoverPlaceholder();
+                    },
+                  );
+                },
+              ),
+      ),
+    );
+  }
+}
+
+class _BookCoverPlaceholder extends StatelessWidget {
+  const _BookCoverPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return const ColoredBox(
+      color: Color(0xFFF3EAF5),
+      child: Center(
+        child: Icon(
+          Icons.menu_book_outlined,
+          color: Color(0xFF6B1FA2),
+        ),
+      ),
+    );
   }
 }
 
@@ -472,16 +534,12 @@ class OrderDetailsScreen extends StatelessWidget {
     switch (currency.toUpperCase()) {
       case 'NGN':
         return '₦';
-
       case 'USD':
         return '\$';
-
       case 'GBP':
         return '£';
-
       case 'EUR':
         return '€';
-
       default:
         return '';
     }
@@ -521,39 +579,29 @@ class OrderDetailsScreen extends StatelessWidget {
                   'Order Information',
                   style: TextStyle(
                     fontSize: 17,
-                    fontWeight:
-                        FontWeight.w800,
+                    fontWeight: FontWeight.w800,
                     color: darkPurple,
                   ),
                 ),
-
                 const SizedBox(height: 16),
-
                 _DetailRow(
                   label: 'Order ID',
                   value: order.id,
                 ),
-
                 const SizedBox(height: 12),
-
                 _DetailRow(
                   label: 'Status',
                   value: order.status,
                 ),
-
                 const SizedBox(height: 12),
-
-                _DetailRow(
+                const _DetailRow(
                   label: 'Payment Method',
                   value: 'Bank Transfer',
                 ),
-
                 const SizedBox(height: 12),
-
                 _DetailRow(
                   label: 'Payment Reference',
-                  value: order.paymentReference
-                          .isEmpty
+                  value: order.paymentReference.isEmpty
                       ? 'Not provided'
                       : order.paymentReference,
                 ),
@@ -586,31 +634,13 @@ class OrderDetailsScreen extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  ClipRRect(
-                    borderRadius:
-                        BorderRadius.circular(10),
-                    child: SizedBox(
-                      width: 50,
-                      height: 65,
-                      child: item.coverUrl.isNotEmpty
-                          ? Image.network(
-                              item.coverUrl,
-                              fit: BoxFit.cover,
-                            )
-                          : const ColoredBox(
-                              color:
-                                  Color(0xFFF3EAF5),
-                              child: Icon(
-                                Icons
-                                    .menu_book_outlined,
-                                color: purple,
-                              ),
-                            ),
-                    ),
+                  _OrderBookCover(
+                    objectKey:
+                        item.coverObjectKey,
+                    width: 50,
+                    height: 65,
                   ),
-
                   const SizedBox(width: 12),
-
                   Expanded(
                     child: Column(
                       crossAxisAlignment:
@@ -618,15 +648,15 @@ class OrderDetailsScreen extends StatelessWidget {
                       children: [
                         Text(
                           item.title,
+                          maxLines: 2,
+                          overflow:
+                              TextOverflow.ellipsis,
                           style: const TextStyle(
-                            fontWeight:
-                                FontWeight.w800,
+                            fontWeight: FontWeight.w800,
                             color: darkPurple,
                           ),
                         ),
-
                         const SizedBox(height: 4),
-
                         Text(
                           'Quantity: ${item.quantity}',
                           style: TextStyle(
@@ -635,14 +665,11 @@ class OrderDetailsScreen extends StatelessWidget {
                                 Colors.grey.shade600,
                           ),
                         ),
-
                         const SizedBox(height: 5),
-
                         Text(
                           '${_currencySymbol(item.currency)}${item.total.toStringAsFixed(0)}',
                           style: const TextStyle(
-                            fontWeight:
-                                FontWeight.w700,
+                            fontWeight: FontWeight.w700,
                             color: purple,
                           ),
                         ),
@@ -671,16 +698,14 @@ class OrderDetailsScreen extends StatelessWidget {
                   'Total',
                   style: TextStyle(
                     color: Colors.white70,
-                    fontWeight:
-                        FontWeight.w700,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
                 Text(
                   '${_currencySymbol(order.currency)}${order.total.toStringAsFixed(0)}',
                   style: const TextStyle(
                     fontSize: 21,
-                    fontWeight:
-                        FontWeight.w800,
+                    fontWeight: FontWeight.w800,
                     color: Colors.white,
                   ),
                 ),
@@ -690,7 +715,6 @@ class OrderDetailsScreen extends StatelessWidget {
 
           if (order.adminNote.isNotEmpty) ...[
             const SizedBox(height: 18),
-
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -705,14 +729,11 @@ class OrderDetailsScreen extends StatelessWidget {
                   const Text(
                     'Administrator Note',
                     style: TextStyle(
-                      fontWeight:
-                          FontWeight.w800,
+                      fontWeight: FontWeight.w800,
                       color: darkPurple,
                     ),
                   ),
-
                   const SizedBox(height: 7),
-
                   Text(
                     order.adminNote,
                     style: TextStyle(
@@ -786,9 +807,7 @@ class _EmptyOrders extends StatelessWidget {
               size: 70,
               color: Color(0xFFD4CAD8),
             ),
-
             SizedBox(height: 18),
-
             Text(
               'No orders yet',
               style: TextStyle(
@@ -797,9 +816,7 @@ class _EmptyOrders extends StatelessWidget {
                 color: Color(0xFF777777),
               ),
             ),
-
             SizedBox(height: 7),
-
             Text(
               'Your book orders will appear here.',
               textAlign: TextAlign.center,
@@ -831,9 +848,7 @@ class _OrderError extends StatelessWidget {
               size: 60,
               color: Colors.redAccent,
             ),
-
             SizedBox(height: 16),
-
             Text(
               'Unable to load your orders.',
               style: TextStyle(

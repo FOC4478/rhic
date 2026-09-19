@@ -28,6 +28,20 @@ const {
 } = require("@aws-sdk/s3-request-presigner");
 
 // ============================================================
+// NOTIFICATION ROUTES
+// ============================================================
+
+const notificationRoutes =
+  require("./routes/notificationRoutes");
+
+// ============================================================
+// PAYMENT ROUTES
+// ============================================================
+
+const paymentRoutes =
+  require("./routes/paymentRoutes");
+
+// ============================================================
 // FIREBASE ADMIN
 // ============================================================
 
@@ -48,10 +62,16 @@ const db = getFirestore();
 
 const app = express();
 
-const PORT = process.env.PORT || 3000;
+const PORT =
+  process.env.PORT || 3000;
 
 app.use(cors());
-app.use(express.json());
+
+app.use(
+  express.json({
+    limit: "10mb",
+  }),
+);
 
 // ============================================================
 // BACKBLAZE B2 CONFIGURATION
@@ -120,7 +140,9 @@ const s3 = new S3Client({
 // OBJECT KEY SECURITY HELPERS
 // ============================================================
 
-function isSafeSermonObjectKey(objectKey) {
+function isSafeSermonObjectKey(
+  objectKey,
+) {
   if (
     !objectKey ||
     typeof objectKey !== "string"
@@ -136,10 +158,18 @@ function isSafeSermonObjectKey(objectKey) {
     return false;
   }
 
-  return objectKey.startsWith("sermons/");
+  return objectKey.startsWith(
+    "sermons/",
+  );
 }
 
-function isSafeEventObjectKey(objectKey) {
+// ============================================================
+// EVENT OBJECT KEY SECURITY
+// ============================================================
+
+function isSafeEventObjectKey(
+  objectKey,
+) {
   if (
     !objectKey ||
     typeof objectKey !== "string"
@@ -164,7 +194,9 @@ function isSafeEventObjectKey(objectKey) {
 // COMMUNITY OBJECT KEY SECURITY
 // ============================================================
 
-function isSafeCommunityObjectKey(objectKey) {
+function isSafeCommunityObjectKey(
+  objectKey,
+) {
   if (
     !objectKey ||
     typeof objectKey !== "string"
@@ -181,8 +213,12 @@ function isSafeCommunityObjectKey(objectKey) {
   }
 
   return (
-    objectKey.startsWith("community/groups/") ||
-    objectKey.startsWith("community/posts/")
+    objectKey.startsWith(
+      "community/groups/",
+    ) ||
+    objectKey.startsWith(
+      "community/posts/",
+    )
   );
 }
 
@@ -190,7 +226,9 @@ function isSafeCommunityObjectKey(objectKey) {
 // GALLERY OBJECT KEY SECURITY
 // ============================================================
 
-function isSafeGalleryObjectKey(objectKey) {
+function isSafeGalleryObjectKey(
+  objectKey,
+) {
   if (
     !objectKey ||
     typeof objectKey !== "string"
@@ -211,7 +249,13 @@ function isSafeGalleryObjectKey(objectKey) {
   );
 }
 
-function isSafeBookObjectKey(objectKey) {
+// ============================================================
+// BOOK OBJECT KEY SECURITY
+// ============================================================
+
+function isSafeBookObjectKey(
+  objectKey,
+) {
   if (
     !objectKey ||
     typeof objectKey !== "string"
@@ -232,7 +276,13 @@ function isSafeBookObjectKey(objectKey) {
   );
 }
 
-function isSafeBookCoverObjectKey(objectKey) {
+// ============================================================
+// BOOK COVER OBJECT KEY SECURITY
+// ============================================================
+
+function isSafeBookCoverObjectKey(
+  objectKey,
+) {
   if (
     !objectKey ||
     typeof objectKey !== "string"
@@ -331,6 +381,14 @@ async function requireAdmin(
   next,
 ) {
   try {
+    if (!req.user?.uid) {
+      return res.status(401).json({
+        success: false,
+        message:
+          "Authenticated user information is missing.",
+      });
+    }
+
     const uid =
       req.user.uid;
 
@@ -351,6 +409,10 @@ async function requireAdmin(
     const userData =
       userSnapshot.data() || {};
 
+    // --------------------------------------------------------
+    // ADMIN ROLE
+    // --------------------------------------------------------
+
     if (
       userData.role !== "admin"
     ) {
@@ -361,8 +423,24 @@ async function requireAdmin(
       });
     }
 
+    // --------------------------------------------------------
+    // ADMIN ACCOUNT STATUS
+    // --------------------------------------------------------
+
+    if (
+      userData.accountStatus &&
+      userData.accountStatus !==
+        "active"
+    ) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "This administrator account is not active.",
+      });
+    }
+
     req.adminUser = {
-      uid: uid,
+      uid,
       ...userData,
     };
 
@@ -380,6 +458,28 @@ async function requireAdmin(
     });
   }
 }
+
+// ============================================================
+// ADMIN NOTIFICATION ROUTES
+// ============================================================
+
+app.use(
+  "/api/admin/notifications",
+  authenticateFirebase,
+  requireAdmin,
+  notificationRoutes,
+);
+
+// ============================================================
+// ADMIN PAYMENT ROUTES
+// ============================================================
+
+app.use(
+  "/api/admin/payments",
+  authenticateFirebase,
+  requireAdmin,
+  paymentRoutes,
+);
 
 // ============================================================
 // ROOT HEALTH CHECK
@@ -415,8 +515,10 @@ app.get(
         success: true,
         message:
           "Backblaze B2 connection is working.",
-        bucket: B2_BUCKET,
-        region: B2_REGION,
+        bucket:
+          B2_BUCKET,
+        region:
+          B2_REGION,
       });
     } catch (error) {
       console.error(
@@ -435,7 +537,7 @@ app.get(
 
 // ============================================================
 // CREATE SECURE UPLOAD URL
-
+// ============================================================
 
 app.post(
   "/upload-url",
@@ -489,7 +591,7 @@ app.post(
         "audio",
         "ebook",
         "image",
-        "community"
+        "community",
       ];
 
       if (
@@ -513,7 +615,7 @@ app.post(
         "book",
         "event",
         "gallery",
-        "community"
+        "community",
       ];
 
       if (
@@ -541,8 +643,12 @@ app.post(
       // BOOK UPLOAD VALIDATION
       // ======================================================
 
-      if (resourceType === "book") {
-        if (mediaType === "ebook") {
+      if (
+        resourceType === "book"
+      ) {
+        if (
+          mediaType === "ebook"
+        ) {
           if (
             normalizedContentType !==
             "application/pdf"
@@ -586,8 +692,12 @@ app.post(
       // EVENT UPLOAD VALIDATION
       // ======================================================
 
-      if (resourceType === "event") {
-        if (mediaType !== "image") {
+      if (
+        resourceType === "event"
+      ) {
+        if (
+          mediaType !== "image"
+        ) {
           return res.status(400).json({
             success: false,
             message:
@@ -618,8 +728,12 @@ app.post(
       // GALLERY UPLOAD VALIDATION
       // ======================================================
 
-      if (resourceType === "gallery") {
-        if (mediaType !== "image") {
+      if (
+        resourceType === "gallery"
+      ) {
+        if (
+          mediaType !== "image"
+        ) {
           return res.status(400).json({
             success: false,
             message:
@@ -646,45 +760,49 @@ app.post(
         }
       }
 
-
       // ======================================================
-// COMMUNITY UPLOAD VALIDATION
-// ======================================================
+      // COMMUNITY UPLOAD VALIDATION
+      // ======================================================
 
-if (resourceType === "community") {
-  if (mediaType !== "image") {
-    return res.status(400).json({
-      success: false,
-      message:
-        "Community media can only be images.",
-    });
-  }
+      if (
+        resourceType === "community"
+      ) {
+        if (
+          mediaType !== "image"
+        ) {
+          return res.status(400).json({
+            success: false,
+            message:
+              "Community media can only be images.",
+          });
+        }
 
-  const allowedCommunityImageTypes = [
-    "image/jpeg",
-    "image/png",
-    "image/webp",
-  ];
+        const allowedCommunityImageTypes = [
+          "image/jpeg",
+          "image/png",
+          "image/webp",
+        ];
 
-  if (
-    !allowedCommunityImageTypes.includes(
-      normalizedContentType,
-    )
-  ) {
-    return res.status(400).json({
-      success: false,
-      message:
-        "Community images must be JPG, PNG, or WEBP images.",
-    });
-  }
-}
-
+        if (
+          !allowedCommunityImageTypes.includes(
+            normalizedContentType,
+          )
+        ) {
+          return res.status(400).json({
+            success: false,
+            message:
+              "Community images must be JPG, PNG, or WEBP images.",
+          });
+        }
+      }
 
       // ======================================================
       // SERMON UPLOAD VALIDATION
       // ======================================================
 
-      if (resourceType === "sermon") {
+      if (
+        resourceType === "sermon"
+      ) {
         const allowedSermonContentTypes = {
           video: [
             "video/mp4",
@@ -716,6 +834,9 @@ if (resourceType === "community") {
         if (
           !allowedSermonContentTypes[
             mediaType
+          ] ||
+          !allowedSermonContentTypes[
+            mediaType
           ].includes(
             normalizedContentType,
           )
@@ -728,9 +849,9 @@ if (resourceType === "community") {
         }
       }
 
-      // ------------------------------------------------------
+      // ======================================================
       // SANITIZE FILE NAME
-      // ------------------------------------------------------
+      // ======================================================
 
       const safeFileName =
         fileName
@@ -744,9 +865,9 @@ if (resourceType === "community") {
             "_",
           );
 
-      // ------------------------------------------------------
+      // ======================================================
       // UNIQUE FILE NAME
-      // ------------------------------------------------------
+      // ======================================================
 
       const timestamp =
         Date.now();
@@ -813,17 +934,17 @@ if (resourceType === "community") {
           `books/ebooks/${timestamp}-${randomPart}-${safeFileName}`;
       }
 
+      // ------------------------------------------------------
+      // COMMUNITY IMAGE
+      // ------------------------------------------------------
 
-      
-        // COMMUNITY IMAGE
-else if (
-  resourceType === "community" &&
-  mediaType === "image"
-) {
-  objectKey =
-    `community/groups/${timestamp}-${randomPart}-${safeFileName}`;
-}
-
+      else if (
+        resourceType === "community" &&
+        mediaType === "image"
+      ) {
+        objectKey =
+          `community/groups/${timestamp}-${randomPart}-${safeFileName}`;
+      }
 
       // ------------------------------------------------------
       // SERMON MEDIA
@@ -834,21 +955,23 @@ else if (
           `sermons/${mediaType}/${timestamp}-${randomPart}-${safeFileName}`;
       }
 
-      // ------------------------------------------------------
+      // ======================================================
       // CREATE PUT COMMAND
-      // ------------------------------------------------------
+      // ======================================================
 
       const command =
         new PutObjectCommand({
-          Bucket: B2_BUCKET,
-          Key: objectKey,
+          Bucket:
+            B2_BUCKET,
+          Key:
+            objectKey,
           ContentType:
             normalizedContentType,
         });
 
-      // ------------------------------------------------------
+      // ======================================================
       // CREATE SIGNED UPLOAD URL
-      // ------------------------------------------------------
+      // ======================================================
 
       const uploadUrl =
         await getSignedUrl(
@@ -934,8 +1057,10 @@ app.post(
 
       const command =
         new GetObjectCommand({
-          Bucket: B2_BUCKET,
-          Key: normalizedObjectKey,
+          Bucket:
+            B2_BUCKET,
+          Key:
+            normalizedObjectKey,
         });
 
       const downloadUrl =
@@ -943,7 +1068,8 @@ app.post(
           s3,
           command,
           {
-            expiresIn: 300,
+            expiresIn:
+              300,
           },
         );
 
@@ -1010,8 +1136,10 @@ app.post(
 
       const command =
         new GetObjectCommand({
-          Bucket: B2_BUCKET,
-          Key: normalizedObjectKey,
+          Bucket:
+            B2_BUCKET,
+          Key:
+            normalizedObjectKey,
         });
 
       const downloadUrl =
@@ -1019,7 +1147,8 @@ app.post(
           s3,
           command,
           {
-            expiresIn: 300,
+            expiresIn:
+              300,
           },
         );
 
@@ -1045,7 +1174,6 @@ app.post(
   },
 );
 
-
 // ============================================================
 // SECURE COMMUNITY MEDIA DOWNLOAD URL
 // ============================================================
@@ -1058,10 +1186,6 @@ app.post(
       const {
         objectKey,
       } = req.body;
-
-      // ------------------------------------------------------
-      // OBJECT KEY
-      // ------------------------------------------------------
 
       if (
         typeof objectKey !== "string" ||
@@ -1077,10 +1201,6 @@ app.post(
       const normalizedObjectKey =
         objectKey.trim();
 
-      // ------------------------------------------------------
-      // VERIFY COMMUNITY OBJECT KEY
-      // ------------------------------------------------------
-
       if (
         !isSafeCommunityObjectKey(
           normalizedObjectKey,
@@ -1093,14 +1213,12 @@ app.post(
         });
       }
 
-      // ------------------------------------------------------
-      // CREATE TEMPORARY B2 URL
-      // ------------------------------------------------------
-
       const command =
         new GetObjectCommand({
-          Bucket: B2_BUCKET,
-          Key: normalizedObjectKey,
+          Bucket:
+            B2_BUCKET,
+          Key:
+            normalizedObjectKey,
         });
 
       const downloadUrl =
@@ -1108,7 +1226,8 @@ app.post(
           s3,
           command,
           {
-            expiresIn: 300,
+            expiresIn:
+              300,
           },
         );
 
@@ -1138,7 +1257,6 @@ app.post(
 // SECURE GALLERY IMAGE DOWNLOAD URL
 // ============================================================
 
-
 app.post(
   "/gallery-download-url",
   authenticateFirebase,
@@ -1147,10 +1265,6 @@ app.post(
       const {
         objectKey,
       } = req.body;
-
-      // ------------------------------------------------------
-      // OBJECT KEY
-      // ------------------------------------------------------
 
       if (
         typeof objectKey !== "string" ||
@@ -1165,10 +1279,6 @@ app.post(
 
       const normalizedObjectKey =
         objectKey.trim();
-
-      // ------------------------------------------------------
-      // VERIFY OBJECT KEY PATH
-      // ------------------------------------------------------
 
       if (
         !isSafeGalleryObjectKey(
@@ -1197,7 +1307,9 @@ app.post(
           .limit(1)
           .get();
 
-      if (gallerySnapshot.empty) {
+      if (
+        gallerySnapshot.empty
+      ) {
         return res.status(404).json({
           success: false,
           message:
@@ -1212,7 +1324,8 @@ app.post(
         galleryDoc.data() || {};
 
       const isPublished =
-        galleryData.isPublished === true;
+        galleryData.isPublished ===
+        true;
 
       // ------------------------------------------------------
       // CHECK ADMIN STATUS
@@ -1226,19 +1339,25 @@ app.post(
           .doc(req.user.uid)
           .get();
 
-      if (userSnapshot.exists) {
+      if (
+        userSnapshot.exists
+      ) {
         const userData =
           userSnapshot.data() || {};
 
         isAdmin =
-          userData.role === "admin";
+          userData.role ===
+          "admin";
       }
 
       // ------------------------------------------------------
       // MEMBERS CAN ONLY ACCESS PUBLISHED IMAGES
       // ------------------------------------------------------
 
-      if (!isPublished && !isAdmin) {
+      if (
+        !isPublished &&
+        !isAdmin
+      ) {
         return res.status(403).json({
           success: false,
           message:
@@ -1252,8 +1371,10 @@ app.post(
 
       const command =
         new GetObjectCommand({
-          Bucket: B2_BUCKET,
-          Key: normalizedObjectKey,
+          Bucket:
+            B2_BUCKET,
+          Key:
+            normalizedObjectKey,
         });
 
       const downloadUrl =
@@ -1261,7 +1382,8 @@ app.post(
           s3,
           command,
           {
-            expiresIn: 300,
+            expiresIn:
+              300,
           },
         );
 
@@ -1320,7 +1442,9 @@ app.post(
           .doc(normalizedBookId)
           .get();
 
-      if (!bookSnapshot.exists) {
+      if (
+        !bookSnapshot.exists
+      ) {
         return res.status(404).json({
           success: false,
           message:
@@ -1332,7 +1456,8 @@ app.post(
         bookSnapshot.data() || {};
 
       const coverObjectKey =
-        typeof bookData.coverObjectKey === "string"
+        typeof bookData.coverObjectKey ===
+        "string"
           ? bookData.coverObjectKey.trim()
           : "";
 
@@ -1358,8 +1483,10 @@ app.post(
 
       const command =
         new GetObjectCommand({
-          Bucket: B2_BUCKET,
-          Key: coverObjectKey,
+          Bucket:
+            B2_BUCKET,
+          Key:
+            coverObjectKey,
         });
 
       const coverUrl =
@@ -1367,7 +1494,8 @@ app.post(
           s3,
           command,
           {
-            expiresIn: 900,
+            expiresIn:
+              900,
           },
         );
 
@@ -1426,7 +1554,9 @@ app.post(
           .doc(normalizedBookId)
           .get();
 
-      if (!bookSnapshot.exists) {
+      if (
+        !bookSnapshot.exists
+      ) {
         return res.status(404).json({
           success: false,
           message:
@@ -1438,7 +1568,8 @@ app.post(
         bookSnapshot.data() || {};
 
       const ebookObjectKey =
-        typeof bookData.ebookObjectKey === "string"
+        typeof bookData.ebookObjectKey ===
+        "string"
           ? bookData.ebookObjectKey.trim()
           : "";
 
@@ -1466,6 +1597,10 @@ app.post(
             "This ebook file is not configured correctly.",
         });
       }
+
+      // ------------------------------------------------------
+      // FIND APPROVED PURCHASE
+      // ------------------------------------------------------
 
       const ordersSnapshot =
         await db
@@ -1512,6 +1647,7 @@ app.post(
         ) {
           hasApprovedPurchase =
             true;
+
           break;
         }
       }
@@ -1526,10 +1662,16 @@ app.post(
         });
       }
 
+      // ------------------------------------------------------
+      // CREATE TEMPORARY B2 URL
+      // ------------------------------------------------------
+
       const command =
         new GetObjectCommand({
-          Bucket: B2_BUCKET,
-          Key: ebookObjectKey,
+          Bucket:
+            B2_BUCKET,
+          Key:
+            ebookObjectKey,
         });
 
       const downloadUrl =
@@ -1661,19 +1803,35 @@ app.listen(
 
     console.log(
       " Book cover access: ENABLED",
-    ); 
+    );
 
     console.log(
       " Secure purchased ebook access: ENABLED",
     );
 
     console.log(
-  " Community media upload: ENABLED",
-);
+      " Community media upload: ENABLED",
+    );
 
-console.log(
-  " Community media access: ENABLED",
-);
+    console.log(
+      " Community media access: ENABLED",
+    );
+
+    console.log(
+      " Admin notifications: ENABLED",
+    );
+
+    console.log(
+      " Admin payments: ENABLED",
+    );
+
+    console.log(
+      " FCM notification sending: ENABLED",
+    );
+
+    console.log(
+      " Invalid FCM token cleanup: ENABLED",
+    );
 
     console.log(
       "============================================",

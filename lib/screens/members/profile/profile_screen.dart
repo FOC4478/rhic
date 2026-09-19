@@ -2,8 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-import '../library/library_screen.dart';
-import '../../../models/order_model.dart';
+import 'package:church_app/models/order_model.dart';
+import 'package:church_app/services/media_url_service.dart';
+import 'package:church_app/screens/members/library/library_screen.dart';
+import 'package:church_app/screens/members/notifications/notifications_screen.dart';
 
 class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
@@ -46,19 +48,32 @@ class AccountScreen extends StatelessWidget {
         builder: (context, snapshot) {
           final data = snapshot.data?.data() ?? {};
 
-          final name =
-              data['name']?.toString().trim().isNotEmpty == true
-                  ? data['name'].toString()
-                  : user.displayName?.trim().isNotEmpty == true
-                      ? user.displayName!
-                      : 'User';
+          final firstName =
+              data['firstName']?.toString().trim() ?? '';
+
+          final lastName =
+              data['lastName']?.toString().trim() ?? '';
+
+          final storedFullName =
+              data['fullName']?.toString().trim() ?? '';
+
+          final displayName = storedFullName.isNotEmpty
+              ? storedFullName
+              : [
+                  firstName,
+                  lastName,
+                ].where((value) => value.isNotEmpty).join(' ');
+
+          final name = displayName.isNotEmpty
+              ? displayName
+              : user.displayName?.trim().isNotEmpty == true
+                  ? user.displayName!.trim()
+                  : 'User';
 
           final email = user.email ?? '';
 
-          final photoUrl =
-              data['photoUrl']?.toString() ??
-                  user.photoURL ??
-                  '';
+          final imageObjectKey =
+              data['imageObjectKey']?.toString().trim() ?? '';
 
           return ListView(
             padding: const EdgeInsets.fromLTRB(
@@ -71,7 +86,7 @@ class AccountScreen extends StatelessWidget {
               _ProfileHeader(
                 name: name,
                 email: email,
-                photoUrl: photoUrl,
+                imageObjectKey: imageObjectKey,
                 onEdit: () {
                   Navigator.push(
                     context,
@@ -123,8 +138,7 @@ class AccountScreen extends StatelessWidget {
               _AccountCard(
                 icon: Icons.favorite_border,
                 title: 'My Favorites',
-                subtitle:
-                    'View resources you have saved',
+                subtitle: 'View resources you have saved',
                 onTap: () {
                   Navigator.push(
                     context,
@@ -161,14 +175,12 @@ class AccountScreen extends StatelessWidget {
               _AccountCard(
                 icon: Icons.notifications_none,
                 title: 'Notifications',
-                subtitle:
-                    'View your notifications',
+                subtitle: 'View your notifications',
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) =>
-                          const NotificationsScreen(),
+                      builder: (_) => const NotificationsScreen(),
                     ),
                   );
                 },
@@ -251,8 +263,7 @@ class AccountScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) =>
-                          const TermsConditionsScreen(),
+                      builder: (_) => const TermsConditionsScreen(),
                     ),
                   );
                 },
@@ -335,18 +346,94 @@ class AccountScreen extends StatelessWidget {
 // PROFILE HEADER
 // ============================================================
 
-class _ProfileHeader extends StatelessWidget {
+class _ProfileHeader extends StatefulWidget {
   final String name;
   final String email;
-  final String photoUrl;
+  final String imageObjectKey;
   final VoidCallback onEdit;
 
   const _ProfileHeader({
     required this.name,
     required this.email,
-    required this.photoUrl,
+    required this.imageObjectKey,
     required this.onEdit,
   });
+
+  @override
+  State<_ProfileHeader> createState() =>
+      _ProfileHeaderState();
+}
+
+class _ProfileHeaderState extends State<_ProfileHeader> {
+  String? _imageUrl;
+  bool _loadingImage = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfileImage();
+  }
+
+  @override
+  void didUpdateWidget(
+    covariant _ProfileHeader oldWidget,
+  ) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.imageObjectKey !=
+        widget.imageObjectKey) {
+      _loadProfileImage();
+    }
+  }
+
+  Future<void> _loadProfileImage() async {
+    final objectKey =
+        widget.imageObjectKey.trim();
+
+    if (objectKey.isEmpty) {
+      if (mounted) {
+        setState(() {
+          _imageUrl = null;
+          _loadingImage = false;
+        });
+      }
+
+      return;
+    }
+
+    setState(() {
+      _loadingImage = true;
+    });
+
+    try {
+      final url =
+          await MediaUrlService.instance.getDownloadUrl(
+        storagePath: objectKey,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _imageUrl = url;
+        _loadingImage = false;
+      });
+    } catch (error) {
+      debugPrint(
+        'Unable to load profile image: $error',
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _imageUrl = null;
+        _loadingImage = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -363,32 +450,17 @@ class _ProfileHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 36,
-            backgroundColor: Colors.white24,
-            backgroundImage:
-                photoUrl.isNotEmpty
-                    ? NetworkImage(photoUrl)
-                    : null,
-            child: photoUrl.isEmpty
-                ? Text(
-                    _initials(name),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  )
-                : null,
-          ),
+          _buildAvatar(),
+
           const SizedBox(width: 15),
+
           Expanded(
             child: Column(
               crossAxisAlignment:
                   CrossAxisAlignment.start,
               children: [
                 Text(
-                  name,
+                  widget.name,
                   maxLines: 1,
                   overflow:
                       TextOverflow.ellipsis,
@@ -398,9 +470,11 @@ class _ProfileHeader extends StatelessWidget {
                     fontWeight: FontWeight.w800,
                   ),
                 ),
+
                 const SizedBox(height: 4),
+
                 Text(
-                  email,
+                  widget.email,
                   maxLines: 1,
                   overflow:
                       TextOverflow.ellipsis,
@@ -412,14 +486,55 @@ class _ProfileHeader extends StatelessWidget {
               ],
             ),
           ),
+
           IconButton(
-            onPressed: onEdit,
+            onPressed: widget.onEdit,
             icon: const Icon(
               Icons.edit_outlined,
               color: Colors.white,
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildAvatar() {
+    if (_loadingImage) {
+      return const CircleAvatar(
+        radius: 36,
+        backgroundColor: Colors.white24,
+        child: SizedBox(
+          width: 22,
+          height: 22,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: Colors.white,
+          ),
+        ),
+      );
+    }
+
+    if (_imageUrl != null &&
+        _imageUrl!.trim().isNotEmpty) {
+      return CircleAvatar(
+        radius: 36,
+        backgroundColor: Colors.white24,
+        backgroundImage:
+            NetworkImage(_imageUrl!),
+      );
+    }
+
+    return CircleAvatar(
+      radius: 36,
+      backgroundColor: Colors.white24,
+      child: Text(
+        _initials(widget.name),
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 22,
+          fontWeight: FontWeight.w800,
+        ),
       ),
     );
   }
@@ -557,7 +672,11 @@ class EditProfileScreen extends StatefulWidget {
 class _EditProfileScreenState
     extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController =
+
+  final _firstNameController =
+      TextEditingController();
+
+  final _lastNameController =
       TextEditingController();
 
   bool _loading = false;
@@ -565,17 +684,76 @@ class _EditProfileScreenState
   @override
   void initState() {
     super.initState();
+    _loadProfile();
+  }
 
+  Future<void> _loadProfile() async {
     final user =
         FirebaseAuth.instance.currentUser;
 
-    _nameController.text =
-        user?.displayName ?? '';
+    if (user == null) {
+      return;
+    }
+
+    try {
+      final snapshot =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .get();
+
+      final data = snapshot.data() ?? {};
+
+      final firstName =
+          data['firstName']?.toString() ?? '';
+
+      final lastName =
+          data['lastName']?.toString() ?? '';
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _firstNameController.text =
+            firstName;
+
+        _lastNameController.text =
+            lastName;
+      });
+    } catch (error) {
+      debugPrint(
+        'Unable to load profile: $error',
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      final displayName =
+          user.displayName?.trim() ?? '';
+
+      final parts = displayName
+          .split(RegExp(r'\s+'))
+          .where((value) => value.isNotEmpty)
+          .toList();
+
+      if (parts.isNotEmpty) {
+        _firstNameController.text =
+            parts.first;
+      }
+
+      if (parts.length > 1) {
+        _lastNameController.text =
+            parts.skip(1).join(' ');
+      }
+    }
   }
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     super.dispose();
   }
 
@@ -591,8 +769,14 @@ class _EditProfileScreenState
       return;
     }
 
-    final name =
-        _nameController.text.trim();
+    final firstName =
+        _firstNameController.text.trim();
+
+    final lastName =
+        _lastNameController.text.trim();
+
+    final fullName =
+        '$firstName $lastName'.trim();
 
     setState(() {
       _loading = true;
@@ -604,14 +788,16 @@ class _EditProfileScreenState
           .doc(user.uid)
           .set(
         {
-          'name': name,
+          'firstName': firstName,
+          'lastName': lastName,
+          'fullName': fullName,
           'updatedAt':
               FieldValue.serverTimestamp(),
         },
         SetOptions(merge: true),
       );
 
-      await user.updateDisplayName(name);
+      await user.updateDisplayName(fullName);
 
       if (!mounted) {
         return;
@@ -627,7 +813,7 @@ class _EditProfileScreenState
       );
 
       Navigator.pop(context);
-    } catch (e) {
+    } catch (error) {
       if (!mounted) {
         return;
       }
@@ -636,7 +822,7 @@ class _EditProfileScreenState
           .showSnackBar(
         SnackBar(
           content: Text(
-            'Unable to update profile: $e',
+            'Unable to update profile: $error',
           ),
         ),
       );
@@ -690,7 +876,7 @@ class _EditProfileScreenState
             const SizedBox(height: 30),
 
             const Text(
-              'Full Name',
+              'First Name',
               style: TextStyle(
                 fontWeight: FontWeight.w700,
                 color: Color(0xFF3D004D),
@@ -700,22 +886,59 @@ class _EditProfileScreenState
             const SizedBox(height: 8),
 
             TextFormField(
-              controller: _nameController,
+              controller:
+                  _firstNameController,
               textCapitalization:
                   TextCapitalization.words,
               decoration:
                   _inputDecoration(
-                'Enter your name',
+                'Enter your first name',
                 Icons.person_outline,
               ),
               validator: (value) {
                 if (value == null ||
                     value.trim().isEmpty) {
-                  return 'Please enter your name.';
+                  return 'Please enter your first name.';
                 }
 
                 if (value.trim().length < 2) {
-                  return 'Name is too short.';
+                  return 'First name is too short.';
+                }
+
+                return null;
+              },
+            ),
+
+            const SizedBox(height: 20),
+
+            const Text(
+              'Last Name',
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF3D004D),
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            TextFormField(
+              controller:
+                  _lastNameController,
+              textCapitalization:
+                  TextCapitalization.words,
+              decoration:
+                  _inputDecoration(
+                'Enter your last name',
+                Icons.person_outline,
+              ),
+              validator: (value) {
+                if (value == null ||
+                    value.trim().isEmpty) {
+                  return 'Please enter your last name.';
+                }
+
+                if (value.trim().length < 2) {
+                  return 'Last name is too short.';
                 }
 
                 return null;
@@ -735,7 +958,8 @@ class _EditProfileScreenState
             const SizedBox(height: 8),
 
             TextFormField(
-              initialValue: user?.email ?? '',
+              initialValue:
+                  user?.email ?? '',
               readOnly: true,
               decoration:
                   _inputDecoration(
@@ -751,10 +975,12 @@ class _EditProfileScreenState
               child: ElevatedButton(
                 onPressed:
                     _loading ? null : _saveProfile,
-                style: ElevatedButton.styleFrom(
+                style:
+                    ElevatedButton.styleFrom(
                   backgroundColor:
                       const Color(0xFF6B1FA2),
-                  foregroundColor: Colors.white,
+                  foregroundColor:
+                      Colors.white,
                   disabledBackgroundColor:
                       Colors.grey.shade300,
                   shape:
@@ -837,7 +1063,8 @@ class OrdersScreen extends StatelessWidget {
           ),
         ),
       ),
-      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      body: StreamBuilder<
+          QuerySnapshot<Map<String, dynamic>>>(
         stream: query.snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState ==
@@ -867,7 +1094,8 @@ class OrdersScreen extends StatelessWidget {
 
           if (docs.isEmpty) {
             return const _EmptyState(
-              icon: Icons.shopping_bag_outlined,
+              icon:
+                  Icons.shopping_bag_outlined,
               title: 'No orders yet',
               message:
                   'Your digital book orders will appear here.',
@@ -896,6 +1124,10 @@ class OrdersScreen extends StatelessWidget {
   }
 }
 
+// ============================================================
+// ORDER CARD
+// ============================================================
+
 class _OrderCard extends StatelessWidget {
   final OrderModel order;
 
@@ -920,9 +1152,14 @@ class _OrderCard extends StatelessWidget {
     final statusColor = _statusColor();
 
     final itemCount = order.items.fold<int>(
-  0,
-  (totalItems, item) => totalItems + item.quantity,
-);
+      0,
+      (totalItems, item) =>
+          totalItems + item.quantity,
+    );
+
+    final shortId = order.id.length > 8
+        ? order.id.substring(0, 8)
+        : order.id;
 
     return InkWell(
       borderRadius: BorderRadius.circular(18),
@@ -957,7 +1194,7 @@ class _OrderCard extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'Order #${order.id.substring(0, order.id.length > 8 ? 8 : order.id.length)}',
+                    'Order #$shortId',
                     style: const TextStyle(
                       fontWeight:
                           FontWeight.w800,
@@ -1112,85 +1349,8 @@ class OrderDetailsScreen
           const SizedBox(height: 10),
 
           ...order.items.map(
-            (item) => Container(
-              margin:
-                  const EdgeInsets.only(
-                bottom: 10,
-              ),
-              padding:
-                  const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius:
-                    BorderRadius.circular(16),
-              ),
-              child: Row(
-                children: [
-                  ClipRRect(
-                    borderRadius:
-                        BorderRadius.circular(10),
-                    child: SizedBox(
-                      width: 55,
-                      height: 70,
-                      child: item.coverUrl
-                              .isNotEmpty
-                          ? Image.network(
-                              item.coverUrl,
-                              fit: BoxFit.cover,
-                            )
-                          : const ColoredBox(
-                              color:
-                                  Color(0xFFF3EAF5),
-                              child: Icon(
-                                Icons
-                                    .menu_book_outlined,
-                                color:
-                                    Color(0xFF6B1FA2),
-                              ),
-                            ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item.title,
-                          maxLines: 2,
-                          overflow:
-                              TextOverflow.ellipsis,
-                          style:
-                              const TextStyle(
-                            fontWeight:
-                                FontWeight.w800,
-                            color:
-                                Color(0xFF3D004D),
-                          ),
-                        ),
-                        const SizedBox(height: 5),
-                        Text(
-                          '${item.currency} ${item.price.toStringAsFixed(2)} × ${item.quantity}',
-                          style:
-                              const TextStyle(
-                            color: Colors.grey,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Text(
-                    '${item.currency} ${item.total.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      fontWeight:
-                          FontWeight.w800,
-                      color:
-                          Color(0xFF6B1FA2),
-                    ),
-                  ),
-                ],
-              ),
+            (item) => _OrderItemCard(
+              item: item,
             ),
           ),
 
@@ -1254,6 +1414,208 @@ class OrderDetailsScreen
       default:
         return Colors.orange;
     }
+  }
+}
+
+// ============================================================
+// ORDER ITEM
+// ============================================================
+
+class _OrderItemCard extends StatefulWidget {
+  final dynamic item;
+
+  const _OrderItemCard({
+    required this.item,
+  });
+
+  @override
+  State<_OrderItemCard> createState() =>
+      _OrderItemCardState();
+}
+
+class _OrderItemCardState
+    extends State<_OrderItemCard> {
+  String? _coverUrl;
+  bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCover();
+  }
+
+  Future<void> _loadCover() async {
+    final item = widget.item;
+
+    final objectKey =
+        _readCoverObjectKey(item);
+
+    if (objectKey.isEmpty) {
+      return;
+    }
+
+    setState(() {
+      _loading = true;
+    });
+
+    try {
+      final url =
+          await MediaUrlService.instance.getDownloadUrl(
+        storagePath: objectKey,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _coverUrl = url;
+        _loading = false;
+      });
+    } catch (error) {
+      debugPrint(
+        'Unable to load order cover: $error',
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _loading = false;
+      });
+    }
+  }
+
+  String _readCoverObjectKey(dynamic item) {
+    try {
+      final value =
+          item.coverObjectKey;
+
+      if (value != null) {
+        return value.toString().trim();
+      }
+    } catch (_) {}
+
+    return '';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final item = widget.item;
+
+    return Container(
+      margin:
+          const EdgeInsets.only(bottom: 10),
+      padding:
+          const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius:
+            BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius:
+                BorderRadius.circular(10),
+            child: SizedBox(
+              width: 55,
+              height: 70,
+              child: _buildCover(),
+            ),
+          ),
+
+          const SizedBox(width: 12),
+
+          Expanded(
+            child: Column(
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.title,
+                  maxLines: 2,
+                  overflow:
+                      TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight:
+                        FontWeight.w800,
+                    color:
+                        Color(0xFF3D004D),
+                  ),
+                ),
+
+                const SizedBox(height: 5),
+
+                Text(
+                  '${item.currency} ${item.price.toStringAsFixed(2)} × ${item.quantity}',
+                  style:
+                      const TextStyle(
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(width: 8),
+
+          Text(
+            '${item.currency} ${item.total.toStringAsFixed(2)}',
+            style: const TextStyle(
+              fontWeight:
+                  FontWeight.w800,
+              color:
+                  Color(0xFF6B1FA2),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCover() {
+    if (_loading) {
+      return const ColoredBox(
+        color: Color(0xFFF3EAF5),
+        child: Center(
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child:
+                CircularProgressIndicator(
+              strokeWidth: 2,
+              color:
+                  Color(0xFF6B1FA2),
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (_coverUrl != null &&
+        _coverUrl!.isNotEmpty) {
+      return Image.network(
+        _coverUrl!,
+        fit: BoxFit.cover,
+        errorBuilder:
+            (_, __, ___) =>
+                _coverPlaceholder(),
+      );
+    }
+
+    return _coverPlaceholder();
+  }
+
+  Widget _coverPlaceholder() {
+    return const ColoredBox(
+      color: Color(0xFFF3EAF5),
+      child: Icon(
+        Icons.menu_book_outlined,
+        color: Color(0xFF6B1FA2),
+      ),
+    );
   }
 }
 
@@ -1389,166 +1751,6 @@ class FavoritesScreen
 }
 
 // ============================================================
-// NOTIFICATIONS
-// ============================================================
-
-class NotificationsScreen
-    extends StatelessWidget {
-  const NotificationsScreen({
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final user =
-        FirebaseAuth.instance.currentUser;
-
-    if (user == null) {
-      return const Scaffold(
-        body: Center(
-          child: Text('Please sign in.'),
-        ),
-      );
-    }
-
-    return Scaffold(
-      backgroundColor:
-          const Color(0xFFFCFAFD),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          'Notifications',
-          style: TextStyle(
-            color: Color(0xFF3D004D),
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-      ),
-      body: StreamBuilder<
-          QuerySnapshot<Map<String, dynamic>>>(
-        stream: FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .collection('notifications')
-            .orderBy(
-              'createdAt',
-              descending: true,
-            )
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState ==
-              ConnectionState.waiting) {
-            return const Center(
-              child:
-                  CircularProgressIndicator(
-                color: Color(0xFF6B1FA2),
-              ),
-            );
-          }
-
-          if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding:
-                    const EdgeInsets.all(24),
-                child: Text(
-                  'Unable to load notifications.\n\n${snapshot.error}',
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            );
-          }
-
-          final docs =
-              snapshot.data?.docs ?? [];
-
-          if (docs.isEmpty) {
-            return const _EmptyState(
-              icon:
-                  Icons.notifications_none,
-              title: 'No notifications',
-              message:
-                  'You are all caught up.',
-            );
-          }
-
-          return ListView.separated(
-            padding: const EdgeInsets.all(20),
-            itemCount: docs.length,
-            separatorBuilder: (_, __) =>
-                const SizedBox(height: 10),
-            itemBuilder: (context, index) {
-              final data =
-                  docs[index].data();
-
-              final isRead =
-                  data['isRead'] == true;
-
-              return Container(
-                padding:
-                    const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius:
-                      BorderRadius.circular(16),
-                ),
-                child: Row(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
-                  children: [
-                    Icon(
-                      isRead
-                          ? Icons
-                              .notifications_none
-                          : Icons
-                              .notifications_active,
-                      color:
-                          const Color(0xFF6B1FA2),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            data['title']
-                                    ?.toString() ??
-                                'Notification',
-                            style:
-                                const TextStyle(
-                              fontWeight:
-                                  FontWeight.w800,
-                            ),
-                          ),
-                          const SizedBox(height: 5),
-                          Text(
-                            data['message']
-                                    ?.toString() ??
-                                '',
-                            style:
-                                const TextStyle(
-                              color: Colors.grey,
-                              height: 1.4,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
-        },
-      ),
-    );
-  }
-}
-
-// ============================================================
 // SETTINGS
 // ============================================================
 
@@ -1567,9 +1769,177 @@ class _SettingsScreenState
     extends State<SettingsScreen> {
   bool notifications = true;
   bool emailUpdates = true;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    final user =
+        FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      return;
+    }
+
+    try {
+      final snapshot =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .get();
+
+      final data = snapshot.data() ?? {};
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        notifications =
+            data['notificationsEnabled'] !=
+                    false;
+
+        emailUpdates =
+            data['emailUpdatesEnabled'] !=
+                    false;
+
+        _loading = false;
+      });
+    } catch (error) {
+      debugPrint(
+        'Unable to load settings: $error',
+      );
+
+      if (mounted) {
+        setState(() {
+          _loading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _updateNotificationSetting(
+    bool value,
+  ) async {
+    final user =
+        FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      return;
+    }
+
+    setState(() {
+      notifications = value;
+    });
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .set(
+        {
+          'notificationsEnabled': value,
+          'updatedAt':
+              FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        notifications = !value;
+      });
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
+        SnackBar(
+          content: Text(
+            'Unable to update notification setting: $error',
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _updateEmailSetting(
+    bool value,
+  ) async {
+    final user =
+        FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      return;
+    }
+
+    setState(() {
+      emailUpdates = value;
+    });
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .set(
+        {
+          'emailUpdatesEnabled': value,
+          'updatedAt':
+              FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        emailUpdates = !value;
+      });
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
+        SnackBar(
+          content: Text(
+            'Unable to update email setting: $error',
+          ),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_loading) {
+      return Scaffold(
+        backgroundColor:
+            const Color(0xFFFCFAFD),
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.white,
+          elevation: 0,
+          title: const Text(
+            'Settings',
+            style: TextStyle(
+              color: Color(0xFF3D004D),
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(
+            color: Color(0xFF6B1FA2),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor:
           const Color(0xFFFCFAFD),
@@ -1608,11 +1978,8 @@ class _SettingsScreenState
               value: notifications,
               activeThumbColor:
                   const Color(0xFF6B1FA2),
-              onChanged: (value) {
-                setState(() {
-                  notifications = value;
-                });
-              },
+              onChanged:
+                  _updateNotificationSetting,
             ),
           ),
 
@@ -1625,11 +1992,8 @@ class _SettingsScreenState
               value: emailUpdates,
               activeThumbColor:
                   const Color(0xFF6B1FA2),
-              onChanged: (value) {
-                setState(() {
-                  emailUpdates = value;
-                });
-              },
+              onChanged:
+                  _updateEmailSetting,
             ),
           ),
 
@@ -1698,10 +2062,18 @@ class _SettingsTile extends StatelessWidget {
       ),
       child: ListTile(
         onTap: onTap,
-        leading: const Icon(
-          Icons.circle,
-          color: Color(0xFF6B1FA2),
-          size: 10,
+        leading: Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            color: const Color(0xFFF2E8F5),
+            borderRadius:
+                BorderRadius.circular(12),
+          ),
+          child: Icon(
+            icon,
+            color: const Color(0xFF6B1FA2),
+          ),
         ),
         title: Text(
           title,
@@ -1771,7 +2143,7 @@ class SecurityScreen
           ),
         ),
       );
-    } catch (e) {
+    } catch (error) {
       if (!context.mounted) {
         return;
       }
@@ -1780,7 +2152,7 @@ class SecurityScreen
           .showSnackBar(
         SnackBar(
           content: Text(
-            'Unable to send password reset email: $e',
+            'Unable to send password reset email: $error',
           ),
         ),
       );
@@ -2323,7 +2695,7 @@ class _InfoBox extends StatelessWidget {
 }
 
 // ============================================================
-// HELPERS
+// INPUT DECORATION
 // ============================================================
 
 InputDecoration _inputDecoration(

@@ -4,7 +4,7 @@ class OrderItemModel {
   final String bookId;
   final String title;
   final String author;
-  final String coverUrl;
+  final String coverObjectKey;
   final double price;
   final String currency;
   final int quantity;
@@ -13,7 +13,7 @@ class OrderItemModel {
     required this.bookId,
     required this.title,
     required this.author,
-    required this.coverUrl,
+    required this.coverObjectKey,
     required this.price,
     required this.currency,
     required this.quantity,
@@ -26,14 +26,16 @@ class OrderItemModel {
       bookId: data['bookId']?.toString() ?? '',
       title: data['title']?.toString() ?? '',
       author: data['author']?.toString() ?? '',
-      coverUrl: data['coverUrl']?.toString() ?? '',
+      coverObjectKey:
+          data['coverObjectKey']?.toString() ?? '',
       price: data['price'] is num
           ? (data['price'] as num).toDouble()
           : double.tryParse(
                 data['price']?.toString() ?? '',
               ) ??
               0,
-      currency: data['currency']?.toString() ?? 'NGN',
+      currency:
+          data['currency']?.toString() ?? 'NGN',
       quantity: data['quantity'] is int
           ? data['quantity'] as int
           : int.tryParse(
@@ -48,7 +50,7 @@ class OrderItemModel {
       'bookId': bookId,
       'title': title,
       'author': author,
-      'coverUrl': coverUrl,
+      'coverObjectKey': coverObjectKey,
       'price': price,
       'currency': currency,
       'quantity': quantity,
@@ -115,20 +117,26 @@ class OrderModel {
                 data['total']?.toString() ?? '',
               ) ??
               0,
-      currency: data['currency']?.toString() ?? 'NGN',
-      status: data['status']?.toString() ?? 'pending',
+      currency:
+          data['currency']?.toString() ?? 'NGN',
+      status:
+          data['status']?.toString() ?? 'pending',
       paymentMethod:
           data['paymentMethod']?.toString() ??
               'bank_transfer',
       paymentReference:
           data['paymentReference']?.toString() ?? '',
-      adminNote: data['adminNote']?.toString() ?? '',
-      verifiedBy: data['verifiedBy']?.toString(),
+      adminNote:
+          data['adminNote']?.toString() ?? '',
+      verifiedBy:
+          data['verifiedBy']?.toString(),
       createdAt: data['createdAt'] is Timestamp
-          ? (data['createdAt'] as Timestamp).toDate()
+          ? (data['createdAt'] as Timestamp)
+              .toDate()
           : null,
       verifiedAt: data['verifiedAt'] is Timestamp
-          ? (data['verifiedAt'] as Timestamp).toDate()
+          ? (data['verifiedAt'] as Timestamp)
+              .toDate()
           : null,
     );
   }

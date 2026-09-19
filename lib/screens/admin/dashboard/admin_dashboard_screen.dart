@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 
 import 'package:church_app/screens/admin/books/admin_books_screen.dart';
@@ -7,6 +8,7 @@ import 'package:church_app/screens/admin/shop/admin_payment_settings_screen.dart
 import 'package:church_app/screens/admin/events/admin_events_screen.dart';
 import 'package:church_app/screens/admin/gallery/admin_gallery_screen.dart';
 import 'package:church_app/screens/admin/users/admin_users_screen.dart';
+import 'package:church_app/screens/admin/notifications/admin_notifications_screen.dart';
 import 'package:church_app/services/auth_service.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
@@ -156,12 +158,7 @@ class _AdminDashboardScreenState
         return const AdminUsersScreen();
 
       case 8:
-        return _buildComingSoonPage(
-          title: 'Notifications',
-          icon: Icons.notifications_none_outlined,
-          description:
-              'Send and manage notifications for the RHIC community.',
-        );
+        return const AdminNotificationsScreen();
 
       case 9:
         return _buildComingSoonPage(
@@ -231,9 +228,7 @@ class _AdminDashboardScreenState
                       ),
                     ),
                   ),
-
                   const SizedBox(width: 13),
-
                   const Expanded(
                     child: Column(
                       crossAxisAlignment:

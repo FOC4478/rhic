@@ -1,4 +1,8 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
 
 import '../models/cart_item_model.dart';
 import '../models/payment_settings_model.dart';
@@ -13,6 +17,16 @@ class PaymentRepository {
   final FirebaseFirestore _firestore =
       FirebaseFirestore.instance;
 
+  final FirebaseAuth _auth =
+      FirebaseAuth.instance;
+
+  // ============================================================
+  // BACKEND
+  // ============================================================
+
+  static const String backendBaseUrl =
+      'http://localhost:3000';
+
   // ============================================================
   // COLLECTIONS
   // ============================================================
@@ -24,6 +38,32 @@ class PaymentRepository {
   CollectionReference<Map<String, dynamic>>
       get _orders =>
           _firestore.collection('book_orders');
+
+  // ============================================================
+  // GET FIREBASE ID TOKEN
+  // ============================================================
+
+  Future<String> _getIdToken() async {
+    final user = _auth.currentUser;
+
+    if (user == null) {
+      throw Exception(
+        'You must be signed in.',
+      );
+    }
+
+    final token =
+        await user.getIdToken();
+
+    if (token == null ||
+        token.trim().isEmpty) {
+      throw Exception(
+        'Unable to authenticate with the server.',
+      );
+    }
+
+    return token;
+  }
 
   // ============================================================
   // PAYMENT DOCUMENT ID
@@ -228,7 +268,7 @@ class PaymentRepository {
     final orderRef = _orders.doc();
 
     // IMPORTANT:
-    // Use coverObjectKey, not coverUrl.
+    // Store the B2 object key, never a URL.
     final orderItems = items.map((item) {
       return {
         'bookId': item.bookId,
@@ -311,24 +351,102 @@ class PaymentRepository {
   // ============================================================
   // APPROVE SHOP ORDER
   // ============================================================
+  //
+  // Approval is now handled by the backend.
+  //
+  // Flutter
+  //    ↓
+  // Backend payment controller
+  //    ↓
+  // Firestore approval
+  //    ↓
+  // Notification service
+  //    ↓
+  // Member notification
+  //
+  // ============================================================
 
   Future<void> approveOrder({
     required String orderId,
     required String adminId,
     String? adminNote,
   }) async {
+    if (orderId.trim().isEmpty) {
+      throw Exception(
+        'Order ID is required.',
+      );
+    }
+
+    if (adminId.trim().isEmpty) {
+      throw Exception(
+        'Admin account could not be identified.',
+      );
+    }
+
     try {
-      await _orders.doc(orderId).update({
-        'status': 'approved',
-        'verifiedBy': adminId,
-        'verifiedAt':
-            FieldValue.serverTimestamp(),
-        'adminNote':
-            adminNote?.trim().isEmpty == true
-                ? ''
-                : adminNote?.trim() ?? '',
-      });
+      final idToken =
+          await _getIdToken();
+
+      final response =
+          await http.post(
+        Uri.parse(
+          '$backendBaseUrl/api/admin/payments/orders/approve',
+        ),
+        headers: {
+          'Content-Type':
+              'application/json',
+          'Authorization':
+              'Bearer $idToken',
+        },
+        body: jsonEncode({
+          'orderId':
+              orderId.trim(),
+          'adminNote':
+              adminNote?.trim() ?? '',
+        }),
+      );
+
+      Map<String, dynamic> data = {};
+
+      if (response.body.trim().isNotEmpty) {
+        try {
+          final decoded =
+              jsonDecode(response.body);
+
+          if (decoded
+              is Map<String, dynamic>) {
+            data = decoded;
+          }
+        } catch (_) {
+          // Ignore invalid JSON and use
+          // the HTTP status below.
+        }
+      }
+
+      if (response.statusCode >= 200 &&
+          response.statusCode < 300 &&
+          data['success'] == true) {
+        return;
+      }
+
+      final message =
+          data['message'];
+
+      if (message is String &&
+          message.trim().isNotEmpty) {
+        throw Exception(
+          message.trim(),
+        );
+      }
+
+      throw Exception(
+        'Unable to approve order.',
+      );
     } catch (e) {
+      if (e is Exception) {
+        rethrow;
+      }
+
       throw Exception(
         'Unable to approve order.',
       );
@@ -338,24 +456,93 @@ class PaymentRepository {
   // ============================================================
   // REJECT SHOP ORDER
   // ============================================================
+  //
+  // Rejection is also handled by the backend so that
+  // admin payment actions use the same secure flow.
+  //
+  // ============================================================
 
   Future<void> rejectOrder({
     required String orderId,
     required String adminId,
     String? adminNote,
   }) async {
+    if (orderId.trim().isEmpty) {
+      throw Exception(
+        'Order ID is required.',
+      );
+    }
+
+    if (adminId.trim().isEmpty) {
+      throw Exception(
+        'Admin account could not be identified.',
+      );
+    }
+
     try {
-      await _orders.doc(orderId).update({
-        'status': 'rejected',
-        'verifiedBy': adminId,
-        'verifiedAt':
-            FieldValue.serverTimestamp(),
-        'adminNote':
-            adminNote?.trim().isEmpty == true
-                ? ''
-                : adminNote?.trim() ?? '',
-      });
+      final idToken =
+          await _getIdToken();
+
+      final response =
+          await http.post(
+        Uri.parse(
+          '$backendBaseUrl/api/admin/payments/orders/reject',
+        ),
+        headers: {
+          'Content-Type':
+              'application/json',
+          'Authorization':
+              'Bearer $idToken',
+        },
+        body: jsonEncode({
+          'orderId':
+              orderId.trim(),
+          'adminNote':
+              adminNote?.trim() ?? '',
+        }),
+      );
+
+      Map<String, dynamic> data = {};
+
+      if (response.body.trim().isNotEmpty) {
+        try {
+          final decoded =
+              jsonDecode(response.body);
+
+          if (decoded
+              is Map<String, dynamic>) {
+            data = decoded;
+          }
+        } catch (_) {
+          // Ignore invalid JSON and use
+          // the HTTP status below.
+        }
+      }
+
+      if (response.statusCode >= 200 &&
+          response.statusCode < 300 &&
+          data['success'] == true) {
+        return;
+      }
+
+      final message =
+          data['message'];
+
+      if (message is String &&
+          message.trim().isNotEmpty) {
+        throw Exception(
+          message.trim(),
+        );
+      }
+
+      throw Exception(
+        'Unable to reject order.',
+      );
     } catch (e) {
+      if (e is Exception) {
+        rethrow;
+      }
+
       throw Exception(
         'Unable to reject order.',
       );

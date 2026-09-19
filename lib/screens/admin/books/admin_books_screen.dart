@@ -1,3 +1,4 @@
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
@@ -15,10 +16,8 @@ class AdminBooksScreen extends StatefulWidget {
       _AdminBooksScreenState();
 }
 
-class _AdminBooksScreenState
-    extends State<AdminBooksScreen> {
-  static const Color _primary =
-      Color(0xFF350044);
+class _AdminBooksScreenState extends State<AdminBooksScreen> {
+  static const Color _primary = Color(0xFF350044);
 
   final ShopRepository _repository =
       ShopRepository.instance;
@@ -26,8 +25,7 @@ class _AdminBooksScreenState
   final B2UploadService _b2UploadService =
       B2UploadService.instance;
 
-  final TextEditingController
-      _searchController =
+  final TextEditingController _searchController =
       TextEditingController();
 
   String _selectedFilter = 'All';
@@ -54,52 +52,39 @@ class _AdminBooksScreenState
     List<BookModel> books,
   ) {
     final search =
-        _searchController.text
-            .trim()
-            .toLowerCase();
+        _searchController.text.trim().toLowerCase();
 
     return books.where((book) {
       final matchesSearch =
           search.isEmpty ||
-          book.title
-              .toLowerCase()
-              .contains(search) ||
-          book.author
-              .toLowerCase()
-              .contains(search) ||
-          book.category
-              .toLowerCase()
-              .contains(search);
+          book.title.toLowerCase().contains(search) ||
+          book.author.toLowerCase().contains(search) ||
+          book.category.toLowerCase().contains(search);
 
       bool matchesFilter = true;
 
       switch (_selectedFilter) {
         case 'Published':
-          matchesFilter =
-              book.isPublished;
+          matchesFilter = book.isPublished;
           break;
 
         case 'Unpublished':
-          matchesFilter =
-              !book.isPublished;
+          matchesFilter = !book.isPublished;
           break;
 
         case 'Featured':
-          matchesFilter =
-              book.isFeatured;
+          matchesFilter = book.isFeatured;
           break;
 
         case 'Not Featured':
-          matchesFilter =
-              !book.isFeatured;
+          matchesFilter = !book.isFeatured;
           break;
 
         default:
           matchesFilter = true;
       }
 
-      return matchesSearch &&
-          matchesFilter;
+      return matchesSearch && matchesFilter;
     }).toList();
   }
 
@@ -128,8 +113,7 @@ class _AdminBooksScreenState
   Future<void> _deleteBook(
     BookModel book,
   ) async {
-    final confirmed =
-        await showDialog<bool>(
+    final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
@@ -147,8 +131,9 @@ class _AdminBooksScreenState
                   false,
                 );
               },
-              child:
-                  const Text('Cancel'),
+              child: const Text(
+                'Cancel',
+              ),
             ),
             FilledButton(
               onPressed: () {
@@ -157,13 +142,12 @@ class _AdminBooksScreenState
                   true,
                 );
               },
-              style:
-                  FilledButton.styleFrom(
-                backgroundColor:
-                    Colors.red,
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.red,
               ),
-              child:
-                  const Text('Delete'),
+              child: const Text(
+                'Delete',
+              ),
             ),
           ],
         );
@@ -183,11 +167,11 @@ class _AdminBooksScreenState
         return;
       }
 
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content:
-              Text('Book deleted.'),
+          content: Text(
+            'Book deleted.',
+          ),
         ),
       );
     } catch (error) {
@@ -195,13 +179,10 @@ class _AdminBooksScreenState
         return;
       }
 
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            error
-                .toString()
-                .replaceFirst(
+            error.toString().replaceFirst(
                   'Exception: ',
                   '',
                 ),
@@ -212,22 +193,18 @@ class _AdminBooksScreenState
   }
 
   // ============================================================
-  // BOOK COVER WIDGET
+  // BOOK COVER
   // ============================================================
 
   Widget _buildBookCover(
     BookModel book,
   ) {
-    if (book.coverObjectKey
-        .trim()
-        .isEmpty) {
+    if (book.coverObjectKey.trim().isEmpty) {
       return _coverPlaceholder();
     }
 
     return FutureBuilder<String>(
-      future:
-          _b2UploadService
-              .getBookCoverUrl(
+      future: _b2UploadService.getBookCoverUrl(
         bookId: book.id,
       ),
       builder: (
@@ -237,17 +214,12 @@ class _AdminBooksScreenState
         if (snapshot.connectionState ==
             ConnectionState.waiting) {
           return Container(
-            color: const Color(
-              0xFFEDE6F0,
-            ),
-            alignment:
-                Alignment.center,
-            child:
-                const SizedBox(
+            color: const Color(0xFFEDE6F0),
+            alignment: Alignment.center,
+            child: const SizedBox(
               width: 28,
               height: 28,
-              child:
-                  CircularProgressIndicator(
+              child: CircularProgressIndicator(
                 strokeWidth: 2.5,
               ),
             ),
@@ -256,19 +228,15 @@ class _AdminBooksScreenState
 
         if (snapshot.hasError ||
             !snapshot.hasData ||
-            snapshot.data!
-                .trim()
-                .isEmpty) {
+            snapshot.data!.trim().isEmpty) {
           return _coverPlaceholder();
         }
 
         return Image.network(
           snapshot.data!,
           fit: BoxFit.cover,
-          width:
-              double.infinity,
-          height:
-              double.infinity,
+          width: double.infinity,
+          height: double.infinity,
           errorBuilder: (
             context,
             error,
@@ -290,160 +258,129 @@ class _AdminBooksScreenState
     BuildContext context,
   ) {
     return Scaffold(
-      backgroundColor:
-          const Color(0xFFF9F7FA),
-      appBar: AppBar(
-        backgroundColor:
-            _primary,
-        foregroundColor:
-            Colors.white,
-        title:
-            const Text(
-          'Manage Books',
-        ),
-        actions: [
-          IconButton(
-            onPressed: () {
-              _openBookForm();
-            },
-            icon:
-                const Icon(
-              Icons.add,
-            ),
-            tooltip:
-                'Add book',
-          ),
-        ],
-      ),
-      floatingActionButton:
-          FloatingActionButton.extended(
-        backgroundColor:
-            _primary,
-        foregroundColor:
-            Colors.white,
+      backgroundColor: const Color(0xFFF9F7FA),
+
+      // NO APP BAR / TOP BAR
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: _primary,
+        foregroundColor: Colors.white,
         onPressed: () {
           _openBookForm();
         },
-        icon:
-            const Icon(
+        icon: const Icon(
           Icons.add,
         ),
-        label:
-            const Text(
+        label: const Text(
           'Add Book',
         ),
       ),
-      body: Column(
-        children: [
-          _buildSearchAndFilters(),
-          Expanded(
-            child:
-                StreamBuilder<
-                    List<BookModel>>(
-              stream: _repository
-                  .adminBooksStream(),
-              builder: (
-                context,
-                snapshot,
-              ) {
-                if (snapshot.hasError) {
-                  return Center(
-                    child: Padding(
-                      padding:
-                          const EdgeInsets
-                              .all(
-                        24,
+
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildSearchAndFilters(),
+
+            Expanded(
+              child: StreamBuilder<List<BookModel>>(
+                stream: _repository.adminBooksStream(),
+                builder: (
+                  context,
+                  snapshot,
+                ) {
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(24),
+                        child: Text(
+                          'Unable to load books.\n\n${snapshot.error}',
+                          textAlign: TextAlign.center,
+                        ),
                       ),
-                      child:
-                          Text(
-                        'Unable to load books.\n\n${snapshot.error}',
-                        textAlign:
-                            TextAlign
-                                .center,
-                      ),
-                    ),
-                  );
-                }
-
-                if (!snapshot.hasData) {
-                  return const Center(
-                    child:
-                        CircularProgressIndicator(),
-                  );
-                }
-
-                final books =
-                    _filterBooks(
-                  snapshot.data!,
-                );
-
-                if (books.isEmpty) {
-                  return const Center(
-                    child: Text(
-                      'No books found.',
-                    ),
-                  );
-                }
-
-                return LayoutBuilder(
-                  builder: (
-                    context,
-                    constraints,
-                  ) {
-                    int columns = 1;
-
-                    if (constraints
-                            .maxWidth >=
-                        1200) {
-                      columns = 4;
-                    } else if (constraints
-                            .maxWidth >=
-                        850) {
-                      columns = 3;
-                    } else if (constraints
-                            .maxWidth >=
-                        550) {
-                      columns = 2;
-                    }
-
-                    return GridView
-                        .builder(
-                      padding:
-                          const EdgeInsets
-                              .fromLTRB(
-                        20,
-                        10,
-                        20,
-                        100,
-                      ),
-                      gridDelegate:
-                          SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount:
-                            columns,
-                        crossAxisSpacing:
-                            16,
-                        mainAxisSpacing:
-                            16,
-                        childAspectRatio:
-                            0.70,
-                      ),
-                      itemCount:
-                          books.length,
-                      itemBuilder: (
-                        context,
-                        index,
-                      ) {
-                        return _buildBookCard(
-                          books[index],
-                        );
-                      },
                     );
-                  },
-                );
-              },
+                  }
+
+                  if (!snapshot.hasData) {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  }
+
+                  final books = _filterBooks(
+                    snapshot.data!,
+                  );
+
+                  if (books.isEmpty) {
+                    return const Center(
+                      child: Text(
+                        'No books found.',
+                      ),
+                    );
+                  }
+
+                  return LayoutBuilder(
+                    builder: (
+                      context,
+                      constraints,
+                    ) {
+                      final width =
+                          constraints.maxWidth;
+
+                      int columns;
+
+                      if (width >= 1400) {
+                        columns = 5;
+                      } else if (width >= 1100) {
+                        columns = 4;
+                      } else if (width >= 750) {
+                        columns = 3;
+                      } else if (width >= 500) {
+                        columns = 2;
+                      } else {
+                        columns = 1;
+                      }
+
+                      final horizontalPadding =
+                          width < 500 ? 12.0 : 20.0;
+
+                      final spacing =
+                          width < 500 ? 10.0 : 16.0;
+
+                      return GridView.builder(
+                        padding: EdgeInsets.fromLTRB(
+                          horizontalPadding,
+                          10,
+                          horizontalPadding,
+                          100,
+                        ),
+                        gridDelegate:
+                            SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: columns,
+                          crossAxisSpacing: spacing,
+                          mainAxisSpacing: spacing,
+                          childAspectRatio:
+                              width < 500
+                                  ? 0.76
+                                  : width < 750
+                                      ? 0.68
+                                      : 0.70,
+                        ),
+                        itemCount: books.length,
+                        itemBuilder: (
+                          context,
+                          index,
+                        ) {
+                          return _buildBookCard(
+                            books[index],
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -453,106 +390,104 @@ class _AdminBooksScreenState
   // ============================================================
 
   Widget _buildSearchAndFilters() {
-    return Container(
-      padding:
-          const EdgeInsets.fromLTRB(
-        20,
-        20,
-        20,
-        10,
-      ),
-      child: Column(
-        children: [
-          TextField(
-            controller:
-                _searchController,
-            onChanged: (_) {
-              setState(() {});
-            },
-            decoration:
-                InputDecoration(
-              hintText:
-                  'Search title, author or category',
-              prefixIcon:
-                  const Icon(
-                Icons.search,
-              ),
-              suffixIcon:
-                  _searchController
-                          .text
-                          .isNotEmpty
-                      ? IconButton(
-                          onPressed: () {
-                            _searchController
-                                .clear();
-                            setState(
-                                () {});
-                          },
-                          icon:
-                              const Icon(
-                            Icons.close,
-                          ),
-                        )
-                      : null,
-              filled: true,
-              fillColor:
-                  Colors.white,
-              border:
-                  OutlineInputBorder(
-                borderRadius:
-                    BorderRadius
-                        .circular(
-                  16,
+    return LayoutBuilder(
+      builder: (
+        context,
+        constraints,
+      ) {
+        final isMobile =
+            constraints.maxWidth < 600;
+
+        return Container(
+          width: double.infinity,
+          padding: EdgeInsets.fromLTRB(
+            isMobile ? 12 : 20,
+            isMobile ? 12 : 20,
+            isMobile ? 12 : 20,
+            10,
+          ),
+          child: Column(
+            children: [
+              TextField(
+                controller: _searchController,
+                onChanged: (_) {
+                  setState(() {});
+                },
+                decoration: InputDecoration(
+                  hintText:
+                      'Search title, author or category',
+                  prefixIcon: const Icon(
+                    Icons.search,
+                  ),
+                  suffixIcon:
+                      _searchController.text.isNotEmpty
+                          ? IconButton(
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() {});
+                              },
+                              icon: const Icon(
+                                Icons.close,
+                              ),
+                            )
+                          : null,
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius:
+                        BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
-                borderSide:
-                    BorderSide.none,
               ),
-            ),
-          ),
-          const SizedBox(
-            height: 12,
-          ),
-          SizedBox(
-            height: 42,
-            child:
-                ListView.separated(
-              scrollDirection:
-                  Axis.horizontal,
-              itemCount:
-                  _filters.length,
-              separatorBuilder:
-                  (_, __) =>
+
+              const SizedBox(
+                height: 12,
+              ),
+
+              SizedBox(
+                height: 42,
+                child: ListView.separated(
+                  scrollDirection:
+                      Axis.horizontal,
+                  itemCount: _filters.length,
+                  separatorBuilder: (
+                    _,
+                    __,
+                  ) =>
                       const SizedBox(
-                width: 8,
-              ),
-              itemBuilder: (
-                context,
-                index,
-              ) {
-                final filter =
-                    _filters[index];
+                    width: 8,
+                  ),
+                  itemBuilder: (
+                    context,
+                    index,
+                  ) {
+                    final filter =
+                        _filters[index];
 
-                final selected =
-                    filter ==
-                        _selectedFilter;
+                    final selected =
+                        filter ==
+                            _selectedFilter;
 
-                return ChoiceChip(
-                  label:
-                      Text(filter),
-                  selected:
-                      selected,
-                  onSelected: (_) {
-                    setState(() {
-                      _selectedFilter =
-                          filter;
-                    });
+                    return ChoiceChip(
+                      label: Text(
+                        filter,
+                      ),
+                      selected: selected,
+                      onSelected: (_) {
+                        setState(() {
+                          _selectedFilter =
+                              filter;
+                        });
+                      },
+                    );
                   },
-                );
-              },
-            ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -564,13 +499,12 @@ class _AdminBooksScreenState
     BookModel book,
   ) {
     return Card(
-      clipBehavior:
-          Clip.antiAlias,
+      clipBehavior: Clip.antiAlias,
       elevation: 2,
+      margin: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment:
-            CrossAxisAlignment
-                .start,
+            CrossAxisAlignment.start,
         children: [
           Expanded(
             child: Stack(
@@ -583,42 +517,30 @@ class _AdminBooksScreenState
                 Positioned(
                   top: 10,
                   left: 10,
-                  child:
-                      Container(
+                  child: Container(
                     padding:
-                        const EdgeInsets
-                            .symmetric(
+                        const EdgeInsets.symmetric(
                       horizontal: 9,
                       vertical: 5,
                     ),
-                    decoration:
-                        BoxDecoration(
+                    decoration: BoxDecoration(
                       color:
                           book.isPublished
-                              ? Colors
-                                  .green
-                              : Colors
-                                  .orange,
+                              ? Colors.green
+                              : Colors.orange,
                       borderRadius:
-                          BorderRadius
-                              .circular(
-                        30,
-                      ),
+                          BorderRadius.circular(30),
                     ),
-                    child:
-                        Text(
+                    child: Text(
                       book.isPublished
                           ? 'Published'
                           : 'Draft',
                       style:
                           const TextStyle(
-                        color: Colors
-                            .white,
-                        fontSize:
-                            11,
+                        color: Colors.white,
+                        fontSize: 11,
                         fontWeight:
-                            FontWeight
-                                .w600,
+                            FontWeight.w600,
                       ),
                     ),
                   ),
@@ -628,16 +550,13 @@ class _AdminBooksScreenState
                   const Positioned(
                     top: 10,
                     right: 10,
-                    child:
-                        CircleAvatar(
+                    child: CircleAvatar(
                       radius: 17,
                       backgroundColor:
                           Colors.white,
-                      child:
-                          Icon(
+                      child: Icon(
                         Icons.star,
-                        color: Colors
-                            .orange,
+                        color: Colors.orange,
                         size: 20,
                       ),
                     ),
@@ -648,89 +567,83 @@ class _AdminBooksScreenState
 
           Padding(
             padding:
-                const EdgeInsets
-                    .all(
-              14,
-            ),
+                const EdgeInsets.all(14),
             child: Column(
               crossAxisAlignment:
-                  CrossAxisAlignment
-                      .start,
+                  CrossAxisAlignment.start,
               children: [
                 Text(
                   book.category,
                   maxLines: 1,
                   overflow:
-                      TextOverflow
-                          .ellipsis,
+                      TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: Colors
-                        .grey
-                        .shade600,
+                    color:
+                        Colors.grey.shade600,
                     fontSize: 12,
                   ),
                 ),
+
                 const SizedBox(
                   height: 5,
                 ),
+
                 Text(
                   book.title,
                   maxLines: 2,
                   overflow:
-                      TextOverflow
-                          .ellipsis,
+                      TextOverflow.ellipsis,
                   style:
                       const TextStyle(
                     fontWeight:
-                        FontWeight
-                            .bold,
+                        FontWeight.bold,
                     fontSize: 16,
                   ),
                 ),
+
                 const SizedBox(
                   height: 4,
                 ),
+
                 Text(
                   book.author,
                   maxLines: 1,
                   overflow:
-                      TextOverflow
-                          .ellipsis,
+                      TextOverflow.ellipsis,
                 ),
+
                 const SizedBox(
                   height: 8,
                 ),
+
                 Text(
                   book.formattedPrice,
                   style:
                       const TextStyle(
                     color: _primary,
                     fontWeight:
-                        FontWeight
-                            .bold,
+                        FontWeight.bold,
                     fontSize: 16,
                   ),
                 ),
+
                 const SizedBox(
                   height: 10,
                 ),
+
                 Row(
                   children: [
                     Expanded(
                       child:
-                          OutlinedButton
-                              .icon(
-                        onPressed:
-                            () {
+                          OutlinedButton.icon(
+                        onPressed: () {
                           _openBookForm(
-                            book:
-                                book,
+                            book: book,
                           );
                         },
-                        icon:
-                            const Icon(
-                          Icons
-                              .edit_outlined,
+                        icon: const Icon(
+                          Icons.edit_outlined,
+                          size: 18,
                         ),
                         label:
                             const Text(
@@ -738,16 +651,16 @@ class _AdminBooksScreenState
                         ),
                       ),
                     ),
+
                     const SizedBox(
                       width: 8,
                     ),
-                    PopupMenuButton<
-                        String>(
+
+                    PopupMenuButton<String>(
                       onSelected:
                           (value) async {
                         try {
-                          switch (
-                              value) {
+                          switch (value) {
                             case 'publish':
                               await _repository
                                   .setPublished(
@@ -776,19 +689,16 @@ class _AdminBooksScreenState
                               );
                               break;
                           }
-                        } catch (
-                            error) {
+                        } catch (error) {
                           if (!mounted) {
                             return;
                           }
 
                           ScaffoldMessenger
-                                  .of(
-                            context,
-                          ).showSnackBar(
+                                  .of(context)
+                              .showSnackBar(
                             SnackBar(
-                              content:
-                                  Text(
+                              content: Text(
                                 error
                                     .toString()
                                     .replaceFirst(
@@ -801,34 +711,32 @@ class _AdminBooksScreenState
                         }
                       },
                       itemBuilder:
-                          (context) =>
-                              [
+                          (context) => [
                         PopupMenuItem(
                           value:
                               'publish',
-                          child:
-                              Text(
+                          child: Text(
                             book.isPublished
                                 ? 'Unpublish'
                                 : 'Publish',
                           ),
                         ),
+
                         PopupMenuItem(
                           value:
                               'feature',
-                          child:
-                              Text(
+                          child: Text(
                             book.isFeatured
                                 ? 'Remove Featured'
                                 : 'Make Featured',
                           ),
                         ),
+
                         const PopupMenuDivider(),
+
                         const PopupMenuItem(
-                          value:
-                              'delete',
-                          child:
-                              Text(
+                          value: 'delete',
+                          child: Text(
                             'Delete',
                             style:
                                 TextStyle(
@@ -851,10 +759,8 @@ class _AdminBooksScreenState
 
   Widget _coverPlaceholder() {
     return Container(
-      color:
-          const Color(0xFFEDE6F0),
-      alignment:
-          Alignment.center,
+      color: const Color(0xFFEDE6F0),
+      alignment: Alignment.center,
       child: const Icon(
         Icons.menu_book_rounded,
         size: 60,
@@ -868,8 +774,7 @@ class _AdminBooksScreenState
 // BOOK FORM
 // ============================================================
 
-class _BookFormDialog
-    extends StatefulWidget {
+class _BookFormDialog extends StatefulWidget {
   final BookModel? book;
 
   const _BookFormDialog({
@@ -889,12 +794,10 @@ class _BookFormDialogState
   final ShopRepository _repository =
       ShopRepository.instance;
 
-  final B2UploadService
-      _b2UploadService =
+  final B2UploadService _b2UploadService =
       B2UploadService.instance;
 
-  final GlobalKey<FormState>
-      _formKey =
+  final GlobalKey<FormState> _formKey =
       GlobalKey<FormState>();
 
   late final TextEditingController
@@ -950,35 +853,29 @@ class _BookFormDialogState
 
     _descriptionController =
         TextEditingController(
-      text:
-          book?.description ?? '',
+      text: book?.description ?? '',
     );
 
     _categoryController =
         TextEditingController(
-      text:
-          book?.category ?? '',
+      text: book?.category ?? '',
     );
 
     _priceController =
         TextEditingController(
-      text:
-          book == null
-              ? ''
-              : book.price
-                  .toString(),
+      text: book == null
+          ? ''
+          : book.price.toString(),
     );
 
     _currency =
         book?.currency ?? 'NGN';
 
     _isPublished =
-        book?.isPublished ??
-            false;
+        book?.isPublished ?? false;
 
     _isFeatured =
-        book?.isFeatured ??
-            false;
+        book?.isFeatured ?? false;
 
     _ebookObjectKey =
         book?.ebookObjectKey ?? '';
@@ -1002,8 +899,7 @@ class _BookFormDialogState
   // SELECT + UPLOAD COVER
   // ============================================================
 
-  Future<void>
-      _selectAndUploadCover() async {
+  Future<void> _selectAndUploadCover() async {
     if (_isUploadingCover) {
       return;
     }
@@ -1011,8 +907,7 @@ class _BookFormDialogState
     try {
       final files =
           await FilePicker.pickFiles(
-        type:
-            FileType.custom,
+        type: FileType.custom,
         allowedExtensions: [
           'jpg',
           'jpeg',
@@ -1025,8 +920,7 @@ class _BookFormDialogState
         return;
       }
 
-      final file =
-          files.first;
+      final file = files.first;
 
       final bytes =
           await file.readAsBytes();
@@ -1038,26 +932,22 @@ class _BookFormDialogState
       }
 
       final extension =
-          file.extension
-              ?.toLowerCase();
+          file.extension?.toLowerCase();
 
       String contentType;
 
       switch (extension) {
         case 'png':
-          contentType =
-              'image/png';
+          contentType = 'image/png';
           break;
 
         case 'webp':
-          contentType =
-              'image/webp';
+          contentType = 'image/webp';
           break;
 
         case 'jpg':
         case 'jpeg':
-          contentType =
-              'image/jpeg';
+          contentType = 'image/jpeg';
           break;
 
         default:
@@ -1071,24 +961,18 @@ class _BookFormDialogState
       }
 
       setState(() {
-        _isUploadingCover =
-            true;
+        _isUploadingCover = true;
         _selectedCoverName =
             file.name;
       });
 
       final uploadResult =
-          await _b2UploadService
-              .uploadFile(
+          await _b2UploadService.uploadFile(
         bytes: bytes,
-        fileName:
-            file.name,
-        contentType:
-            contentType,
-        mediaType:
-            'image',
-        resourceType:
-            'book',
+        fileName: file.name,
+        contentType: contentType,
+        mediaType: 'image',
+        resourceType: 'book',
       );
 
       if (!mounted) {
@@ -1097,15 +981,12 @@ class _BookFormDialogState
 
       setState(() {
         _coverObjectKey =
-            uploadResult
-                .objectKey;
-        _isUploadingCover =
-            false;
+            uploadResult.objectKey;
+        _isUploadingCover = false;
       });
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
         const SnackBar(
           content: Text(
             'Cover image uploaded successfully.',
@@ -1118,13 +999,11 @@ class _BookFormDialogState
       }
 
       setState(() {
-        _isUploadingCover =
-            false;
+        _isUploadingCover = false;
       });
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
         SnackBar(
           content: Text(
             error
@@ -1143,8 +1022,7 @@ class _BookFormDialogState
   // SELECT + UPLOAD EBOOK
   // ============================================================
 
-  Future<void>
-      _selectAndUploadEbook() async {
+  Future<void> _selectAndUploadEbook() async {
     if (_isUploadingEbook) {
       return;
     }
@@ -1152,18 +1030,15 @@ class _BookFormDialogState
     try {
       final files =
           await FilePicker.pickFiles(
-        type:
-            FileType.custom,
-        allowedExtensions:
-            ['pdf'],
+        type: FileType.custom,
+        allowedExtensions: ['pdf'],
       );
 
       if (files.isEmpty) {
         return;
       }
 
-      final file =
-          files.first;
+      final file = files.first;
 
       final bytes =
           await file.readAsBytes();
@@ -1179,24 +1054,19 @@ class _BookFormDialogState
       }
 
       setState(() {
-        _isUploadingEbook =
-            true;
+        _isUploadingEbook = true;
         _selectedEbookName =
             file.name;
       });
 
       final uploadResult =
-          await _b2UploadService
-              .uploadFile(
+          await _b2UploadService.uploadFile(
         bytes: bytes,
-        fileName:
-            file.name,
+        fileName: file.name,
         contentType:
             'application/pdf',
-        mediaType:
-            'ebook',
-        resourceType:
-            'book',
+        mediaType: 'ebook',
+        resourceType: 'book',
       );
 
       if (!mounted) {
@@ -1205,15 +1075,12 @@ class _BookFormDialogState
 
       setState(() {
         _ebookObjectKey =
-            uploadResult
-                .objectKey;
-        _isUploadingEbook =
-            false;
+            uploadResult.objectKey;
+        _isUploadingEbook = false;
       });
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
         const SnackBar(
           content: Text(
             'Ebook uploaded successfully.',
@@ -1226,13 +1093,11 @@ class _BookFormDialogState
       }
 
       setState(() {
-        _isUploadingEbook =
-            false;
+        _isUploadingEbook = false;
       });
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
         SnackBar(
           content: Text(
             error
@@ -1258,22 +1123,17 @@ class _BookFormDialogState
       return;
     }
 
-    if (!_formKey.currentState!
-        .validate()) {
+    if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    final price =
-        double.tryParse(
-      _priceController.text
-          .trim(),
+    final price = double.tryParse(
+      _priceController.text.trim(),
     );
 
-    if (price == null ||
-        price < 0) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(
+    if (price == null || price < 0) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
         const SnackBar(
           content: Text(
             'Enter a valid price.',
@@ -1284,16 +1144,9 @@ class _BookFormDialogState
       return;
     }
 
-    // ----------------------------------------------------------
-    // COVER IS REQUIRED
-    // ----------------------------------------------------------
-
-    if (_coverObjectKey
-        .trim()
-        .isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(
+    if (_coverObjectKey.trim().isEmpty) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
         const SnackBar(
           content: Text(
             'Upload a valid cover image before saving the book.',
@@ -1304,17 +1157,10 @@ class _BookFormDialogState
       return;
     }
 
-    // ----------------------------------------------------------
-    // PUBLISHED BOOK MUST HAVE PDF
-    // ----------------------------------------------------------
-
     if (_isPublished &&
-        _ebookObjectKey
-            .trim()
-            .isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(
+        _ebookObjectKey.trim().isEmpty) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
         const SnackBar(
           content: Text(
             'Upload the ebook PDF before publishing this book.',
@@ -1331,70 +1177,43 @@ class _BookFormDialogState
 
     try {
       if (widget.book == null) {
-        await _repository
-            .createBook(
+        await _repository.createBook(
           title:
-              _titleController
-                  .text
-                  .trim(),
+              _titleController.text.trim(),
           author:
-              _authorController
-                  .text
-                  .trim(),
+              _authorController.text.trim(),
           description:
-              _descriptionController
-                  .text
-                  .trim(),
+              _descriptionController.text.trim(),
           category:
-              _categoryController
-                  .text
-                  .trim(),
+              _categoryController.text.trim(),
           coverObjectKey:
-              _coverObjectKey
-                  .trim(),
+              _coverObjectKey.trim(),
           ebookObjectKey:
-              _ebookObjectKey
-                  .trim(),
+              _ebookObjectKey.trim(),
           price: price,
           currency: _currency,
-          isPublished:
-              _isPublished,
-          isFeatured:
-              _isFeatured,
+          isPublished: _isPublished,
+          isFeatured: _isFeatured,
         );
       } else {
-        await _repository
-            .updateBook(
-          bookId:
-              widget.book!.id,
+        await _repository.updateBook(
+          bookId: widget.book!.id,
           title:
-              _titleController
-                  .text
-                  .trim(),
+              _titleController.text.trim(),
           author:
-              _authorController
-                  .text
-                  .trim(),
+              _authorController.text.trim(),
           description:
-              _descriptionController
-                  .text
-                  .trim(),
+              _descriptionController.text.trim(),
           category:
-              _categoryController
-                  .text
-                  .trim(),
+              _categoryController.text.trim(),
           coverObjectKey:
-              _coverObjectKey
-                  .trim(),
+              _coverObjectKey.trim(),
           ebookObjectKey:
-              _ebookObjectKey
-                  .trim(),
+              _ebookObjectKey.trim(),
           price: price,
           currency: _currency,
-          isPublished:
-              _isPublished,
-          isFeatured:
-              _isFeatured,
+          isPublished: _isPublished,
+          isFeatured: _isFeatured,
         );
       }
 
@@ -1402,13 +1221,10 @@ class _BookFormDialogState
         return;
       }
 
-      Navigator.pop(
-        context,
-      );
+      Navigator.pop(context);
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
         SnackBar(
           content: Text(
             widget.book == null
@@ -1426,9 +1242,8 @@ class _BookFormDialogState
         _isSaving = false;
       });
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
         SnackBar(
           content: Text(
             error
@@ -1454,25 +1269,36 @@ class _BookFormDialogState
     final editing =
         widget.book != null;
 
+    final screenSize =
+        MediaQuery.sizeOf(context);
+
+    final isMobile =
+        screenSize.width < 600;
+
     return Dialog(
-      insetPadding:
-          const EdgeInsets.all(20),
+      insetPadding: EdgeInsets.all(
+        isMobile ? 8 : 20,
+      ),
       child: ConstrainedBox(
-        constraints:
-            const BoxConstraints(
-          maxWidth: 650,
-          maxHeight: 820,
+        constraints: BoxConstraints(
+          maxWidth:
+              isMobile
+                  ? double.infinity
+                  : 650,
+          maxHeight:
+              screenSize.height -
+              (isMobile ? 16 : 40),
         ),
         child: Column(
           children: [
-            // ----------------------------------------------------
+            // ==================================================
             // HEADER
-            // ----------------------------------------------------
+            // ==================================================
 
             Container(
               padding:
-                  const EdgeInsets.all(
-                20,
+                  EdgeInsets.all(
+                isMobile ? 14 : 20,
               ),
               color: _primary,
               child: Row(
@@ -1483,16 +1309,19 @@ class _BookFormDialogState
                           ? 'Edit Book'
                           : 'Add Book',
                       style:
-                          const TextStyle(
+                          TextStyle(
                         color:
                             Colors.white,
-                        fontSize: 21,
+                        fontSize:
+                            isMobile
+                                ? 18
+                                : 21,
                         fontWeight:
-                            FontWeight
-                                .bold,
+                            FontWeight.bold,
                       ),
                     ),
                   ),
+
                   IconButton(
                     onPressed:
                         _isSaving ||
@@ -1515,16 +1344,16 @@ class _BookFormDialogState
               ),
             ),
 
-            // ----------------------------------------------------
+            // ==================================================
             // FORM
-            // ----------------------------------------------------
+            // ==================================================
 
             Expanded(
               child:
                   SingleChildScrollView(
                 padding:
-                    const EdgeInsets.all(
-                  20,
+                    EdgeInsets.all(
+                  isMobile ? 14 : 20,
                 ),
                 child: Form(
                   key: _formKey,
@@ -1565,8 +1394,7 @@ class _BookFormDialogState
                             _descriptionController,
                         label:
                             'Description',
-                        maxLines:
-                            5,
+                        maxLines: 5,
                         validator:
                             _required,
                       ),
@@ -1584,8 +1412,7 @@ class _BookFormDialogState
                         style:
                             TextStyle(
                           fontWeight:
-                              FontWeight
-                                  .w700,
+                              FontWeight.w700,
                           fontSize: 15,
                         ),
                       ),
@@ -1598,8 +1425,7 @@ class _BookFormDialogState
                         width:
                             double.infinity,
                         padding:
-                            const EdgeInsets
-                                .all(
+                            const EdgeInsets.all(
                           16,
                         ),
                         decoration:
@@ -1625,10 +1451,8 @@ class _BookFormDialogState
                             Row(
                               children: [
                                 SizedBox(
-                                  width:
-                                      58,
-                                  height:
-                                      74,
+                                  width: 58,
+                                  height: 74,
                                   child:
                                       ClipRRect(
                                     borderRadius:
@@ -1636,9 +1460,11 @@ class _BookFormDialogState
                                       8,
                                     ),
                                     child:
-                                        _coverObjectKey.isNotEmpty
+                                        _coverObjectKey
+                                                .isNotEmpty
                                             ? _CoverPreview(
-                                              bookId: widget.book?.id,
+                                              bookId:
+                                                  widget.book?.id,
                                               uploadService:
                                                   _b2UploadService,
                                               fallback:
@@ -1647,10 +1473,11 @@ class _BookFormDialogState
                                             : _coverSmallPlaceholder(),
                                   ),
                                 ),
+
                                 const SizedBox(
-                                  width:
-                                      12,
+                                  width: 12,
                                 ),
+
                                 Expanded(
                                   child:
                                       Column(
@@ -1666,20 +1493,21 @@ class _BookFormDialogState
                                         maxLines:
                                             2,
                                         overflow:
-                                            TextOverflow.ellipsis,
+                                            TextOverflow
+                                                .ellipsis,
                                         style:
                                             const TextStyle(
                                           fontWeight:
                                               FontWeight.w600,
                                         ),
                                       ),
+
                                       if (_coverObjectKey
                                           .isNotEmpty)
                                         const Padding(
                                           padding:
                                               EdgeInsets.only(
-                                            top:
-                                                4,
+                                            top: 4,
                                           ),
                                           child:
                                               Text(
@@ -1700,8 +1528,7 @@ class _BookFormDialogState
                             ),
 
                             const SizedBox(
-                              height:
-                                  14,
+                              height: 14,
                             ),
 
                             SizedBox(
@@ -1749,7 +1576,7 @@ class _BookFormDialogState
                       ),
 
                       // ==================================================
-                      // EBOOK PDF
+                      // EBOOK
                       // ==================================================
 
                       const Text(
@@ -1757,8 +1584,7 @@ class _BookFormDialogState
                         style:
                             TextStyle(
                           fontWeight:
-                              FontWeight
-                                  .w700,
+                              FontWeight.w700,
                           fontSize: 15,
                         ),
                       ),
@@ -1771,8 +1597,7 @@ class _BookFormDialogState
                         width:
                             double.infinity,
                         padding:
-                            const EdgeInsets
-                                .all(
+                            const EdgeInsets.all(
                           16,
                         ),
                         decoration:
@@ -1805,10 +1630,11 @@ class _BookFormDialogState
                                   size:
                                       34,
                                 ),
+
                                 const SizedBox(
-                                  width:
-                                      12,
+                                  width: 12,
                                 ),
+
                                 Expanded(
                                   child:
                                       Column(
@@ -1818,27 +1644,27 @@ class _BookFormDialogState
                                     children: [
                                       Text(
                                         _selectedEbookName ??
-                                            (_ebookObjectKey
-                                                    .isNotEmpty
+                                            (_ebookObjectKey.isNotEmpty
                                                 ? 'Ebook already uploaded'
                                                 : 'No PDF selected'),
                                         maxLines:
                                             2,
                                         overflow:
-                                            TextOverflow.ellipsis,
+                                            TextOverflow
+                                                .ellipsis,
                                         style:
                                             const TextStyle(
                                           fontWeight:
                                               FontWeight.w600,
                                         ),
                                       ),
+
                                       if (_ebookObjectKey
                                           .isNotEmpty)
                                         const Padding(
                                           padding:
                                               EdgeInsets.only(
-                                            top:
-                                                4,
+                                            top: 4,
                                           ),
                                           child:
                                               Text(
@@ -1859,8 +1685,7 @@ class _BookFormDialogState
                             ),
 
                             const SizedBox(
-                              height:
-                                  14,
+                              height: 14,
                             ),
 
                             SizedBox(
@@ -1893,8 +1718,7 @@ class _BookFormDialogState
                                     Text(
                                   _isUploadingEbook
                                       ? 'Uploading PDF...'
-                                      : _ebookObjectKey
-                                              .isEmpty
+                                      : _ebookObjectKey.isEmpty
                                           ? 'Select & Upload PDF'
                                           : 'Replace PDF',
                                 ),
@@ -1912,12 +1736,10 @@ class _BookFormDialogState
                       // PRICE + CURRENCY
                       // ==================================================
 
-                      Row(
-                        children: [
-                          Expanded(
-                            flex: 2,
-                            child:
-                                _field(
+                      if (isMobile)
+                        Column(
+                          children: [
+                            _field(
                               controller:
                                   _priceController,
                               label:
@@ -1931,15 +1753,9 @@ class _BookFormDialogState
                               validator:
                                   _required,
                             ),
-                          ),
-                          const SizedBox(
-                            width:
-                                12,
-                          ),
-                          Expanded(
-                            child:
-                                DropdownButtonFormField<
-                                    String>(
+
+                            DropdownButtonFormField<
+                                String>(
                               initialValue:
                                   _currency,
                               decoration:
@@ -1955,22 +1771,21 @@ class _BookFormDialogState
                                 'USD',
                                 'GBP',
                                 'EUR',
-                              ]
-                                      .map(
+                              ].map(
                                 (
                                   currency,
-                                ) =>
-                                    DropdownMenuItem<
-                                        String>(
-                                  value:
+                                ) {
+                                  return DropdownMenuItem<
+                                      String>(
+                                    value:
+                                        currency,
+                                    child:
+                                        Text(
                                       currency,
-                                  child:
-                                      Text(
-                                    currency,
-                                  ),
-                                ),
-                              )
-                                      .toList(),
+                                    ),
+                                  );
+                                },
+                              ).toList(),
                               onChanged:
                                   _isSaving
                                       ? null
@@ -1988,9 +1803,91 @@ class _BookFormDialogState
                                           }
                                         },
                             ),
-                          ),
-                        ],
-                      ),
+                          ],
+                        )
+                      else
+                        Row(
+                          crossAxisAlignment:
+                              CrossAxisAlignment
+                                  .start,
+                          children: [
+                            Expanded(
+                              flex: 2,
+                              child:
+                                  _field(
+                                controller:
+                                    _priceController,
+                                label:
+                                    'Price',
+                                keyboardType:
+                                    const TextInputType
+                                        .numberWithOptions(
+                                  decimal:
+                                      true,
+                                ),
+                                validator:
+                                    _required,
+                              ),
+                            ),
+
+                            const SizedBox(
+                              width: 12,
+                            ),
+
+                            Expanded(
+                              child:
+                                  DropdownButtonFormField<
+                                      String>(
+                                initialValue:
+                                    _currency,
+                                decoration:
+                                    const InputDecoration(
+                                  labelText:
+                                      'Currency',
+                                  border:
+                                      OutlineInputBorder(),
+                                ),
+                                items:
+                                    const [
+                                  'NGN',
+                                  'USD',
+                                  'GBP',
+                                  'EUR',
+                                ].map(
+                                  (
+                                    currency,
+                                  ) {
+                                    return DropdownMenuItem<
+                                        String>(
+                                      value:
+                                          currency,
+                                      child:
+                                          Text(
+                                        currency,
+                                      ),
+                                    );
+                                  },
+                                ).toList(),
+                                onChanged:
+                                    _isSaving
+                                        ? null
+                                        : (
+                                            value,
+                                          ) {
+                                            if (value !=
+                                                null) {
+                                              setState(
+                                                () {
+                                                  _currency =
+                                                      value;
+                                                },
+                                              );
+                                            }
+                                          },
+                              ),
+                            ),
+                          ],
+                        ),
 
                       // ==================================================
                       // PUBLISHED
@@ -2067,8 +1964,8 @@ class _BookFormDialogState
 
             Container(
               padding:
-                  const EdgeInsets.all(
-                20,
+                  EdgeInsets.all(
+                isMobile ? 14 : 20,
               ),
               decoration:
                   BoxDecoration(
@@ -2103,9 +2000,11 @@ class _BookFormDialogState
                       ),
                     ),
                   ),
+
                   const SizedBox(
                     width: 12,
                   ),
+
                   Expanded(
                     child:
                         FilledButton(
@@ -2157,13 +2056,10 @@ class _BookFormDialogState
 
   Widget _coverSmallPlaceholder() {
     return Container(
-      color:
-          const Color(0xFFEDE6F0),
-      alignment:
-          Alignment.center,
+      color: const Color(0xFFEDE6F0),
+      alignment: Alignment.center,
       child: const Icon(
-        Icons
-            .add_photo_alternate_outlined,
+        Icons.add_photo_alternate_outlined,
         color: _primary,
         size: 28,
       ),
@@ -2175,11 +2071,9 @@ class _BookFormDialogState
   // ============================================================
 
   Widget _field({
-    required TextEditingController
-        controller,
+    required TextEditingController controller,
     required String label,
-    String? Function(String?)?
-        validator,
+    String? Function(String?)? validator,
     int maxLines = 1,
     TextInputType? keyboardType,
   }) {
@@ -2188,20 +2082,14 @@ class _BookFormDialogState
           const EdgeInsets.only(
         bottom: 16,
       ),
-      child:
-          TextFormField(
-        controller:
-            controller,
-        maxLines:
-            maxLines,
-        keyboardType:
-            keyboardType,
-        validator:
-            validator,
+      child: TextFormField(
+        controller: controller,
+        maxLines: maxLines,
+        keyboardType: keyboardType,
+        validator: validator,
         decoration:
             InputDecoration(
-          labelText:
-              label,
+          labelText: label,
           alignLabelWithHint:
               maxLines > 1,
           border:
@@ -2250,10 +2138,8 @@ class _CoverPreview
 
     return FutureBuilder<String>(
       future:
-          uploadService
-              .getBookCoverUrl(
-        bookId:
-            bookId!,
+          uploadService.getBookCoverUrl(
+        bookId: bookId!,
       ),
       builder: (
         context,
@@ -2263,9 +2149,7 @@ class _CoverPreview
             ConnectionState.waiting) {
           return Container(
             color:
-                const Color(
-              0xFFEDE6F0,
-            ),
+                const Color(0xFFEDE6F0),
             alignment:
                 Alignment.center,
             child:
@@ -2290,12 +2174,9 @@ class _CoverPreview
 
         return Image.network(
           snapshot.data!,
-          fit:
-              BoxFit.cover,
-          width:
-              double.infinity,
-          height:
-              double.infinity,
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: double.infinity,
           errorBuilder: (
             context,
             error,

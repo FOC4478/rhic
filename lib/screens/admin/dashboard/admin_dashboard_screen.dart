@@ -23,7 +23,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey =
       GlobalKey<ScaffoldState>();
 
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore _firestore =
+      FirebaseFirestore.instance;
 
   int _selectedIndex = 0;
 
@@ -98,17 +99,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   child: _buildSidebar(context),
                 ),
               Expanded(
-                child: Column(
-                  children: [
-                    _buildTopBar(
-                      context,
-                      isDesktop,
-                    ),
-                    Expanded(
-                      child: _buildCurrentPage(),
-                    ),
-                  ],
-                ),
+                child: _buildCurrentPage(),
               ),
             ],
           ),
@@ -217,7 +208,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   const SizedBox(width: 13),
                   const Expanded(
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment:
+                          CrossAxisAlignment.start,
                       children: [
                         Text(
                           'RHIC',
@@ -251,7 +243,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 itemBuilder: (context, index) {
                   final item = _menuItems[index];
 
-                  final bool selected = _selectedIndex == index;
+                  final bool selected =
+                      _selectedIndex == index;
 
                   return Padding(
                     padding: const EdgeInsets.only(
@@ -260,11 +253,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     child: ListTile(
                       onTap: () => _selectMenu(index),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius:
+                            BorderRadius.circular(12),
                       ),
                       selected: selected,
                       selectedTileColor:
-                          Colors.white.withValues(alpha: 0.14),
+                          Colors.white.withValues(
+                        alpha: 0.14,
+                      ),
                       leading: Icon(
                         item.icon,
                         color: selected
@@ -302,7 +298,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               child: ListTile(
                 onTap: _logout,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius:
+                      BorderRadius.circular(12),
                 ),
                 leading: const Icon(
                   Icons.logout,
@@ -324,128 +321,56 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   // ============================================================
-  // TOP BAR
-  // ============================================================
-
-  Widget _buildTopBar(
-    BuildContext context,
-    bool isDesktop,
-  ) {
-    final String pageTitle = _menuItems[_selectedIndex].title;
-
-    return Container(
-      height: 76,
-      padding: EdgeInsets.symmetric(
-        horizontal: isDesktop ? 24 : 12,
-      ),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          bottom: BorderSide(
-            color: Color(0xFFE9E5EA),
-          ),
-        ),
-      ),
-      child: Row(
-        children: [
-          if (!isDesktop)
-            IconButton(
-              tooltip: 'Menu',
-              onPressed: () {
-                _scaffoldKey.currentState?.openDrawer();
-              },
-              icon: const Icon(
-                Icons.menu,
-              ),
-            ),
-
-          if (!isDesktop)
-            const SizedBox(width: 4),
-
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  pageTitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: isDesktop ? 21 : 18,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-
-                if (isDesktop) ...[
-                  const SizedBox(height: 2),
-                  const Text(
-                    'Manage your RHIC platform',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.black54,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-
-          if (isDesktop) ...[
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 10,
-                vertical: 6,
-              ),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF7F5F8),
-                borderRadius: BorderRadius.circular(30),
-              ),
-              child: const Row(
-                children: [
-                  CircleAvatar(
-                    radius: 17,
-                    backgroundColor: Color(0xFF350044),
-                    child: Icon(
-                      Icons.person,
-                      color: Colors.white,
-                      size: 18,
-                    ),
-                  ),
-                  SizedBox(width: 9),
-                  Text(
-                    'Administrator',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  // ============================================================
   // DASHBOARD PAGE
   // ============================================================
 
   Widget _buildDashboardPage() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final bool isMobile = constraints.maxWidth < 600;
+        final bool isMobile =
+            constraints.maxWidth < 900;
 
         return SingleChildScrollView(
           padding: EdgeInsets.all(
             isMobile ? 16 : 28,
           ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment:
+                CrossAxisAlignment.start,
             children: [
+              // ==================================================
+              // MOBILE MENU BUTTON
+              // ==================================================
+
+              if (isMobile)
+                Padding(
+                  padding: const EdgeInsets.only(
+                    bottom: 24,
+                  ),
+                  child: IconButton(
+                    tooltip: 'Menu',
+                    padding: EdgeInsets.zero,
+                    alignment: Alignment.centerLeft,
+                    constraints:
+                        const BoxConstraints(
+                      minWidth: 40,
+                      minHeight: 40,
+                    ),
+                    onPressed: () {
+                      _scaffoldKey.currentState
+                          ?.openDrawer();
+                    },
+                    icon: const Icon(
+                      Icons.menu,
+                      size: 28,
+                    ),
+                  ),
+                ),
+
+              // ==================================================
+              // WELCOME
+              // ==================================================
+
               Text(
                 'Welcome back, Admin',
                 style: TextStyle(
@@ -468,11 +393,19 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 height: isMobile ? 24 : 28,
               ),
 
+              // ==================================================
+              // LIVE STATISTICS
+              // ==================================================
+
               _buildStatistics(),
 
               SizedBox(
                 height: isMobile ? 26 : 30,
               ),
+
+              // ==================================================
+              // QUICK ACTIONS
+              // ==================================================
 
               const Text(
                 'Quick Actions',
@@ -499,40 +432,54 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     crossAxisSpacing: 15,
                     mainAxisSpacing: 15,
                     childAspectRatio:
-                        constraints.maxWidth < 500 ? 3.2 : 2.5,
+                        constraints.maxWidth < 500
+                            ? 3.2
+                            : 2.5,
                     shrinkWrap: true,
                     physics:
                         const NeverScrollableScrollPhysics(),
                     children: [
                       _QuickAction(
                         title: 'Add Sermon',
-                        icon: Icons.add_circle_outline,
-                        onTap: () => _selectMenu(1),
+                        icon:
+                            Icons.add_circle_outline,
+                        onTap: () =>
+                            _selectMenu(1),
                       ),
                       _QuickAction(
                         title: 'Add Book',
-                        icon: Icons.library_add_outlined,
-                        onTap: () => _selectMenu(2),
+                        icon:
+                            Icons.library_add_outlined,
+                        onTap: () =>
+                            _selectMenu(2),
                       ),
                       _QuickAction(
                         title: 'Create Event',
-                        icon: Icons.event_available_outlined,
-                        onTap: () => _selectMenu(3),
+                        icon:
+                            Icons.event_available_outlined,
+                        onTap: () =>
+                            _selectMenu(3),
                       ),
                       _QuickAction(
                         title: 'Manage Community',
-                        icon: Icons.groups_outlined,
-                        onTap: () => _selectMenu(6),
+                        icon:
+                            Icons.groups_outlined,
+                        onTap: () =>
+                            _selectMenu(6),
                       ),
                       _QuickAction(
                         title: 'Manage Users',
-                        icon: Icons.people_outline,
-                        onTap: () => _selectMenu(7),
+                        icon:
+                            Icons.people_outline,
+                        onTap: () =>
+                            _selectMenu(7),
                       ),
                       _QuickAction(
                         title: 'Payment Settings',
-                        icon: Icons.payments_outlined,
-                        onTap: () => _selectMenu(5),
+                        icon:
+                            Icons.payments_outlined,
+                        onTap: () =>
+                            _selectMenu(5),
                       ),
                     ],
                   );
@@ -564,19 +511,27 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
         return StreamBuilder<
             QuerySnapshot<Map<String, dynamic>>>(
-          stream: _firestore.collection('users').snapshots(),
+          stream: _firestore
+              .collection('users')
+              .snapshots(),
           builder: (context, usersSnapshot) {
             return StreamBuilder<
                 QuerySnapshot<Map<String, dynamic>>>(
-              stream: _firestore.collection('sermons').snapshots(),
+              stream: _firestore
+                  .collection('sermons')
+                  .snapshots(),
               builder: (context, sermonsSnapshot) {
                 return StreamBuilder<
                     QuerySnapshot<Map<String, dynamic>>>(
-                  stream: _firestore.collection('books').snapshots(),
+                  stream: _firestore
+                      .collection('books')
+                      .snapshots(),
                   builder: (context, booksSnapshot) {
                     return StreamBuilder<
                         QuerySnapshot<Map<String, dynamic>>>(
-                      stream: _firestore.collection('events').snapshots(),
+                      stream: _firestore
+                          .collection('events')
+                          .snapshots(),
                       builder: (context, eventsSnapshot) {
                         final bool loading =
                             usersSnapshot.connectionState ==
@@ -595,22 +550,26 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                               _StatCard(
                                 title: 'Total Users',
                                 value: '...',
-                                icon: Icons.people_outline,
+                                icon:
+                                    Icons.people_outline,
                               ),
                               _StatCard(
                                 title: 'Sermons',
                                 value: '...',
-                                icon: Icons.play_circle_outline,
+                                icon:
+                                    Icons.play_circle_outline,
                               ),
                               _StatCard(
                                 title: 'Books',
                                 value: '...',
-                                icon: Icons.library_books_outlined,
+                                icon:
+                                    Icons.library_books_outlined,
                               ),
                               _StatCard(
                                 title: 'Events',
                                 value: '...',
-                                icon: Icons.event_outlined,
+                                icon:
+                                    Icons.event_outlined,
                               ),
                             ],
                           );
@@ -626,61 +585,89 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                               _StatCard(
                                 title: 'Total Users',
                                 value: '—',
-                                icon: Icons.people_outline,
+                                icon:
+                                    Icons.people_outline,
                               ),
                               _StatCard(
                                 title: 'Sermons',
                                 value: '—',
-                                icon: Icons.play_circle_outline,
+                                icon:
+                                    Icons.play_circle_outline,
                               ),
                               _StatCard(
                                 title: 'Books',
                                 value: '—',
-                                icon: Icons.library_books_outlined,
+                                icon:
+                                    Icons.library_books_outlined,
                               ),
                               _StatCard(
                                 title: 'Events',
                                 value: '—',
-                                icon: Icons.event_outlined,
+                                icon:
+                                    Icons.event_outlined,
                               ),
                             ],
                           );
                         }
 
                         final int users =
-                            usersSnapshot.data?.docs.length ?? 0;
+                            usersSnapshot
+                                    .data
+                                    ?.docs
+                                    .length ??
+                                0;
 
                         final int sermons =
-                            sermonsSnapshot.data?.docs.length ?? 0;
+                            sermonsSnapshot
+                                    .data
+                                    ?.docs
+                                    .length ??
+                                0;
 
                         final int books =
-                            booksSnapshot.data?.docs.length ?? 0;
+                            booksSnapshot
+                                    .data
+                                    ?.docs
+                                    .length ??
+                                0;
 
                         final int events =
-                            eventsSnapshot.data?.docs.length ?? 0;
+                            eventsSnapshot
+                                    .data
+                                    ?.docs
+                                    .length ??
+                                0;
 
                         return _buildStatisticsGrid(
                           columns: columns,
                           cards: [
                             _StatCard(
                               title: 'Total Users',
-                              value: users.toString(),
-                              icon: Icons.people_outline,
+                              value:
+                                  users.toString(),
+                              icon:
+                                  Icons.people_outline,
                             ),
                             _StatCard(
                               title: 'Sermons',
-                              value: sermons.toString(),
-                              icon: Icons.play_circle_outline,
+                              value:
+                                  sermons.toString(),
+                              icon:
+                                  Icons.play_circle_outline,
                             ),
                             _StatCard(
                               title: 'Books',
-                              value: books.toString(),
-                              icon: Icons.library_books_outlined,
+                              value:
+                                  books.toString(),
+                              icon:
+                                  Icons.library_books_outlined,
                             ),
                             _StatCard(
                               title: 'Events',
-                              value: events.toString(),
-                              icon: Icons.event_outlined,
+                              value:
+                                  events.toString(),
+                              icon:
+                                  Icons.event_outlined,
                             ),
                           ],
                         );
@@ -704,9 +691,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       crossAxisCount: columns,
       crossAxisSpacing: 18,
       mainAxisSpacing: 18,
-      childAspectRatio: columns == 1 ? 3.3 : 2.6,
+      childAspectRatio:
+          columns == 1 ? 3.3 : 2.6,
       shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
+      physics:
+          const NeverScrollableScrollPhysics(),
       children: cards,
     );
   }
@@ -724,16 +713,19 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Container(
-          constraints: const BoxConstraints(
+          constraints:
+              const BoxConstraints(
             maxWidth: 600,
           ),
           width: double.infinity,
           padding: const EdgeInsets.all(40),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
+            borderRadius:
+                BorderRadius.circular(24),
             border: Border.all(
-              color: const Color(0xFFE9E5EA),
+              color:
+                  const Color(0xFFE9E5EA),
             ),
           ),
           child: Column(
@@ -743,14 +735,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 width: 80,
                 height: 80,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF350044)
-                      .withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(20),
+                  color:
+                      const Color(0xFF350044)
+                          .withValues(alpha: 0.08),
+                  borderRadius:
+                      BorderRadius.circular(20),
                 ),
                 child: Icon(
                   icon,
                   size: 38,
-                  color: const Color(0xFF350044),
+                  color:
+                      const Color(0xFF350044),
                 ),
               ),
               const SizedBox(height: 22),
@@ -758,13 +753,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 title,
                 style: const TextStyle(
                   fontSize: 26,
-                  fontWeight: FontWeight.w800,
+                  fontWeight:
+                      FontWeight.w800,
                 ),
               ),
               const SizedBox(height: 10),
               Text(
                 description,
-                textAlign: TextAlign.center,
+                textAlign:
+                    TextAlign.center,
                 style: const TextStyle(
                   fontSize: 14,
                   color: Colors.black54,
@@ -772,19 +769,24 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               ),
               const SizedBox(height: 22),
               Container(
-                padding: const EdgeInsets.symmetric(
+                padding:
+                    const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 9,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF7F5F8),
-                  borderRadius: BorderRadius.circular(30),
+                  color:
+                      const Color(0xFFF7F5F8),
+                  borderRadius:
+                      BorderRadius.circular(30),
                 ),
                 child: const Text(
                   'Management section',
                   style: TextStyle(
-                    color: Color(0xFF350044),
-                    fontWeight: FontWeight.w700,
+                    color:
+                        Color(0xFF350044),
+                    fontWeight:
+                        FontWeight.w700,
                     fontSize: 12,
                   ),
                 ),
@@ -801,11 +803,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   // ============================================================
 
   Future<void> _logout() async {
-    final bool? confirmed = await showDialog<bool>(
+    final bool? confirmed =
+        await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Logout'),
+          title:
+              const Text('Logout'),
           content: const Text(
             'Are you sure you want to logout?',
           ),
@@ -817,7 +821,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   false,
                 );
               },
-              child: const Text('Cancel'),
+              child:
+                  const Text('Cancel'),
             ),
             ElevatedButton(
               onPressed: () {
@@ -826,11 +831,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   true,
                 );
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF350044),
-                foregroundColor: Colors.white,
+              style:
+                  ElevatedButton.styleFrom(
+                backgroundColor:
+                    const Color(0xFF350044),
+                foregroundColor:
+                    Colors.white,
               ),
-              child: const Text('Logout'),
+              child:
+                  const Text('Logout'),
             ),
           ],
         );
@@ -885,12 +894,15 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding:
+          const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius:
+            BorderRadius.circular(18),
         border: Border.all(
-          color: const Color(0xFFE9E5EA),
+          color:
+              const Color(0xFFE9E5EA),
         ),
       ),
       child: Row(
@@ -899,35 +911,44 @@ class _StatCard extends StatelessWidget {
             width: 46,
             height: 46,
             decoration: BoxDecoration(
-              color: const Color(0xFF350044)
-                  .withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(12),
+              color:
+                  const Color(0xFF350044)
+                      .withValues(alpha: 0.08),
+              borderRadius:
+                  BorderRadius.circular(12),
             ),
             child: Icon(
               icon,
-              color: const Color(0xFF350044),
+              color:
+                  const Color(0xFF350044),
               size: 22,
             ),
           ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment:
+                  MainAxisAlignment.center,
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style:
+                      const TextStyle(
                     fontSize: 12,
-                    color: Colors.black54,
+                    color:
+                        Colors.black54,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   value,
-                  style: const TextStyle(
+                  style:
+                      const TextStyle(
                     fontSize: 22,
-                    fontWeight: FontWeight.w800,
+                    fontWeight:
+                        FontWeight.w800,
                   ),
                 ),
               ],
@@ -943,7 +964,8 @@ class _StatCard extends StatelessWidget {
 // QUICK ACTION
 // ================================================================
 
-class _QuickAction extends StatelessWidget {
+class _QuickAction
+    extends StatelessWidget {
   final String title;
   final IconData icon;
   final VoidCallback onTap;
@@ -958,33 +980,43 @@ class _QuickAction extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(15),
+      borderRadius:
+          BorderRadius.circular(15),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(15),
+        borderRadius:
+            BorderRadius.circular(15),
         child: Container(
-          padding: const EdgeInsets.symmetric(
+          padding:
+              const EdgeInsets.symmetric(
             horizontal: 16,
           ),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(15),
+          decoration:
+              BoxDecoration(
+            borderRadius:
+                BorderRadius.circular(15),
             border: Border.all(
-              color: const Color(0xFFE9E5EA),
+              color: const Color(
+                0xFFE9E5EA,
+              ),
             ),
           ),
           child: Row(
             children: [
               Icon(
                 icon,
-                color: const Color(0xFF350044),
+                color:
+                    const Color(0xFF350044),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   title,
-                  style: const TextStyle(
+                  style:
+                      const TextStyle(
                     fontSize: 13,
-                    fontWeight: FontWeight.w700,
+                    fontWeight:
+                        FontWeight.w700,
                   ),
                 ),
               ),

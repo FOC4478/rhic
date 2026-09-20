@@ -12,13 +12,11 @@ class AdminEventsScreen extends StatefulWidget {
   const AdminEventsScreen({super.key});
 
   @override
-  State<AdminEventsScreen> createState() =>
-      _AdminEventsScreenState();
+  State<AdminEventsScreen> createState() => _AdminEventsScreenState();
 }
 
 class _AdminEventsScreenState extends State<AdminEventsScreen> {
-  final ContentRepository _repository =
-      ContentRepository.instance;
+  final ContentRepository _repository = ContentRepository.instance;
 
   Future<void> _openEventForm([EventModel? event]) async {
     await showDialog<bool>(
@@ -62,9 +60,7 @@ class _AdminEventsScreenState extends State<AdminEventsScreen> {
       },
     );
 
-    if (confirmed != true) {
-      return;
-    }
+    if (confirmed != true) return;
 
     try {
       await _repository.deleteCurrentEvent();
@@ -105,8 +101,7 @@ class _AdminEventsScreenState extends State<AdminEventsScreen> {
             );
           }
 
-          if (snapshot.connectionState ==
-              ConnectionState.waiting) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
               child: CircularProgressIndicator(
                 color: Color(0xFF6B1FA2),
@@ -116,38 +111,44 @@ class _AdminEventsScreenState extends State<AdminEventsScreen> {
 
           final event = snapshot.data;
 
-          return CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: _buildHeader(
-                  hasEvent: event != null &&
-                      event.imageObjectKey.trim().isNotEmpty,
-                ),
-              ),
-              if (event == null ||
-                  event.imageObjectKey.trim().isEmpty)
-                const SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: _EmptyState(),
-                )
-              else
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(
-                    20,
-                    8,
-                    20,
-                    30,
-                  ),
-                  sliver: SliverToBoxAdapter(
-                    child: _CurrentEventCard(
-                      event: event,
-                      onReplace: () =>
-                          _openEventForm(event),
-                      onDelete: _deleteEvent,
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              final width = constraints.maxWidth;
+
+              return CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: _buildHeader(
+                      width: width,
+                      hasEvent: event != null &&
+                          event.imageObjectKey.trim().isNotEmpty,
                     ),
                   ),
-                ),
-            ],
+                  if (event == null ||
+                      event.imageObjectKey.trim().isEmpty)
+                    const SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: _EmptyState(),
+                    )
+                  else
+                    SliverPadding(
+                      padding: EdgeInsets.fromLTRB(
+                        width < 600 ? 14 : 20,
+                        8,
+                        width < 600 ? 14 : 20,
+                        30,
+                      ),
+                      sliver: SliverToBoxAdapter(
+                        child: _CurrentEventCard(
+                          event: event,
+                          onReplace: () => _openEventForm(event),
+                          onDelete: _deleteEvent,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
           );
         },
       ),
@@ -162,116 +163,114 @@ class _AdminEventsScreenState extends State<AdminEventsScreen> {
   }
 
   Widget _buildHeader({
+    required double width,
     required bool hasEvent,
   }) {
+    final isMobile = width < 650;
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        20,
-        24,
-        20,
+      padding: EdgeInsets.fromLTRB(
+        isMobile ? 14 : 20,
+        isMobile ? 12 : 20,
+        isMobile ? 14 : 20,
         18,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              IconButton(
+                tooltip: 'Open menu',
+                onPressed: () {
+                  final scaffoldState = Scaffold.maybeOf(context);
+
+                  if (scaffoldState != null &&
+                      scaffoldState.hasDrawer) {
+                    scaffoldState.openDrawer();
+                  }
+                },
+                icon: const Icon(
+                  Icons.menu,
+                  color: Color(0xFF3D004D),
+                ),
+              ),
+              const SizedBox(width: 4),
               Expanded(
                 child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Events',
                       style: TextStyle(
-                        fontSize: 28,
+                        fontSize: isMobile ? 24 : 28,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF3D004D),
+                        color: const Color(0xFF3D004D),
                       ),
                     ),
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 4),
                     Text(
                       hasEvent
                           ? 'Current event flyer'
                           : 'No event flyer published',
                       style: TextStyle(
                         color: Colors.grey.shade600,
-                        fontSize: 14,
+                        fontSize: isMobile ? 12 : 14,
                       ),
                     ),
                   ],
                 ),
               ),
-              FilledButton.icon(
+              if (!isMobile)
+                FilledButton.icon(
+                  onPressed: () => _openEventForm(),
+                  icon: const Icon(
+                    Icons.upload_file_outlined,
+                  ),
+                  label: Text(
+                    hasEvent ? 'Replace Flyer' : 'Upload Flyer',
+                  ),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFF6B1FA2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 14,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          if (isMobile) ...[
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
                 onPressed: () => _openEventForm(),
                 icon: const Icon(
                   Icons.upload_file_outlined,
                 ),
                 label: Text(
-                  hasEvent
-                      ? 'Replace Flyer'
-                      : 'Upload Flyer',
+                  hasEvent ? 'Replace Flyer' : 'Upload Flyer',
                 ),
                 style: FilledButton.styleFrom(
-                  backgroundColor:
-                      const Color(0xFF6B1FA2),
+                  backgroundColor: const Color(0xFF6B1FA2),
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 14,
+                    vertical: 13,
                   ),
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: Colors.grey.shade200,
-              ),
             ),
-            child: Row(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF1E7F5),
-                    borderRadius:
-                        BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.info_outline,
-                    color: Color(0xFF6B1FA2),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Text(
-                    'Only one event flyer is displayed in the member app. '
-                    'Uploading a new flyer replaces the previous event. '
-                    'The flyer should contain the event date, time, '
-                    'description and location.',
-                    style: TextStyle(
-                      color: Color(0xFF55505A),
-                      height: 1.45,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          ],
         ],
       ),
     );
   }
 }
+
+/* -------------------------------------------------------------------------- */
+/* CURRENT EVENT CARD                                                         */
+/* -------------------------------------------------------------------------- */
 
 class _CurrentEventCard extends StatelessWidget {
   final EventModel event;
@@ -286,120 +285,139 @@ class _CurrentEventCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      clipBehavior: Clip.antiAlias,
-      color: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(
-          color: Colors.grey.shade200,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              18,
-              18,
-              18,
-              12,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final isMobile = width < 600;
+
+        return Card(
+          elevation: 0,
+          clipBehavior: Clip.antiAlias,
+          color: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(
+              isMobile ? 16 : 20,
             ),
-            child: Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    'Current Event Flyer',
-                    style: TextStyle(
-                      fontSize: 19,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF3D004D),
-                    ),
-                  ),
+            side: BorderSide(
+              color: Colors.grey.shade200,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  isMobile ? 14 : 18,
+                  isMobile ? 14 : 18,
+                  isMobile ? 14 : 18,
+                  12,
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 11,
-                    vertical: 7,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Current Event Flyer',
+                        style: TextStyle(
+                          fontSize: isMobile ? 17 : 19,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF3D004D),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isMobile ? 8 : 11,
+                        vertical: isMobile ? 6 : 7,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade700,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        'Published',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: isMobile ? 10 : 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isMobile ? 12 : 18,
+                ),
+                child: Container(
+                  width: double.infinity,
+                  constraints: BoxConstraints(
+                    minHeight: isMobile ? 260 : 400,
+                    maxHeight: isMobile ? 500 : 700,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.green.shade700,
-                    borderRadius:
-                        BorderRadius.circular(20),
+                    color: const Color(0xFFF5F0F7),
+                    borderRadius: BorderRadius.circular(
+                      isMobile ? 14 : 18,
+                    ),
                   ),
-                  child: const Text(
-                    'Published',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12,
+                  clipBehavior: Clip.antiAlias,
+                  child: AspectRatio(
+                    aspectRatio: isMobile ? 0.78 : 1.0,
+                    child: _EventImage(
+                      objectKey: event.imageObjectKey,
                     ),
                   ),
                 ),
-              ],
-            ),
-          ),
-          Container(
-            width: double.infinity,
-            constraints: const BoxConstraints(
-              minHeight: 400,
-              maxHeight: 700,
-            ),
-            margin: const EdgeInsets.fromLTRB(
-              18,
-              0,
-              18,
-              16,
-            ),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF5F0F7),
-              borderRadius:
-                  BorderRadius.circular(18),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: _EventImage(
-              objectKey: event.imageObjectKey,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              18,
-              0,
-              18,
-              18,
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: onReplace,
-                    icon: const Icon(
-                      Icons.swap_horiz_outlined,
-                    ),
-                    label: const Text(
-                      'Replace Flyer',
-                    ),
-                  ),
+              ),
+
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  isMobile ? 12 : 18,
+                  12,
+                  isMobile ? 12 : 18,
+                  isMobile ? 14 : 18,
                 ),
-                const SizedBox(width: 10),
-                IconButton(
-                  tooltip: 'Remove Flyer',
-                  onPressed: onDelete,
-                  icon: const Icon(
-                    Icons.delete_outline,
-                    color: Colors.red,
-                  ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: onReplace,
+                        icon: const Icon(
+                          Icons.swap_horiz_outlined,
+                        ),
+                        label: Text(
+                          isMobile
+                              ? 'Replace'
+                              : 'Replace Flyer',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    IconButton(
+                      tooltip: 'Remove Flyer',
+                      onPressed: onDelete,
+                      icon: const Icon(
+                        Icons.delete_outline,
+                        color: Colors.red,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
+
+/* -------------------------------------------------------------------------- */
+/* EVENT IMAGE                                                                */
+/* -------------------------------------------------------------------------- */
 
 class _EventImage extends StatefulWidget {
   final String objectKey;
@@ -409,8 +427,7 @@ class _EventImage extends StatefulWidget {
   });
 
   @override
-  State<_EventImage> createState() =>
-      _EventImageState();
+  State<_EventImage> createState() => _EventImageState();
 }
 
 class _EventImageState extends State<_EventImage> {
@@ -441,8 +458,7 @@ class _EventImageState extends State<_EventImage> {
       return;
     }
 
-    _urlFuture =
-        B2UploadService.instance.getEventDownloadUrl(
+    _urlFuture = B2UploadService.instance.getEventDownloadUrl(
       objectKey: widget.objectKey,
     );
   }
@@ -452,8 +468,7 @@ class _EventImageState extends State<_EventImage> {
     return FutureBuilder<String>(
       future: _urlFuture,
       builder: (context, snapshot) {
-        if (snapshot.connectionState ==
-            ConnectionState.waiting) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
             child: CircularProgressIndicator(
               color: Color(0xFF6B1FA2),
@@ -479,22 +494,27 @@ class _EventImageState extends State<_EventImage> {
         return Image.network(
           snapshot.data!,
           fit: BoxFit.contain,
-          errorBuilder:
-              (_, __, ___) => Container(
-            color: const Color(0xFFF1EAF4),
-            child: const Center(
-              child: Icon(
-                Icons.broken_image_outlined,
-                size: 56,
-                color: Color(0xFF6B1FA2),
+          errorBuilder: (_, __, ___) {
+            return Container(
+              color: const Color(0xFFF1EAF4),
+              child: const Center(
+                child: Icon(
+                  Icons.broken_image_outlined,
+                  size: 56,
+                  color: Color(0xFF6B1FA2),
+                ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );
   }
 }
+
+/* -------------------------------------------------------------------------- */
+/* EVENT FORM DIALOG                                                          */
+/* -------------------------------------------------------------------------- */
 
 class _EventFormDialog extends StatefulWidget {
   final EventModel? event;
@@ -506,12 +526,10 @@ class _EventFormDialog extends StatefulWidget {
   });
 
   @override
-  State<_EventFormDialog> createState() =>
-      _EventFormDialogState();
+  State<_EventFormDialog> createState() => _EventFormDialogState();
 }
 
-class _EventFormDialogState
-    extends State<_EventFormDialog> {
+class _EventFormDialogState extends State<_EventFormDialog> {
   Uint8List? _flyerPreviewBytes;
 
   String _imageObjectKey = '';
@@ -533,8 +551,7 @@ class _EventFormDialogState
   }
 
   Future<void> _pickAndUploadFlyer() async {
-    if (_isUploadingFlyer ||
-        _isSaving) {
+    if (_isUploadingFlyer || _isSaving) {
       return;
     }
 
@@ -554,7 +571,6 @@ class _EventFormDialogState
       }
 
       final file = result.first;
-
       final bytes = await file.readAsBytes();
 
       if (bytes.isEmpty) {
@@ -573,28 +589,11 @@ class _EventFormDialogState
         _flyerFileName = fileName;
       });
 
-      // ========================================================
-      // EVENT FLYER UPLOAD
-      // ========================================================
-      //
-      // IMPORTANT:
-      // resourceType MUST be "event".
-      //
-      // The backend will therefore store the flyer under:
-      //
-      // events/flyers/...
-      //
-      // instead of:
-      //
-      // sermons/image/...
-      // ========================================================
-
       final uploadResult =
           await B2UploadService.instance.uploadFile(
         bytes: bytes,
         fileName: fileName,
-        contentType:
-            _imageContentType(fileName),
+        contentType: _imageContentType(fileName),
         mediaType: 'image',
         resourceType: 'event',
       );
@@ -602,8 +601,7 @@ class _EventFormDialogState
       if (!mounted) return;
 
       setState(() {
-        _imageObjectKey =
-            uploadResult.objectKey;
+        _imageObjectKey = uploadResult.objectKey;
         _isUploadingFlyer = false;
       });
 
@@ -686,8 +684,7 @@ class _EventFormDialogState
 
     try {
       await widget.repository.saveEvent(
-        imageObjectKey:
-            _imageObjectKey.trim(),
+        imageObjectKey: _imageObjectKey.trim(),
         createdBy: user.uid,
       );
 
@@ -695,9 +692,7 @@ class _EventFormDialogState
 
       Navigator.of(context).pop(true);
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             _isEditing
@@ -730,152 +725,234 @@ class _EventFormDialogState
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(
-        _isEditing
-            ? 'Replace Event Flyer'
-            : 'Upload Event Flyer',
-        style: const TextStyle(
-          fontWeight: FontWeight.w800,
-          color: Color(0xFF3D004D),
-        ),
+    final screenWidth =
+        MediaQuery.sizeOf(context).width;
+
+    final screenHeight =
+        MediaQuery.sizeOf(context).height;
+
+    final isMobile = screenWidth < 600;
+
+    final dialogWidth = isMobile
+        ? screenWidth - 32
+        : screenWidth > 900
+            ? 700.0
+            : screenWidth - 80;
+
+    final previewHeight = isMobile
+        ? (screenHeight * 0.42).clamp(220.0, 380.0)
+        : (screenHeight * 0.50).clamp(300.0, 480.0);
+
+    return Dialog(
+      insetPadding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 12 : 24,
+        vertical: isMobile ? 12 : 24,
       ),
-      content: SizedBox(
-        width: 620,
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Event Flyer',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF3D004D),
-                ),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: dialogWidth,
+          maxHeight: screenHeight - 24,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                isMobile ? 16 : 22,
+                isMobile ? 14 : 18,
+                isMobile ? 10 : 14,
+                10,
               ),
-              const SizedBox(height: 6),
-              Text(
-                'Upload the event notice. The flyer should contain '
-                'the event information such as date, time, '
-                'description and location.',
-                style: TextStyle(
-                  color: Colors.grey.shade600,
-                  height: 1.4,
-                ),
-              ),
-              const SizedBox(height: 14),
-              Container(
-                width: double.infinity,
-                height: 400,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF5F0F7),
-                  borderRadius:
-                      BorderRadius.circular(18),
-                  border: Border.all(
-                    color: Colors.grey.shade300,
-                  ),
-                ),
-                clipBehavior:
-                    Clip.antiAlias,
-                child: _flyerPreviewBytes != null
-                    ? Image.memory(
-                        _flyerPreviewBytes!,
-                        fit: BoxFit.contain,
-                      )
-                    : _ExistingFlyer(
-                        objectKey:
-                            _imageObjectKey,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _isEditing
+                          ? 'Replace Event Flyer'
+                          : 'Upload Event Flyer',
+                      style: TextStyle(
+                        fontSize: isMobile ? 18 : 21,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF3D004D),
                       ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: _isSaving ||
+                            _isUploadingFlyer
+                        ? null
+                        : () {
+                            Navigator.of(context).pop();
+                          },
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
               ),
-              const SizedBox(height: 14),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed:
-                      _isUploadingFlyer ||
-                              _isSaving
-                          ? null
-                          : _pickAndUploadFlyer,
-                  icon: _isUploadingFlyer
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child:
-                              CircularProgressIndicator(
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : const Icon(
-                          Icons.upload_file_outlined,
+            ),
+            const Divider(height: 1),
+            Flexible(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(
+                  isMobile ? 16 : 22,
+                ),
+                child: Column(
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Event Flyer',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF3D004D),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Upload the event flyer. '
+                      'The flyer should contain the event '
+                      'information such as date, time, '
+                      'description and location.',
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        height: 1.4,
+                        fontSize: isMobile ? 12 : 14,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Container(
+                      width: double.infinity,
+                      height: previewHeight,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF5F0F7),
+                        borderRadius:
+                            BorderRadius.circular(18),
+                        border: Border.all(
+                          color: Colors.grey.shade300,
                         ),
-                  label: Text(
-                    _isUploadingFlyer
-                        ? 'Uploading Flyer...'
-                        : _imageObjectKey.isEmpty
-                            ? 'Select Flyer'
-                            : 'Select Another Flyer',
-                  ),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: _flyerPreviewBytes != null
+                          ? Image.memory(
+                              _flyerPreviewBytes!,
+                              fit: BoxFit.contain,
+                            )
+                          : _ExistingFlyer(
+                              objectKey: _imageObjectKey,
+                            ),
+                    ),
+                    const SizedBox(height: 14),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed:
+                            _isUploadingFlyer ||
+                                    _isSaving
+                                ? null
+                                : _pickAndUploadFlyer,
+                        icon: _isUploadingFlyer
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child:
+                                    CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(
+                                Icons.upload_file_outlined,
+                              ),
+                        label: Text(
+                          _isUploadingFlyer
+                              ? 'Uploading Flyer...'
+                              : _imageObjectKey.isEmpty
+                                  ? 'Select Flyer'
+                                  : 'Select Another Flyer',
+                        ),
+                      ),
+                    ),
+                    if (_flyerFileName.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        _flyerFileName,
+                        maxLines: 1,
+                        overflow:
+                            TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
-              if (_flyerFileName.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(
-                  _flyerFileName,
-                  maxLines: 1,
-                  overflow:
-                      TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 12,
+            ),
+            const Divider(height: 1),
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                isMobile ? 12 : 18,
+                10,
+                isMobile ? 12 : 18,
+                12,
+              ),
+              child: Row(
+                mainAxisAlignment:
+                    MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: _isSaving ||
+                            _isUploadingFlyer
+                        ? null
+                        : () {
+                            Navigator.of(context).pop();
+                          },
+                    child: const Text('Cancel'),
                   ),
-                ),
-              ],
-            ],
-          ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: FilledButton(
+                      onPressed:
+                          _isSaving ||
+                                  _isUploadingFlyer
+                              ? null
+                              : _save,
+                      style: FilledButton.styleFrom(
+                        backgroundColor:
+                            const Color(0xFF6B1FA2),
+                      ),
+                      child: _isSaving
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child:
+                                  CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(
+                              _isEditing
+                                  ? 'Publish Replacement'
+                                  : 'Publish Flyer',
+                              overflow:
+                                  TextOverflow.ellipsis,
+                            ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: _isSaving ||
-                  _isUploadingFlyer
-              ? null
-              : () {
-                  Navigator.of(context).pop();
-                },
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed:
-              _isSaving ||
-                      _isUploadingFlyer
-                  ? null
-                  : _save,
-          style: FilledButton.styleFrom(
-            backgroundColor:
-                const Color(0xFF6B1FA2),
-          ),
-          child: _isSaving
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child:
-                      CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : Text(
-                  _isEditing
-                      ? 'Publish Replacement'
-                      : 'Publish Flyer',
-                ),
-        ),
-      ],
     );
   }
 }
+
+/* -------------------------------------------------------------------------- */
+/* EXISTING FLYER                                                             */
+/* -------------------------------------------------------------------------- */
 
 class _ExistingFlyer extends StatefulWidget {
   final String objectKey;
@@ -905,8 +982,7 @@ class _ExistingFlyerState
   ) {
     super.didUpdateWidget(oldWidget);
 
-    if (oldWidget.objectKey !=
-        widget.objectKey) {
+    if (oldWidget.objectKey != widget.objectKey) {
       _load();
     }
   }
@@ -918,10 +994,6 @@ class _ExistingFlyerState
       );
       return;
     }
-
-    // ==========================================================
-    // EVENT FLYERS USE THE EVENT ENDPOINT
-    // ==========================================================
 
     _future =
         B2UploadService.instance.getEventDownloadUrl(
@@ -970,19 +1042,24 @@ class _ExistingFlyerState
         return Image.network(
           snapshot.data!,
           fit: BoxFit.contain,
-          errorBuilder:
-              (_, __, ___) => const Center(
-            child: Icon(
-              Icons.broken_image_outlined,
-              size: 48,
-              color: Color(0xFF6B1FA2),
-            ),
-          ),
+          errorBuilder: (_, __, ___) {
+            return const Center(
+              child: Icon(
+                Icons.broken_image_outlined,
+                size: 48,
+                color: Color(0xFF6B1FA2),
+              ),
+            );
+          },
         );
       },
     );
   }
 }
+
+/* -------------------------------------------------------------------------- */
+/* EMPTY STATE                                                                */
+/* -------------------------------------------------------------------------- */
 
 class _EmptyState extends StatelessWidget {
   const _EmptyState();
@@ -990,11 +1067,10 @@ class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(40),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
         child: Column(
-          mainAxisAlignment:
-              MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               Icons.event_outlined,
@@ -1026,6 +1102,10 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
+/* -------------------------------------------------------------------------- */
+/* ERROR STATE                                                                */
+/* -------------------------------------------------------------------------- */
+
 class _ErrorState extends StatelessWidget {
   final String message;
 
@@ -1036,7 +1116,7 @@ class _ErrorState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Text(
           'Unable to load event.\n\n$message',
@@ -1049,4 +1129,3 @@ class _ErrorState extends StatelessWidget {
     );
   }
 }
-

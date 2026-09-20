@@ -426,63 +426,55 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   } else if (constraints.maxWidth >= 650) {
                     columns = 2;
                   }
+return GridView.builder(
+  shrinkWrap: true,
+  physics: const NeverScrollableScrollPhysics(),
+  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+    crossAxisCount: columns,
+    crossAxisSpacing: 15,
+    mainAxisSpacing: 15,
+    mainAxisExtent: constraints.maxWidth < 500
+        ? 68
+        : 82,
+  ),
+  itemCount: 6,
+  itemBuilder: (context, index) {
+    final actions = [
+      _QuickAction(
+        title: 'Add Sermon',
+        icon: Icons.add_circle_outline,
+        onTap: () => _selectMenu(1),
+      ),
+      _QuickAction(
+        title: 'Add Book',
+        icon: Icons.library_add_outlined,
+        onTap: () => _selectMenu(2),
+      ),
+      _QuickAction(
+        title: 'Create Event',
+        icon: Icons.event_available_outlined,
+        onTap: () => _selectMenu(3),
+      ),
+      _QuickAction(
+        title: 'Manage Community',
+        icon: Icons.groups_outlined,
+        onTap: () => _selectMenu(6),
+      ),
+      _QuickAction(
+        title: 'Manage Users',
+        icon: Icons.people_outline,
+        onTap: () => _selectMenu(7),
+      ),
+      _QuickAction(
+        title: 'Payment Settings',
+        icon: Icons.payments_outlined,
+        onTap: () => _selectMenu(5),
+      ),
+    ];
 
-                  return GridView.count(
-                    crossAxisCount: columns,
-                    crossAxisSpacing: 15,
-                    mainAxisSpacing: 15,
-                    childAspectRatio:
-                        constraints.maxWidth < 500
-                            ? 3.2
-                            : 2.5,
-                    shrinkWrap: true,
-                    physics:
-                        const NeverScrollableScrollPhysics(),
-                    children: [
-                      _QuickAction(
-                        title: 'Add Sermon',
-                        icon:
-                            Icons.add_circle_outline,
-                        onTap: () =>
-                            _selectMenu(1),
-                      ),
-                      _QuickAction(
-                        title: 'Add Book',
-                        icon:
-                            Icons.library_add_outlined,
-                        onTap: () =>
-                            _selectMenu(2),
-                      ),
-                      _QuickAction(
-                        title: 'Create Event',
-                        icon:
-                            Icons.event_available_outlined,
-                        onTap: () =>
-                            _selectMenu(3),
-                      ),
-                      _QuickAction(
-                        title: 'Manage Community',
-                        icon:
-                            Icons.groups_outlined,
-                        onTap: () =>
-                            _selectMenu(6),
-                      ),
-                      _QuickAction(
-                        title: 'Manage Users',
-                        icon:
-                            Icons.people_outline,
-                        onTap: () =>
-                            _selectMenu(7),
-                      ),
-                      _QuickAction(
-                        title: 'Payment Settings',
-                        icon:
-                            Icons.payments_outlined,
-                        onTap: () =>
-                            _selectMenu(5),
-                      ),
-                    ],
-                  );
+    return actions[index];
+  },
+);
                 },
               ),
 
@@ -684,21 +676,35 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Widget _buildStatisticsGrid({
-    required int columns,
-    required List<_StatCard> cards,
-  }) {
-    return GridView.count(
+  required int columns,
+  required List<_StatCard> cards,
+}) {
+  double cardHeight;
+
+  if (columns == 1) {
+    cardHeight = 82;
+  } else if (columns == 2) {
+    cardHeight = 92;
+  } else {
+    cardHeight = 96;
+  }
+
+  return GridView.builder(
+    shrinkWrap: true,
+    physics: const NeverScrollableScrollPhysics(),
+    padding: EdgeInsets.zero,
+    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
       crossAxisCount: columns,
       crossAxisSpacing: 18,
       mainAxisSpacing: 18,
-      childAspectRatio:
-          columns == 1 ? 3.3 : 2.6,
-      shrinkWrap: true,
-      physics:
-          const NeverScrollableScrollPhysics(),
-      children: cards,
-    );
-  }
+      mainAxisExtent: cardHeight,
+    ),
+    itemCount: cards.length,
+    itemBuilder: (context, index) {
+      return cards[index];
+    },
+  );
+}
 
   // ============================================================
   // COMING SOON PAGE
@@ -894,61 +900,66 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding:
-          const EdgeInsets.all(18),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 12,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius:
-            BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color:
-              const Color(0xFFE9E5EA),
+          color: const Color(0xFFE9E5EA),
         ),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            width: 46,
-            height: 46,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
-              color:
-                  const Color(0xFF350044)
-                      .withValues(alpha: 0.08),
-              borderRadius:
-                  BorderRadius.circular(12),
+              color: const Color(0xFF350044).withValues(
+                alpha: 0.08,
+              ),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
               icon,
-              color:
-                  const Color(0xFF350044),
-              size: 22,
+              color: const Color(0xFF350044),
+              size: 21,
             ),
           ),
-          const SizedBox(width: 14),
+
+          const SizedBox(width: 12),
+
           Expanded(
             child: Column(
-              mainAxisAlignment:
-                  MainAxisAlignment.center,
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style:
-                      const TextStyle(
-                    fontSize: 12,
-                    color:
-                        Colors.black54,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Colors.black54,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
-                const SizedBox(height: 4),
+
+                const SizedBox(height: 2),
+
                 Text(
                   value,
-                  style:
-                      const TextStyle(
-                    fontSize: 22,
-                    fontWeight:
-                        FontWeight.w800,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 21,
+                    fontWeight: FontWeight.w800,
+                    height: 1.0,
                   ),
                 ),
               ],
@@ -964,8 +975,7 @@ class _StatCard extends StatelessWidget {
 // QUICK ACTION
 // ================================================================
 
-class _QuickAction
-    extends StatelessWidget {
+class _QuickAction extends StatelessWidget {
   final String title;
   final IconData icon;
   final VoidCallback onTap;
@@ -980,49 +990,51 @@ class _QuickAction
   Widget build(BuildContext context) {
     return Material(
       color: Colors.white,
-      borderRadius:
-          BorderRadius.circular(15),
+      borderRadius: BorderRadius.circular(15),
       child: InkWell(
         onTap: onTap,
-        borderRadius:
-            BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(15),
         child: Container(
-          padding:
-              const EdgeInsets.symmetric(
-            horizontal: 16,
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(
+            horizontal: 14,
+            vertical: 8,
           ),
-          decoration:
-              BoxDecoration(
-            borderRadius:
-                BorderRadius.circular(15),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(15),
             border: Border.all(
-              color: const Color(
-                0xFFE9E5EA,
-              ),
+              color: const Color(0xFFE9E5EA),
             ),
           ),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Icon(
                 icon,
-                color:
-                    const Color(0xFF350044),
+                color: const Color(0xFF350044),
+                size: 21,
               ),
+
               const SizedBox(width: 10),
+
               Expanded(
                 child: Text(
                   title,
-                  style:
-                      const TextStyle(
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
                     fontSize: 13,
-                    fontWeight:
-                        FontWeight.w700,
+                    fontWeight: FontWeight.w700,
+                    height: 1.1,
                   ),
                 ),
               ),
+
+              const SizedBox(width: 8),
+
               const Icon(
                 Icons.arrow_forward_ios,
-                size: 13,
+                size: 12,
                 color: Colors.black38,
               ),
             ],

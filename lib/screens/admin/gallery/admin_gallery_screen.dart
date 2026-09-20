@@ -1,4 +1,3 @@
-
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
@@ -41,8 +40,7 @@ class _AdminGalleryScreenState
   Future<void> _deleteGalleryItem(
     GalleryItem item,
   ) async {
-    final confirmed =
-        await showDialog<bool>(
+    final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(
@@ -139,217 +137,395 @@ class _AdminGalleryScreenState
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor:
-          const Color(0xFFF7F5F8),
-      appBar: AppBar(
-        title: const Text(
-          'Gallery',
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        backgroundColor: Colors.white,
-        foregroundColor:
-            const Color(0xFF3D004D),
-        elevation: 0,
-        actions: [
-          Padding(
-            padding:
-                const EdgeInsets.only(
-              right: 16,
-            ),
-            child: FilledButton.icon(
-              onPressed: () =>
-                  _openGalleryForm(),
-              icon: const Icon(
-                Icons.add_photo_alternate_outlined,
-              ),
-              label: const Text(
-                'Add Image',
-              ),
-              style:
-                  FilledButton.styleFrom(
-                backgroundColor:
-                    const Color(0xFF6B1FA2),
+    return Container(
+      color: const Color(0xFFF7F5F8),
+      child: SafeArea(
+        child: Column(
+          children: [
+            // ============================================================
+            // MENU ICON
+            // ============================================================
+
+            Container(
+              width: double.infinity,
+              height: 56,
+              color: Colors.white,
+              alignment: Alignment.centerLeft,
+              child: Builder(
+                builder: (menuContext) {
+                  return IconButton(
+                    tooltip: 'Menu',
+                    onPressed: () {
+                      Scaffold.maybeOf(
+                        menuContext,
+                      )?.openDrawer();
+                    },
+                    icon: const Icon(
+                      Icons.menu,
+                      color: Color(0xFF3D004D),
+                    ),
+                  );
+                },
               ),
             ),
-          ),
-        ],
-      ),
-      body: StreamBuilder<List<GalleryItem>>(
-        stream:
-            _repository.adminGalleryStream(),
-        builder: (
-          context,
-          snapshot,
-        ) {
-          if (snapshot.connectionState ==
-              ConnectionState.waiting) {
-            return const Center(
-              child:
-                  CircularProgressIndicator(),
-            );
-          }
 
-          if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding:
-                    const EdgeInsets.all(24),
-                child: Text(
-                  'Unable to load gallery.\n\n${snapshot.error}',
-                  textAlign:
-                      TextAlign.center,
-                ),
-              ),
-            );
-          }
+            // ============================================================
+            // GALLERY CONTENT
+            // ============================================================
 
-          final items =
-              snapshot.data ?? [];
+            Expanded(
+              child: StreamBuilder<List<GalleryItem>>(
+                stream:
+                    _repository.adminGalleryStream(),
+                builder: (
+                  context,
+                  snapshot,
+                ) {
+                  if (snapshot.connectionState ==
+                      ConnectionState.waiting) {
+                    return const Center(
+                      child:
+                          CircularProgressIndicator(),
+                    );
+                  }
 
-          final filtered =
-              items.where((item) {
-            final query =
-                _searchQuery
-                    .trim()
-                    .toLowerCase();
-
-            if (query.isEmpty) {
-              return true;
-            }
-
-            return item.title
-                    .toLowerCase()
-                    .contains(query) ||
-                item.description
-                    .toLowerCase()
-                    .contains(query);
-          }).toList();
-
-          return Column(
-            children: [
-              Padding(
-                padding:
-                    const EdgeInsets.all(20),
-                child: TextField(
-                  onChanged: (value) {
-                    setState(() {
-                      _searchQuery = value;
-                    });
-                  },
-                  decoration:
-                      InputDecoration(
-                    hintText:
-                        'Search gallery...',
-                    prefixIcon:
-                        const Icon(
-                      Icons.search,
-                    ),
-                    filled: true,
-                    fillColor:
-                        Colors.white,
-                    border:
-                        OutlineInputBorder(
-                      borderRadius:
-                          BorderRadius.circular(
-                        14,
-                      ),
-                      borderSide:
-                          BorderSide.none,
-                    ),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: filtered.isEmpty
-                    ? const Center(
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Padding(
+                        padding:
+                            const EdgeInsets.all(24),
                         child: Text(
-                          'No gallery images found.',
-                          style: TextStyle(
-                            color:
-                                Colors.grey,
-                            fontSize: 16,
+                          'Unable to load gallery.\n\n${snapshot.error}',
+                          textAlign:
+                              TextAlign.center,
+                        ),
+                      ),
+                    );
+                  }
+
+                  final items =
+                      snapshot.data ?? [];
+
+                  final filtered =
+                      items.where((item) {
+                    final query =
+                        _searchQuery
+                            .trim()
+                            .toLowerCase();
+
+                    if (query.isEmpty) {
+                      return true;
+                    }
+
+                    return item.title
+                            .toLowerCase()
+                            .contains(query) ||
+                        item.description
+                            .toLowerCase()
+                            .contains(query);
+                  }).toList();
+
+                  return Column(
+                    children: [
+                      // ====================================================
+                      // HEADER
+                      // ====================================================
+
+                      Padding(
+                        padding:
+                            const EdgeInsets.fromLTRB(
+                          20,
+                          18,
+                          20,
+                          12,
+                        ),
+                        child: LayoutBuilder(
+                          builder: (
+                            context,
+                            constraints,
+                          ) {
+                            final isMobile =
+                                constraints.maxWidth <
+                                    650;
+
+                            if (isMobile) {
+                              return Column(
+                                crossAxisAlignment:
+                                    CrossAxisAlignment
+                                        .start,
+                                children: [
+                                  const Text(
+                                    'Gallery',
+                                    style:
+                                        TextStyle(
+                                      fontSize: 26,
+                                      fontWeight:
+                                          FontWeight
+                                              .w800,
+                                      color:
+                                          Color(
+                                        0xFF3D004D,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(
+                                    height: 4,
+                                  ),
+                                  const Text(
+                                    'Manage gallery images visible to members.',
+                                    style:
+                                        TextStyle(
+                                      color:
+                                          Colors.grey,
+                                    ),
+                                  ),
+                                  const SizedBox(
+                                    height: 14,
+                                  ),
+                                  SizedBox(
+                                    width:
+                                        double.infinity,
+                                    child:
+                                        FilledButton
+                                            .icon(
+                                      onPressed: () =>
+                                          _openGalleryForm(),
+                                      icon:
+                                          const Icon(
+                                        Icons
+                                            .add_photo_alternate_outlined,
+                                      ),
+                                      label:
+                                          const Text(
+                                        'Add Image',
+                                      ),
+                                      style:
+                                          FilledButton
+                                              .styleFrom(
+                                        backgroundColor:
+                                            const Color(
+                                          0xFF6B1FA2,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }
+
+                            return Row(
+                              crossAxisAlignment:
+                                  CrossAxisAlignment
+                                      .center,
+                              children: [
+                                const Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment
+                                            .start,
+                                    children: [
+                                      Text(
+                                        'Gallery',
+                                        style:
+                                            TextStyle(
+                                          fontSize: 28,
+                                          fontWeight:
+                                              FontWeight
+                                                  .w800,
+                                          color:
+                                              Color(
+                                            0xFF3D004D,
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        height: 4,
+                                      ),
+                                      Text(
+                                        'Manage gallery images visible to members.',
+                                        style:
+                                            TextStyle(
+                                          color:
+                                              Colors.grey,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(
+                                  width: 16,
+                                ),
+                                FilledButton.icon(
+                                  onPressed: () =>
+                                      _openGalleryForm(),
+                                  icon:
+                                      const Icon(
+                                    Icons
+                                        .add_photo_alternate_outlined,
+                                  ),
+                                  label:
+                                      const Text(
+                                    'Add Image',
+                                  ),
+                                  style:
+                                      FilledButton
+                                          .styleFrom(
+                                    backgroundColor:
+                                        const Color(
+                                      0xFF6B1FA2,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+
+                      // ====================================================
+                      // SEARCH
+                      // ====================================================
+
+                      Padding(
+                        padding:
+                            const EdgeInsets.fromLTRB(
+                          20,
+                          0,
+                          20,
+                          20,
+                        ),
+                        child: TextField(
+                          onChanged: (value) {
+                            setState(() {
+                              _searchQuery = value;
+                            });
+                          },
+                          decoration:
+                              InputDecoration(
+                            hintText:
+                                'Search gallery...',
+                            prefixIcon:
+                                const Icon(
+                              Icons.search,
+                            ),
+                            filled: true,
+                            fillColor:
+                                Colors.white,
+                            border:
+                                OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius
+                                      .circular(
+                                14,
+                              ),
+                              borderSide:
+                                  BorderSide.none,
+                            ),
                           ),
                         ),
-                      )
-                    : LayoutBuilder(
-                        builder: (
-                          context,
-                          constraints,
-                        ) {
-                          int columns = 1;
-
-                          if (constraints
-                                  .maxWidth >=
-                              1200) {
-                            columns = 4;
-                          } else if (constraints
-                                  .maxWidth >=
-                              850) {
-                            columns = 3;
-                          } else if (constraints
-                                  .maxWidth >=
-                              550) {
-                            columns = 2;
-                          }
-
-                          return GridView.builder(
-                            padding:
-                                const EdgeInsets
-                                    .fromLTRB(
-                              20,
-                              0,
-                              20,
-                              20,
-                            ),
-                            gridDelegate:
-                                SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount:
-                                  columns,
-                              crossAxisSpacing:
-                                  16,
-                              mainAxisSpacing:
-                                  16,
-                              childAspectRatio:
-                                  0.78,
-                            ),
-                            itemCount:
-                                filtered.length,
-                            itemBuilder:
-                                (
-                              context,
-                              index,
-                            ) {
-                              final item =
-                                  filtered[
-                                      index];
-
-                              return _AdminGalleryCard(
-                                item: item,
-                                onEdit: () =>
-                                    _openGalleryForm(
-                                  item: item,
-                                ),
-                                onDelete: () =>
-                                    _deleteGalleryItem(
-                                  item,
-                                ),
-                                onTogglePublished:
-                                    () =>
-                                        _togglePublished(
-                                  item,
-                                ),
-                              );
-                            },
-                          );
-                        },
                       ),
+
+                      // ====================================================
+                      // GALLERY GRID
+                      // ====================================================
+
+                      Expanded(
+                        child: filtered.isEmpty
+                            ? const Center(
+                                child: Text(
+                                  'No gallery images found.',
+                                  style:
+                                      TextStyle(
+                                    color:
+                                        Colors.grey,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              )
+                            : LayoutBuilder(
+                                builder: (
+                                  context,
+                                  constraints,
+                                ) {
+                                  int columns = 1;
+
+                                  if (constraints
+                                          .maxWidth >=
+                                      1200) {
+                                    columns = 4;
+                                  } else if (constraints
+                                          .maxWidth >=
+                                      850) {
+                                    columns = 3;
+                                  } else if (constraints
+                                          .maxWidth >=
+                                      550) {
+                                    columns = 2;
+                                  }
+
+                                  return GridView.builder(
+                                    padding:
+                                        const EdgeInsets
+                                            .fromLTRB(
+                                      20,
+                                      0,
+                                      20,
+                                      20,
+                                    ),
+                                    gridDelegate:
+                                        SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount:
+                                          columns,
+                                      crossAxisSpacing:
+                                          16,
+                                      mainAxisSpacing:
+                                          16,
+                                      mainAxisExtent:
+                                          columns == 1
+                                              ? 430
+                                              : columns == 2
+                                                  ? 390
+                                                  : 400,
+                                    ),
+                                    itemCount:
+                                        filtered.length,
+                                    itemBuilder:
+                                        (
+                                      context,
+                                      index,
+                                    ) {
+                                      final item =
+                                          filtered[
+                                              index];
+
+                                      return _AdminGalleryCard(
+                                        item: item,
+                                        onEdit: () =>
+                                            _openGalleryForm(
+                                          item: item,
+                                        ),
+                                        onDelete: () =>
+                                            _deleteGalleryItem(
+                                          item,
+                                        ),
+                                        onTogglePublished:
+                                            () =>
+                                                _togglePublished(
+                                          item,
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
+                      ),
+                    ],
+                  );
+                },
               ),
-            ],
-          );
-        },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -376,8 +552,7 @@ class _AdminGalleryCard
   @override
   Widget build(BuildContext context) {
     return Card(
-      clipBehavior:
-          Clip.antiAlias,
+      clipBehavior: Clip.antiAlias,
       elevation: 2,
       color: Colors.white,
       shape: RoundedRectangleBorder(
@@ -400,6 +575,7 @@ class _AdminGalleryCard
             child: Column(
               crossAxisAlignment:
                   CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   item.title.isEmpty
@@ -625,10 +801,13 @@ class _GalleryImageState
     if (widget.objectKey
         .trim()
         .isEmpty) {
+      if (!mounted) return;
+
       setState(() {
         _error =
             'Image not configured.';
       });
+
       return;
     }
 
@@ -803,6 +982,8 @@ class _GalleryFormDialogState
           'Unable to read the selected image.',
         );
       }
+
+      if (!mounted) return;
 
       setState(() {
         _imageBytes = bytes;
@@ -990,7 +1171,25 @@ class _GalleryFormDialogState
 
   @override
   Widget build(BuildContext context) {
+    final screenSize =
+        MediaQuery.sizeOf(context);
+
+    final dialogWidth =
+        screenSize.width < 700
+            ? screenSize.width - 32
+            : 560.0;
+
+    final imageHeight =
+        screenSize.height < 800
+            ? 180.0
+            : 220.0;
+
     return AlertDialog(
+      insetPadding:
+          const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 16,
+      ),
       title: Text(
         _isEditing
             ? 'Edit Gallery Image'
@@ -1000,8 +1199,12 @@ class _GalleryFormDialogState
           color: Color(0xFF3D004D),
         ),
       ),
-      content: SizedBox(
-        width: 560,
+      content: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: dialogWidth,
+          maxHeight:
+              screenSize.height * 0.68,
+        ),
         child: Form(
           key: _formKey,
           child: SingleChildScrollView(
@@ -1060,7 +1263,7 @@ class _GalleryFormDialogState
                     ),
                     child: Image.memory(
                       _imageBytes!,
-                      height: 220,
+                      height: imageHeight,
                       width:
                           double.infinity,
                       fit: BoxFit.cover,
@@ -1072,7 +1275,7 @@ class _GalleryFormDialogState
                         .trim()
                         .isNotEmpty)
                   SizedBox(
-                    height: 220,
+                    height: imageHeight,
                     width:
                         double.infinity,
                     child:
@@ -1083,7 +1286,8 @@ class _GalleryFormDialogState
                   )
                 else
                   Container(
-                    height: 180,
+                    height:
+                        imageHeight,
                     width:
                         double.infinity,
                     decoration:

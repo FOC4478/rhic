@@ -8,18 +8,20 @@ class AdminUsersScreen extends StatefulWidget {
   const AdminUsersScreen({super.key});
 
   @override
-  State<AdminUsersScreen> createState() =>
-      _AdminUsersScreenState();
+  State<AdminUsersScreen> createState() => _AdminUsersScreenState();
 }
 
 class _AdminUsersScreenState extends State<AdminUsersScreen> {
-  final ContentRepository _repository =
-      ContentRepository.instance;
+  final ContentRepository _repository = ContentRepository.instance;
 
   final TextEditingController _searchController =
       TextEditingController();
 
   String _filter = 'all';
+
+  static const Color _primary = Color(0xFF6B1FA2);
+  static const Color _darkPurple = Color(0xFF3D004D);
+  static const Color _background = Color(0xFFF7F4F9);
 
   @override
   void dispose() {
@@ -27,11 +29,14 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     super.dispose();
   }
 
+  // ============================================================
+  // SEARCH
+  // ============================================================
+
   bool _matchesSearch(
     DocumentSnapshot<Map<String, dynamic>> document,
   ) {
-    final query =
-        _searchController.text.trim().toLowerCase();
+    final query = _searchController.text.trim().toLowerCase();
 
     if (query.isEmpty) {
       return true;
@@ -58,8 +63,12 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         lastName.contains(query) ||
         fullName.contains(query) ||
         email.contains(query) ||
-        uid.toLowerCase().contains(query);
+        uid.contains(query);
   }
+
+  // ============================================================
+  // FILTER
+  // ============================================================
 
   bool _matchesFilter(
     DocumentSnapshot<Map<String, dynamic>> document,
@@ -90,6 +99,10 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     }
   }
 
+  // ============================================================
+  // USER DATA
+  // ============================================================
+
   String _displayName(
     DocumentSnapshot<Map<String, dynamic>> document,
   ) {
@@ -108,8 +121,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     final lastName =
         data['lastName']?.toString().trim() ?? '';
 
-    final name =
-        '$firstName $lastName'.trim();
+    final name = '$firstName $lastName'.trim();
 
     if (name.isNotEmpty) {
       return name;
@@ -123,7 +135,10 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
   ) {
     final data = document.data() ?? {};
 
-    return data['email']?.toString() ?? 'No email';
+    final email =
+        data['email']?.toString().trim() ?? '';
+
+    return email.isNotEmpty ? email : 'No email';
   }
 
   String _role(
@@ -174,6 +189,10 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         .toUpperCase();
   }
 
+  // ============================================================
+  // OPEN USER
+  // ============================================================
+
   Future<void> _openUser(
     DocumentSnapshot<Map<String, dynamic>> user,
   ) async {
@@ -187,115 +206,157 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF7F5F8),
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: const Color(0xFF6B1FA2),
-        foregroundColor: Colors.white,
-        title: const Text(
-          'Users',
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
-      body: StreamBuilder<
-          List<DocumentSnapshot<Map<String, dynamic>>>>(
-        stream: _repository.adminUsersStream(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return _ErrorView(
-              message: snapshot.error.toString(),
-              onRetry: () {
-                setState(() {});
-              },
-            );
-          }
+  // ============================================================
+  // MENU BAR
+  // ============================================================
 
-          if (snapshot.connectionState ==
-              ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(
-                color: Color(0xFF6B1FA2),
-              ),
-            );
-          }
-
-          final users = snapshot.data ?? [];
-
-          final filteredUsers = users
-              .where(_matchesSearch)
-              .where(_matchesFilter)
-              .toList();
-
-          return Column(
-            children: [
-              _buildHeader(users.length),
-              _buildSearch(),
-              _buildFilters(),
-              Expanded(
-                child: filteredUsers.isEmpty
-                    ? _EmptyUsers(
-                        searchActive:
-                            _searchController.text
-                                .trim()
-                                .isNotEmpty ||
-                                _filter != 'all',
-                      )
-                    : RefreshIndicator(
-                        color:
-                            const Color(0xFF6B1FA2),
-                        onRefresh: () async {
-                          setState(() {});
-                          await Future<void>.delayed(
-                            const Duration(milliseconds: 300),
-                          );
-                        },
-                        child: ListView.separated(
-                          padding:
-                              const EdgeInsets.fromLTRB(
-                            16,
-                            8,
-                            16,
-                            24,
-                          ),
-                          itemCount:
-                              filteredUsers.length,
-                          separatorBuilder:
-                              (_, __) =>
-                                  const SizedBox(height: 10),
-                          itemBuilder:
-                              (context, index) {
-                            final user =
-                                filteredUsers[index];
-
-                            return _UserCard(
-                              user: user,
-                              name: _displayName(user),
-                              email: _email(user),
-                              role: _role(user),
-                              status: _status(user),
-                              verified:
-                                  _isVerified(user),
-                              initials: _initials(
-                                _displayName(user),
-                              ),
-                              onTap: () =>
-                                  _openUser(user),
-                            );
-                          },
-                        ),
-                      ),
-              ),
-            ],
+  Widget _buildMenuBar() {
+    return Container(
+      height: 56,
+      width: double.infinity,
+      color: Colors.white,
+      alignment: Alignment.centerLeft,
+      child: Builder(
+        builder: (menuContext) {
+          return IconButton(
+            tooltip: 'Menu',
+            icon: const Icon(
+              Icons.menu,
+              color: _darkPurple,
+            ),
+            onPressed: () {
+              Scaffold.maybeOf(menuContext)?.openDrawer();
+            },
           );
         },
       ),
     );
   }
+
+  // ============================================================
+  // BUILD
+  // ============================================================
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: _background,
+      child: SafeArea(
+        child: Column(
+          children: [
+            _buildMenuBar(),
+
+            Expanded(
+              child: StreamBuilder<
+                  List<DocumentSnapshot<Map<String, dynamic>>>>(
+                stream: _repository.adminUsersStream(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return _ErrorView(
+                      message: snapshot.error.toString(),
+                      onRetry: () {
+                        setState(() {});
+                      },
+                    );
+                  }
+
+                  if (snapshot.connectionState ==
+                      ConnectionState.waiting) {
+                    return const Center(
+                      child: CircularProgressIndicator(
+                        color: _primary,
+                      ),
+                    );
+                  }
+
+                  final users = snapshot.data ?? [];
+
+                  final filteredUsers = users
+                      .where(_matchesSearch)
+                      .where(_matchesFilter)
+                      .toList();
+
+                  return Column(
+                    children: [
+                      _buildHeader(users.length),
+                      _buildSearch(),
+                      _buildFilters(),
+
+                      Expanded(
+                        child: filteredUsers.isEmpty
+                            ? _EmptyUsers(
+                                searchActive:
+                                    _searchController.text
+                                            .trim()
+                                            .isNotEmpty ||
+                                        _filter != 'all',
+                              )
+                            : RefreshIndicator(
+                                color: _primary,
+                                onRefresh: () async {
+                                  setState(() {});
+                                  await Future<void>.delayed(
+                                    const Duration(
+                                      milliseconds: 300,
+                                    ),
+                                  );
+                                },
+                                child: ListView.separated(
+                                  physics:
+                                      const AlwaysScrollableScrollPhysics(),
+                                  padding:
+                                      const EdgeInsets.fromLTRB(
+                                    16,
+                                    8,
+                                    16,
+                                    24,
+                                  ),
+                                  itemCount:
+                                      filteredUsers.length,
+                                  separatorBuilder:
+                                      (_, __) =>
+                                          const SizedBox(
+                                    height: 10,
+                                  ),
+                                  itemBuilder:
+                                      (context, index) {
+                                    final user =
+                                        filteredUsers[index];
+
+                                    return _UserCard(
+                                      user: user,
+                                      name:
+                                          _displayName(user),
+                                      email: _email(user),
+                                      role: _role(user),
+                                      status:
+                                          _status(user),
+                                      verified:
+                                          _isVerified(user),
+                                      initials: _initials(
+                                        _displayName(user),
+                                      ),
+                                      onTap: () =>
+                                          _openUser(user),
+                                    );
+                                  },
+                                ),
+                              ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // HEADER
+  // ============================================================
 
   Widget _buildHeader(int totalUsers) {
     return Container(
@@ -307,16 +368,18 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         16,
       ),
       decoration: const BoxDecoration(
-        color: Color(0xFF6B1FA2),
+        color: _primary,
       ),
-      child: Row(
-        children: [
-          const Expanded(
-            child: Column(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final narrow = constraints.maxWidth < 420;
+
+          if (narrow) {
+            return Column(
               crossAxisAlignment:
                   CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'User Management',
                   style: TextStyle(
                     color: Colors.white,
@@ -324,53 +387,90 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-                SizedBox(height: 4),
-                Text(
+                const SizedBox(height: 4),
+                const Text(
                   'Manage RHIC member accounts',
                   style: TextStyle(
                     color: Colors.white70,
                     fontSize: 13,
                   ),
                 ),
+                const SizedBox(height: 14),
+                _userCountBadge(totalUsers),
               ],
+            );
+          }
+
+          return Row(
+            children: [
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'User Management',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Manage RHIC member accounts',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              _userCountBadge(totalUsers),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _userCountBadge(int totalUsers) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 14,
+        vertical: 10,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        children: [
+          Text(
+            '$totalUsers',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 14,
-              vertical: 10,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(
-                alpha: 0.15,
-              ),
-              borderRadius:
-                  BorderRadius.circular(14),
-            ),
-            child: Column(
-              children: [
-                Text(
-                  '$totalUsers',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const Text(
-                  'Users',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 11,
-                  ),
-                ),
-              ],
+          const Text(
+            'Users',
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 11,
             ),
           ),
         ],
       ),
     );
   }
+
+  // ============================================================
+  // SEARCH
+  // ============================================================
 
   Widget _buildSearch() {
     return Padding(
@@ -393,8 +493,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
               _searchController.text.isEmpty
                   ? null
                   : IconButton(
-                      icon:
-                          const Icon(Icons.clear),
+                      icon: const Icon(Icons.clear),
                       onPressed: () {
                         _searchController.clear();
                         setState(() {});
@@ -403,14 +502,28 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
           filled: true,
           fillColor: Colors.white,
           border: OutlineInputBorder(
-            borderRadius:
-                BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(14),
             borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(
+              color: _primary,
+              width: 1.2,
+            ),
           ),
         ),
       ),
     );
   }
+
+  // ============================================================
+  // FILTERS
+  // ============================================================
 
   Widget _buildFilters() {
     final filters = <String, String>{
@@ -424,14 +537,12 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     return SizedBox(
       height: 52,
       child: ListView(
-        padding:
-            const EdgeInsets.symmetric(
+        padding: const EdgeInsets.symmetric(
           horizontal: 16,
         ),
         scrollDirection: Axis.horizontal,
         children: filters.entries.map((entry) {
-          final selected =
-              _filter == entry.key;
+          final selected = _filter == entry.key;
 
           return Padding(
             padding: const EdgeInsets.only(
@@ -445,16 +556,14 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                   _filter = entry.key;
                 });
               },
-              selectedColor:
-                  const Color(0xFF6B1FA2),
+              selectedColor: _primary,
               labelStyle: TextStyle(
                 color: selected
                     ? Colors.white
                     : Colors.black87,
-                fontWeight:
-                    selected
-                        ? FontWeight.w700
-                        : FontWeight.w500,
+                fontWeight: selected
+                    ? FontWeight.w700
+                    : FontWeight.w500,
               ),
               backgroundColor: Colors.white,
               side: BorderSide.none,
@@ -465,6 +574,10 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     );
   }
 }
+
+// ============================================================================
+// USER CARD
+// ============================================================================
 
 class _UserCard extends StatelessWidget {
   final DocumentSnapshot<Map<String, dynamic>> user;
@@ -494,157 +607,170 @@ class _UserCard extends StatelessWidget {
 
     return Material(
       color: Colors.white,
-      borderRadius:
-          BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(18),
       child: InkWell(
-        borderRadius:
-            BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(18),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.all(15),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 25,
-                backgroundColor:
-                    const Color(0xFF6B1FA2)
-                        .withValues(alpha: 0.12),
-                child: Text(
-                  initials,
-                  style: const TextStyle(
-                    color: Color(0xFF6B1FA2),
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 13),
-              Expanded(
-                child: Column(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final narrow = constraints.maxWidth < 360;
+
+              if (narrow) {
+                return Column(
                   crossAxisAlignment:
                       CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Flexible(
-                          child: Text(
-                            name,
-                            maxLines: 1,
-                            overflow:
-                                TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontWeight:
-                                  FontWeight.w700,
-                              fontSize: 15,
-                            ),
+                        _buildAvatar(),
+                        const SizedBox(width: 13),
+                        Expanded(
+                          child: _buildMainInfo(
+                            isAdmin: isAdmin,
+                            isDisabled: isDisabled,
                           ),
                         ),
-                        if (verified) ...[
-                          const SizedBox(width: 5),
-                          const Icon(
-                            Icons.verified,
-                            size: 17,
-                            color:
-                                Color(0xFF1976D2),
-                          ),
-                        ],
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      email,
-                      maxLines: 1,
-                      overflow:
-                          TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 13,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 5,
-                      children: [
-                        _StatusBadge(
-                          text: isAdmin
-                              ? 'ADMIN'
-                              : 'MEMBER',
-                          background:
-                              isAdmin
-                                  ? const Color(
-                                      0xFFFFF3E0,
-                                    )
-                                  : const Color(
-                                      0xFFF0E7F5,
-                                    ),
-                          foreground:
-                              isAdmin
-                                  ? const Color(
-                                      0xFFE65100,
-                                    )
-                                  : const Color(
-                                      0xFF6B1FA2,
-                                    ),
-                        ),
-                        _StatusBadge(
-                          text: verified
-                              ? 'VERIFIED'
-                              : 'UNVERIFIED',
-                          background:
-                              verified
-                                  ? const Color(
-                                      0xFFE8F5E9,
-                                    )
-                                  : const Color(
-                                      0xFFFFF3E0,
-                                    ),
-                          foreground:
-                              verified
-                                  ? const Color(
-                                      0xFF2E7D32,
-                                    )
-                                  : const Color(
-                                      0xFFE65100,
-                                    ),
-                        ),
-                        _StatusBadge(
-                          text: isDisabled
-                              ? 'DISABLED'
-                              : 'ACTIVE',
-                          background:
-                              isDisabled
-                                  ? const Color(
-                                      0xFFFFEBEE,
-                                    )
-                                  : const Color(
-                                      0xFFE8F5E9,
-                                    ),
-                          foreground:
-                              isDisabled
-                                  ? const Color(
-                                      0xFFC62828,
-                                    )
-                                  : const Color(
-                                      0xFF2E7D32,
-                                    ),
+                        const SizedBox(width: 6),
+                        const Icon(
+                          Icons.chevron_right,
+                          color: Colors.grey,
                         ),
                       ],
                     ),
                   ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              const Icon(
-                Icons.chevron_right,
-                color: Colors.grey,
-              ),
-            ],
+                );
+              }
+
+              return Row(
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
+                children: [
+                  _buildAvatar(),
+                  const SizedBox(width: 13),
+                  Expanded(
+                    child: _buildMainInfo(
+                      isAdmin: isAdmin,
+                      isDisabled: isDisabled,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(
+                    Icons.chevron_right,
+                    color: Colors.grey,
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),
     );
   }
+
+  Widget _buildAvatar() {
+    return CircleAvatar(
+      radius: 25,
+      backgroundColor:
+          const Color(0xFF6B1FA2).withValues(
+        alpha: 0.12,
+      ),
+      child: Text(
+        initials,
+        style: const TextStyle(
+          color: Color(0xFF6B1FA2),
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMainInfo({
+    required bool isAdmin,
+    required bool isDisabled,
+  }) {
+    return Column(
+      crossAxisAlignment:
+          CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Flexible(
+              child: Text(
+                name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                ),
+              ),
+            ),
+            if (verified) ...[
+              const SizedBox(width: 5),
+              const Icon(
+                Icons.verified,
+                size: 17,
+                color: Color(0xFF1976D2),
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          email,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: Colors.grey.shade600,
+            fontSize: 13,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 6,
+          runSpacing: 5,
+          children: [
+            _StatusBadge(
+              text: isAdmin ? 'ADMIN' : 'MEMBER',
+              background: isAdmin
+                  ? const Color(0xFFFFF3E0)
+                  : const Color(0xFFF0E7F5),
+              foreground: isAdmin
+                  ? const Color(0xFFE65100)
+                  : const Color(0xFF6B1FA2),
+            ),
+            _StatusBadge(
+              text: verified
+                  ? 'VERIFIED'
+                  : 'UNVERIFIED',
+              background: verified
+                  ? const Color(0xFFE8F5E9)
+                  : const Color(0xFFFFF3E0),
+              foreground: verified
+                  ? const Color(0xFF2E7D32)
+                  : const Color(0xFFE65100),
+            ),
+            _StatusBadge(
+              text: isDisabled ? 'DISABLED' : 'ACTIVE',
+              background: isDisabled
+                  ? const Color(0xFFFFEBEE)
+                  : const Color(0xFFE8F5E9),
+              foreground: isDisabled
+                  ? const Color(0xFFC62828)
+                  : const Color(0xFF2E7D32),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
 }
+
+// ============================================================================
+// STATUS BADGE
+// ============================================================================
 
 class _StatusBadge extends StatelessWidget {
   final String text;
@@ -666,11 +792,12 @@ class _StatusBadge extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: background,
-        borderRadius:
-            BorderRadius.circular(7),
+        borderRadius: BorderRadius.circular(7),
       ),
       child: Text(
         text,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
         style: TextStyle(
           color: foreground,
           fontSize: 9,
@@ -680,6 +807,10 @@ class _StatusBadge extends StatelessWidget {
     );
   }
 }
+
+// ============================================================================
+// EMPTY USERS
+// ============================================================================
 
 class _EmptyUsers extends StatelessWidget {
   final bool searchActive;
@@ -691,7 +822,7 @@ class _EmptyUsers extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(30),
         child: Column(
           mainAxisAlignment:
@@ -709,6 +840,7 @@ class _EmptyUsers extends StatelessWidget {
               searchActive
                   ? 'No users found'
                   : 'No users yet',
+              textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
@@ -731,6 +863,10 @@ class _EmptyUsers extends StatelessWidget {
   }
 }
 
+// ============================================================================
+// ERROR VIEW
+// ============================================================================
+
 class _ErrorView extends StatelessWidget {
   final String message;
   final VoidCallback onRetry;
@@ -743,7 +879,7 @@ class _ErrorView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment:
@@ -757,6 +893,7 @@ class _ErrorView extends StatelessWidget {
             const SizedBox(height: 14),
             const Text(
               'Unable to load users',
+              textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,

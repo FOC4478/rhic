@@ -37,39 +37,35 @@ class _AdminCommunityScreenState
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF7F7FA),
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF3D004D),
-        title: const Text(
-          'Community Management',
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: const Color(0xFF6B1FA2),
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.add),
-        label: const Text('Add Community'),
-        onPressed: _showCreateCommunityDialog,
-      ),
-      body: StreamBuilder<List<CommunityGroupModel>>(
+    return Container(
+      color: const Color(0xFFF7F7FA),
+      child: StreamBuilder<List<CommunityGroupModel>>(
         stream: _repository.adminCommunityGroupsStream(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return _ErrorState(
-              message: snapshot.error.toString(),
+            return Column(
+              children: [
+                _buildTopBar(context),
+                Expanded(
+                  child: _ErrorState(
+                    message: snapshot.error.toString(),
+                  ),
+                ),
+              ],
             );
           }
 
           if (snapshot.connectionState ==
               ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(),
+            return Column(
+              children: [
+                _buildTopBar(context),
+                const Expanded(
+                  child: Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
+              ],
             );
           }
 
@@ -81,16 +77,18 @@ class _AdminCommunityScreenState
 
             final matchesSearch =
                 query.isEmpty ||
-                group.name.toLowerCase().contains(query) ||
-                group.description
-                    .toLowerCase()
-                    .contains(query) ||
-                group.department
-                    .toLowerCase()
-                    .contains(query) ||
-                group.adminName
-                    .toLowerCase()
-                    .contains(query);
+                    group.name
+                        .toLowerCase()
+                        .contains(query) ||
+                    group.description
+                        .toLowerCase()
+                        .contains(query) ||
+                    group.department
+                        .toLowerCase()
+                        .contains(query) ||
+                    group.adminName
+                        .toLowerCase()
+                        .contains(query);
 
             final matchesFilter = switch (_filter) {
               'Published' => group.isPublished,
@@ -114,93 +112,191 @@ class _AdminCommunityScreenState
 
           return LayoutBuilder(
             builder: (context, constraints) {
-              final isMobile = constraints.maxWidth < 700;
+              final width = constraints.maxWidth;
+              final isMobile = width < 700;
 
-              return SingleChildScrollView(
-                padding: EdgeInsets.all(
-                  isMobile ? 16 : 24,
-                ),
-                child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
-                  children: [
-                    _Header(
-                      totalCommunities: groups.length,
-                      published: publishedCount,
-                      unpublished: unpublishedCount,
-                      members: totalMembers,
-                    ),
-                    const SizedBox(height: 24),
-                    _SearchAndFilters(
-                      controller: _searchController,
-                      selectedFilter: _filter,
-                      onSearchChanged: (value) {
-                        setState(() {
-                          _searchQuery = value;
-                        });
-                      },
-                      onFilterChanged: (value) {
-                        setState(() {
-                          _filter = value;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 24),
-                    if (filteredGroups.isEmpty)
-                      const _EmptyState()
-                    else
-                      GridView.builder(
-                        shrinkWrap: true,
-                        physics:
-                            const NeverScrollableScrollPhysics(),
-                        itemCount: filteredGroups.length,
-                        gridDelegate:
-                            SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount:
-                              _getCrossAxisCount(
-                            constraints.maxWidth,
+              return Column(
+                children: [
+                  _buildTopBar(context),
+
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        SingleChildScrollView(
+                          padding: EdgeInsets.all(
+                            isMobile ? 16 : 24,
                           ),
-                          crossAxisSpacing: 18,
-                          mainAxisSpacing: 18,
-                          childAspectRatio: _getAspectRatio(
-                            constraints.maxWidth,
+                          child: Column(
+                            crossAxisAlignment:
+                                CrossAxisAlignment.start,
+                            children: [
+                              _Header(
+                                totalCommunities:
+                                    groups.length,
+                                published:
+                                    publishedCount,
+                                unpublished:
+                                    unpublishedCount,
+                                members:
+                                    totalMembers,
+                              ),
+
+                              const SizedBox(height: 24),
+
+                              _SearchAndFilters(
+                                controller:
+                                    _searchController,
+                                selectedFilter:
+                                    _filter,
+                                onSearchChanged:
+                                    (value) {
+                                  setState(() {
+                                    _searchQuery =
+                                        value;
+                                  });
+                                },
+                                onFilterChanged:
+                                    (value) {
+                                  setState(() {
+                                    _filter = value;
+                                  });
+                                },
+                              ),
+
+                              const SizedBox(height: 24),
+
+                              if (filteredGroups.isEmpty)
+                                const _EmptyState()
+                              else
+                                GridView.builder(
+                                  shrinkWrap: true,
+                                  physics:
+                                      const NeverScrollableScrollPhysics(),
+                                  itemCount:
+                                      filteredGroups.length,
+                                  gridDelegate:
+                                      SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount:
+                                        _getCrossAxisCount(
+                                      width,
+                                    ),
+                                    crossAxisSpacing: 18,
+                                    mainAxisSpacing: 18,
+                                    mainAxisExtent:
+                                        _getCardHeight(
+                                      width,
+                                    ),
+                                  ),
+                                  itemBuilder:
+                                      (context, index) {
+                                    final group =
+                                        filteredGroups[
+                                            index];
+
+                                    return _CommunityCard(
+                                      group: group,
+                                      onManage: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder:
+                                                (_) =>
+                                                    CommunityManagementScreen(
+                                              groupId:
+                                                  group.id,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      onEdit: () {
+                                        _showEditCommunityDialog(
+                                          group,
+                                        );
+                                      },
+                                      onDelete: () {
+                                        _deleteCommunity(
+                                          group,
+                                        );
+                                      },
+                                      onTogglePublished:
+                                          () {
+                                        _togglePublished(
+                                          group,
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
+
+                              const SizedBox(height: 100),
+                            ],
                           ),
                         ),
-                        itemBuilder: (context, index) {
-                          final group =
-                              filteredGroups[index];
 
-                          return _CommunityCard(
-                            group: group,
-                            onManage: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      CommunityManagementScreen(
-                                    groupId: group.id,
-                                  ),
-                                ),
-                              );
-                            },
-                            onEdit: () {
-                              _showEditCommunityDialog(
-                                group,
-                              );
-                            },
-                            onDelete: () {
-                              _deleteCommunity(group);
-                            },
-                            onTogglePublished: () {
-                              _togglePublished(group);
-                            },
-                          );
-                        },
-                      ),
-                  ],
-                ),
+                        Positioned(
+                          right: isMobile ? 16 : 24,
+                          bottom: isMobile ? 16 : 24,
+                          child: FloatingActionButton.extended(
+                            backgroundColor:
+                                const Color(0xFF6B1FA2),
+                            foregroundColor:
+                                Colors.white,
+                            icon: const Icon(
+                              Icons.add,
+                            ),
+                            label: Text(
+                              isMobile
+                                  ? 'Add'
+                                  : 'Add Community',
+                            ),
+                            onPressed:
+                                _showCreateCommunityDialog,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               );
             },
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildTopBar(BuildContext context) {
+    return Container(
+      height: 64,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          bottom: BorderSide(
+            color: Colors.grey.shade200,
+          ),
+        ),
+      ),
+      child: Builder(
+        builder: (menuContext) {
+          return Align(
+            alignment: Alignment.centerLeft,
+            child: IconButton(
+              tooltip: 'Open menu',
+              onPressed: () {
+                final scaffold =
+                    Scaffold.maybeOf(menuContext);
+
+                if (scaffold != null &&
+                    scaffold.hasDrawer) {
+                  scaffold.openDrawer();
+                }
+              },
+              icon: const Icon(
+                Icons.menu,
+                color: Color(0xFF3D004D),
+              ),
+            ),
           );
         },
       ),
@@ -214,11 +310,11 @@ class _AdminCommunityScreenState
     return 1;
   }
 
-  double _getAspectRatio(double width) {
-    if (width >= 1400) return 1.05;
-    if (width >= 1000) return 1.0;
-    if (width >= 700) return 0.95;
-    return 1.05;
+  double _getCardHeight(double width) {
+    if (width >= 1400) return 430;
+    if (width >= 1000) return 445;
+    if (width >= 700) return 465;
+    return 475;
   }
 
   Future<void> _showCreateCommunityDialog() async {
@@ -430,10 +526,8 @@ class _AdminCommunityScreenState
     switch (extension.toLowerCase()) {
       case 'png':
         return 'image/png';
-
       case 'webp':
         return 'image/webp';
-
       case 'jpg':
       case 'jpeg':
       default:
@@ -689,30 +783,49 @@ class _CommunityFormDialogState
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+
+    final isMobile = size.width < 600;
+
+    final horizontalPadding =
+        isMobile ? 16.0 : 24.0;
+
+    final maxHeight =
+        size.height * 0.92;
+
     return Dialog(
-      insetPadding: const EdgeInsets.all(20),
+      insetPadding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 8 : 20,
+        vertical: isMobile ? 12 : 20,
+      ),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(
+        constraints: BoxConstraints(
           maxWidth: 650,
-          maxHeight: 850,
+          maxHeight: maxHeight,
         ),
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(
+            horizontalPadding,
+          ),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment:
                   CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Row(
                   children: [
                     Expanded(
                       child: Text(
                         widget.title,
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF3D004D),
+                        style: TextStyle(
+                          fontSize:
+                              isMobile ? 19 : 22,
+                          fontWeight:
+                              FontWeight.w700,
+                          color:
+                              const Color(0xFF3D004D),
                         ),
                       ),
                     ),
@@ -727,7 +840,7 @@ class _CommunityFormDialogState
                   ],
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
 
                 _buildTextField(
                   controller: _nameController,
@@ -875,7 +988,7 @@ class _CommunityFormDialogState
                         },
                 ),
 
-                const SizedBox(height: 28),
+                const SizedBox(height: 24),
 
                 SizedBox(
                   width: double.infinity,
@@ -1099,7 +1212,7 @@ class _CoverPicker extends StatelessWidget {
   Widget build(BuildContext context) {
     final hasSelected =
         selectedBytes != null &&
-        selectedBytes!.isNotEmpty;
+            selectedBytes!.isNotEmpty;
 
     final hasExisting =
         existingObjectKey.trim().isNotEmpty;
@@ -1115,7 +1228,9 @@ class _CoverPicker extends StatelessWidget {
             fontSize: 15,
           ),
         ),
+
         const SizedBox(height: 6),
+
         Text(
           'Upload a JPG, PNG, or WEBP image. '
           'The image will be stored in B2 and '
@@ -1125,32 +1240,38 @@ class _CoverPicker extends StatelessWidget {
             fontSize: 13,
           ),
         ),
+
         const SizedBox(height: 12),
-        Container(
-          height: 210,
-          width: double.infinity,
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius:
-                BorderRadius.circular(14),
-            border: Border.all(
-              color: Colors.grey.shade300,
+
+        AspectRatio(
+          aspectRatio: 16 / 8,
+          child: Container(
+            width: double.infinity,
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius:
+                  BorderRadius.circular(14),
+              border: Border.all(
+                color: Colors.grey.shade300,
+              ),
             ),
+            child: hasSelected
+                ? Image.memory(
+                    selectedBytes!,
+                    fit: BoxFit.cover,
+                  )
+                : hasExisting
+                    ? _ExistingCover(
+                        objectKey:
+                            existingObjectKey,
+                      )
+                    : const _EmptyCover(),
           ),
-          child: hasSelected
-              ? Image.memory(
-                  selectedBytes!,
-                  fit: BoxFit.cover,
-                )
-              : hasExisting
-                  ? _ExistingCover(
-                      objectKey:
-                          existingObjectKey,
-                    )
-                  : const _EmptyCover(),
         ),
+
         const SizedBox(height: 12),
+
         if (hasSelected &&
             selectedFileName.trim().isNotEmpty)
           Padding(
@@ -1167,11 +1288,13 @@ class _CoverPicker extends StatelessWidget {
               ),
             ),
           ),
+
         Row(
           children: [
             Expanded(
               child: OutlinedButton.icon(
-                onPressed: () => _pickFile(context),
+                onPressed: () =>
+                    _pickFile(context),
                 icon: const Icon(
                   Icons.cloud_upload_outlined,
                 ),
@@ -1297,23 +1420,29 @@ class _EmptyCover extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(
-        mainAxisAlignment:
-            MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.image_outlined,
-            size: 48,
-            color: Colors.grey.shade400,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            message,
-            style: TextStyle(
-              color: Colors.grey.shade500,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          mainAxisAlignment:
+              MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.image_outlined,
+              size: 48,
+              color: Colors.grey.shade400,
             ),
-          ),
-        ],
+            const SizedBox(height: 8),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: Colors.grey.shade500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1363,6 +1492,7 @@ class _CommunityCard extends StatelessWidget {
                   group.coverImageObjectKey,
             ),
           ),
+
           Expanded(
             child: Padding(
               padding:
@@ -1391,13 +1521,17 @@ class _CommunityCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      _StatusChip(
-                        published:
-                            group.isPublished,
+                      Flexible(
+                        child: _StatusChip(
+                          published:
+                              group.isPublished,
+                        ),
                       ),
                     ],
                   ),
+
                   const SizedBox(height: 8),
+
                   if (group.department
                       .trim()
                       .isNotEmpty)
@@ -1426,7 +1560,9 @@ class _CommunityCard extends StatelessWidget {
                         ),
                       ],
                     ),
+
                   const SizedBox(height: 8),
+
                   Text(
                     group.description
                             .trim()
@@ -1443,7 +1579,9 @@ class _CommunityCard extends StatelessWidget {
                       fontSize: 13,
                     ),
                   ),
+
                   const SizedBox(height: 12),
+
                   Row(
                     children: [
                       Icon(
@@ -1453,15 +1591,20 @@ class _CommunityCard extends StatelessWidget {
                             Colors.grey.shade600,
                       ),
                       const SizedBox(width: 5),
-                      Text(
-                        '${group.memberCount} members',
-                        style: TextStyle(
-                          color:
-                              Colors.grey.shade700,
-                          fontSize: 13,
+                      Expanded(
+                        child: Text(
+                          '${group.memberCount} members',
+                          maxLines: 1,
+                          overflow:
+                              TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color:
+                                Colors.grey.shade700,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
-                      const Spacer(),
+                      const SizedBox(width: 8),
                       Icon(
                         group.requiresApproval
                             ? Icons.lock_outline
@@ -1483,7 +1626,9 @@ class _CommunityCard extends StatelessWidget {
                       ),
                     ],
                   ),
+
                   const SizedBox(height: 8),
+
                   Row(
                     children: [
                       Icon(
@@ -1513,39 +1658,43 @@ class _CommunityCard extends StatelessWidget {
                       ),
                     ],
                   ),
+
                   const Spacer(),
+
                   Row(
                     children: [
                       Expanded(
-                        child: FilledButton(
-                          style:
-                              FilledButton.styleFrom(
-                            backgroundColor:
-                                const Color(
-                              0xFF6B1FA2,
+                        child: SizedBox(
+                          height: 42,
+                          child: FilledButton(
+                            style:
+                                FilledButton.styleFrom(
+                              backgroundColor:
+                                  const Color(
+                                0xFF6B1FA2,
+                              ),
                             ),
-                            padding:
-                                const EdgeInsets
-                                    .symmetric(
-                              vertical: 11,
+                            onPressed: onManage,
+                            child: const Text(
+                              'Manage',
                             ),
-                          ),
-                          onPressed: onManage,
-                          child: const Text(
-                            'Manage',
                           ),
                         ),
                       ),
+
                       const SizedBox(width: 8),
+
                       PopupMenuButton<String>(
                         onSelected: (value) {
                           switch (value) {
                             case 'edit':
                               onEdit();
                               break;
+
                             case 'publish':
                               onTogglePublished();
                               break;
+
                             case 'delete':
                               onDelete();
                               break;
@@ -1757,42 +1906,63 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 14,
-      runSpacing: 14,
-      children: [
-        _StatCard(
-          title: 'Communities',
-          value: totalCommunities.toString(),
-          icon: Icons.groups_outlined,
-        ),
-        _StatCard(
-          title: 'Published',
-          value: published.toString(),
-          icon: Icons.visibility_outlined,
-        ),
-        _StatCard(
-          title: 'Unpublished',
-          value: unpublished.toString(),
-          icon:
-              Icons.visibility_off_outlined,
-        ),
-        _StatCard(
-          title: 'Members',
-          value: members.toString(),
-          icon: Icons.people_outline,
-        ),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+
+        final cardWidth = width >= 1000
+            ? 210.0
+            : width >= 700
+                ? 190.0
+                : (width - 14) / 2;
+
+        return Wrap(
+          spacing: 14,
+          runSpacing: 14,
+          children: [
+            _StatCard(
+              width: cardWidth,
+              title: 'Communities',
+              value:
+                  totalCommunities.toString(),
+              icon: Icons.groups_outlined,
+            ),
+            _StatCard(
+              width: cardWidth,
+              title: 'Published',
+              value: published.toString(),
+              icon:
+                  Icons.visibility_outlined,
+            ),
+            _StatCard(
+              width: cardWidth,
+              title: 'Unpublished',
+              value:
+                  unpublished.toString(),
+              icon:
+                  Icons.visibility_off_outlined,
+            ),
+            _StatCard(
+              width: cardWidth,
+              title: 'Members',
+              value: members.toString(),
+              icon: Icons.people_outline,
+            ),
+          ],
+        );
+      },
     );
   }
 }
 
 class _StatCard extends StatelessWidget {
+  final double width;
   final String title;
   final String value;
   final IconData icon;
 
   const _StatCard({
+    required this.width,
     required this.title,
     required this.value,
     required this.icon,
@@ -1801,8 +1971,8 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 210,
-      padding: const EdgeInsets.all(18),
+      width: width,
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius:
@@ -1814,8 +1984,8 @@ class _StatCard extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 44,
-            height: 44,
+            width: 42,
+            height: 42,
             decoration: BoxDecoration(
               color:
                   const Color(0xFF6B1FA2)
@@ -1825,34 +1995,46 @@ class _StatCard extends StatelessWidget {
             ),
             child: Icon(
               icon,
-              color: const Color(0xFF6B1FA2),
+              size: 21,
+              color:
+                  const Color(0xFF6B1FA2),
             ),
           ),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  color:
-                      Colors.grey.shade600,
-                  fontSize: 12,
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow:
+                      TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color:
+                        Colors.grey.shade600,
+                    fontSize: 11,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 3),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 21,
-                  fontWeight:
-                      FontWeight.w800,
-                  color:
-                      Color(0xFF3D004D),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow:
+                      TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    height: 1,
+                    fontWeight:
+                        FontWeight.w800,
+                    color:
+                        Color(0xFF3D004D),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -1882,93 +2064,122 @@ class _SearchAndFilters
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      crossAxisAlignment:
-          WrapCrossAlignment.center,
-      children: [
-        SizedBox(
-          width: 360,
-          child: TextField(
-            controller: controller,
-            onChanged: onSearchChanged,
-            decoration: InputDecoration(
-              hintText:
-                  'Search communities...',
-              prefixIcon:
-                  const Icon(Icons.search),
-              suffixIcon:
-                  controller.text.isNotEmpty
-                      ? IconButton(
-                          onPressed: () {
-                            controller.clear();
-                            onSearchChanged('');
-                          },
-                          icon: const Icon(
-                            Icons.clear,
-                          ),
-                        )
-                      : null,
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius:
-                    BorderRadius.circular(12),
-                borderSide: BorderSide(
-                  color: Colors.grey.shade200,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow =
+            constraints.maxWidth < 560;
+
+        if (isNarrow) {
+          return Column(
+            crossAxisAlignment:
+                CrossAxisAlignment.stretch,
+            children: [
+              _buildSearchField(),
+              const SizedBox(height: 12),
+              _buildFilter(),
+            ],
+          );
+        }
+
+        return Row(
+          children: [
+            Expanded(
+              child: ConstrainedBox(
+                constraints:
+                    const BoxConstraints(
+                  maxWidth: 500,
                 ),
-              ),
-              enabledBorder:
-                  OutlineInputBorder(
-                borderRadius:
-                    BorderRadius.circular(12),
-                borderSide: BorderSide(
-                  color: Colors.grey.shade200,
-                ),
+                child: _buildSearchField(),
               ),
             ),
+            const SizedBox(width: 12),
+            _buildFilter(),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildSearchField() {
+    return TextField(
+      controller: controller,
+      onChanged: onSearchChanged,
+      decoration: InputDecoration(
+        hintText:
+            'Search communities...',
+        prefixIcon:
+            const Icon(Icons.search),
+        suffixIcon:
+            controller.text.isNotEmpty
+                ? IconButton(
+                    onPressed: () {
+                      controller.clear();
+                      onSearchChanged('');
+                    },
+                    icon: const Icon(
+                      Icons.clear,
+                    ),
+                  )
+                : null,
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius:
+              BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: Colors.grey.shade200,
           ),
         ),
-        DropdownButtonHideUnderline(
-          child: Container(
-            padding:
-                const EdgeInsets.symmetric(
-              horizontal: 12,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius:
-                  BorderRadius.circular(12),
-              border: Border.all(
-                color: Colors.grey.shade200,
-              ),
-            ),
-            child: DropdownButton<String>(
-              value: selectedFilter,
-              items: const [
-                DropdownMenuItem(
-                  value: 'All',
-                  child: Text('All'),
-                ),
-                DropdownMenuItem(
-                  value: 'Published',
-                  child: Text('Published'),
-                ),
-                DropdownMenuItem(
-                  value: 'Unpublished',
-                  child: Text('Unpublished'),
-                ),
-              ],
-              onChanged: (value) {
-                if (value != null) {
-                  onFilterChanged(value);
-                }
-              },
-            ),
+        enabledBorder:
+            OutlineInputBorder(
+          borderRadius:
+              BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: Colors.grey.shade200,
           ),
         ),
-      ],
+      ),
+    );
+  }
+
+  Widget _buildFilter() {
+    return DropdownButtonHideUnderline(
+      child: Container(
+        padding:
+            const EdgeInsets.symmetric(
+          horizontal: 12,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius:
+              BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.grey.shade200,
+          ),
+        ),
+        child: DropdownButton<String>(
+          value: selectedFilter,
+          items: const [
+            DropdownMenuItem(
+              value: 'All',
+              child: Text('All'),
+            ),
+            DropdownMenuItem(
+              value: 'Published',
+              child: Text('Published'),
+            ),
+            DropdownMenuItem(
+              value: 'Unpublished',
+              child: Text('Unpublished'),
+            ),
+          ],
+          onChanged: (value) {
+            if (value != null) {
+              onFilterChanged(value);
+            }
+          },
+        ),
+      ),
     );
   }
 }
@@ -2069,6 +2280,8 @@ class _StatusChip
         published
             ? 'Published'
             : 'Unpublished',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
         style: TextStyle(
           fontSize: 11,
           fontWeight:
@@ -2148,7 +2361,7 @@ class _ErrorState
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding:
             const EdgeInsets.all(24),
         child: Column(
@@ -2163,6 +2376,7 @@ class _ErrorState
             const SizedBox(height: 12),
             const Text(
               'Unable to load communities',
+              textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight:

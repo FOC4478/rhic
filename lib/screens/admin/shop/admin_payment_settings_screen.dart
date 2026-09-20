@@ -82,34 +82,66 @@ class _AdminPaymentsScreenState
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(
-        0xFFF7F4F9,
-      ),
-      appBar: AppBar(
-        title: const Text(
-          'Payment Management',
-        ),
-        backgroundColor: const Color(
-          0xFF6B1FA2,
-        ),
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+    return Container(
+      color: const Color(0xFFF7F4F9),
+      child: SafeArea(
         child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start,
           children: [
-            _buildHeader(),
-            const SizedBox(height: 24),
+            // ============================================================
+            // MENU ICON
+            // ============================================================
 
-            _buildPaymentSettingsSection(),
+            Container(
+              width: double.infinity,
+              height: 56,
+              color: Colors.white,
+              alignment: Alignment.centerLeft,
+              child: Builder(
+                builder: (menuContext) {
+                  return IconButton(
+                    tooltip: 'Menu',
+                    onPressed: () {
+                      Scaffold.maybeOf(
+                        menuContext,
+                      )?.openDrawer();
+                    },
+                    icon: const Icon(
+                      Icons.menu,
+                      color: Color(0xFF3D004D),
+                    ),
+                  );
+                },
+              ),
+            ),
 
-            const SizedBox(height: 32),
+            // ============================================================
+            // PAYMENT CONTENT
+            // ============================================================
 
-            _buildTransactionsSection(),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start,
+                  children: [
+                    _buildHeader(),
+
+                    const SizedBox(
+                      height: 24,
+                    ),
+
+                    _buildPaymentSettingsSection(),
+
+                    const SizedBox(
+                      height: 32,
+                    ),
+
+                    _buildTransactionsSection(),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -286,17 +318,32 @@ class _AdminPaymentsScreenState
     await showDialog(
       context: context,
       builder: (dialogContext) {
+        final screenSize =
+            MediaQuery.sizeOf(dialogContext);
+
         return StatefulBuilder(
           builder: (
             context,
             setDialogState,
           ) {
             return AlertDialog(
+              insetPadding:
+                  const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 16,
+              ),
               title: Text(
                 '${_paymentTypeLabel(paymentType)} • $currency',
               ),
-              content: SizedBox(
-                width: 500,
+              content: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth:
+                      screenSize.width < 700
+                          ? screenSize.width - 32
+                          : 500,
+                  maxHeight:
+                      screenSize.height * 0.68,
+                ),
                 child: SingleChildScrollView(
                   child: Column(
                     mainAxisSize:
@@ -309,7 +356,9 @@ class _AdminPaymentsScreenState
                         icon:
                             Icons.account_balance,
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(
+                        height: 14,
+                      ),
 
                       _field(
                         controller:
@@ -318,7 +367,9 @@ class _AdminPaymentsScreenState
                         icon:
                             Icons.person_outline,
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(
+                        height: 14,
+                      ),
 
                       _field(
                         controller:
@@ -330,7 +381,9 @@ class _AdminPaymentsScreenState
                         keyboardType:
                             TextInputType.number,
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(
+                        height: 14,
+                      ),
 
                       _field(
                         controller:
@@ -341,7 +394,9 @@ class _AdminPaymentsScreenState
                             Icons.info_outline,
                         maxLines: 4,
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(
+                        height: 8,
+                      ),
 
                       SwitchListTile(
                         contentPadding:
@@ -460,7 +515,10 @@ class _AdminPaymentsScreenState
                               adminId:
                                   admin.uid,
                             );
-                         if (!context.mounted) return;
+
+                            if (!context.mounted) {
+                              return;
+                            }
 
                             Navigator.pop(
                               dialogContext,
@@ -617,6 +675,21 @@ class _AdminPaymentsScreenState
               );
             }
 
+            if (orderSnapshot.hasError ||
+                givingSnapshot.hasError) {
+              return Center(
+                child: Padding(
+                  padding:
+                      const EdgeInsets.all(20),
+                  child: Text(
+                    'Unable to load transactions.',
+                    textAlign:
+                        TextAlign.center,
+                  ),
+                ),
+              );
+            }
+
             final orders =
                 orderSnapshot.data ??
                     <OrderModel>[];
@@ -673,6 +746,14 @@ class _AdminPaymentsScreenState
           );
         }
 
+        if (snapshot.hasError) {
+          return const Center(
+            child: Text(
+              'Unable to load shop transactions.',
+            ),
+          );
+        }
+
         final orders =
             snapshot.data ?? <OrderModel>[];
 
@@ -711,6 +792,14 @@ class _AdminPaymentsScreenState
           return const Center(
             child:
                 CircularProgressIndicator(),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return const Center(
+            child: Text(
+              'Unable to load giving transactions.',
+            ),
           );
         }
 
@@ -760,7 +849,13 @@ class _AdminPaymentsScreenState
           crossAxisAlignment:
               CrossAxisAlignment.start,
           children: [
-            Row(
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              alignment:
+                  WrapAlignment.spaceBetween,
+              crossAxisAlignment:
+                  WrapCrossAlignment.center,
               children: [
                 _typeBadge(
                   'BOOK SHOP',
@@ -768,7 +863,6 @@ class _AdminPaymentsScreenState
                     0xFF6B1FA2,
                   ),
                 ),
-                const Spacer(),
                 _statusBadge(
                   order.status,
                 ),
@@ -874,7 +968,13 @@ class _AdminPaymentsScreenState
           crossAxisAlignment:
               CrossAxisAlignment.start,
           children: [
-            Row(
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              alignment:
+                  WrapAlignment.spaceBetween,
+              crossAxisAlignment:
+                  WrapCrossAlignment.center,
               children: [
                 _typeBadge(
                   giving.type.toUpperCase(),
@@ -882,7 +982,6 @@ class _AdminPaymentsScreenState
                     0xFFF7931E,
                   ),
                 ),
-                const Spacer(),
                 _statusBadge(
                   giving.status,
                 ),
@@ -1455,6 +1554,9 @@ class _PaymentSettingCard
                       children: [
                         Text(
                           title,
+                          overflow:
+                              TextOverflow
+                                  .ellipsis,
                           style:
                               const TextStyle(
                             fontWeight:

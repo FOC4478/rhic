@@ -16,8 +16,7 @@ class AdminNotificationsScreen extends StatefulWidget {
 
 class _AdminNotificationsScreenState
     extends State<AdminNotificationsScreen> {
-  final FirebaseFirestore _firestore =
-      FirebaseFirestore.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   bool _loading = false;
 
@@ -119,9 +118,10 @@ class _AdminNotificationsScreenState
       _sortNotifications(
     List<QueryDocumentSnapshot<Map<String, dynamic>>> documents,
   ) {
-    final sorted = List<
-        QueryDocumentSnapshot<Map<String, dynamic>>
-      >.from(documents);
+    final sorted =
+        List<QueryDocumentSnapshot<Map<String, dynamic>>>.from(
+      documents,
+    );
 
     sorted.sort((a, b) {
       final Timestamp? aTimestamp =
@@ -158,119 +158,154 @@ class _AdminNotificationsScreenState
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Notifications',
-        ),
-        actions: [
-          IconButton(
-            tooltip: 'Create notification',
-            onPressed: _openCreateNotification,
-            icon: const Icon(
-              Icons.add_alert_outlined,
-            ),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _openCreateNotification,
-        icon: const Icon(
-          Icons.notifications_active_outlined,
-        ),
-        label: const Text(
-          'Create',
-        ),
-      ),
-      body: Stack(
-        children: [
-          StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-            stream: _firestore
-                .collectionGroup('notifications')
-                .snapshots(),
-            builder: (
-              context,
-              snapshot,
-            ) {
-              if (snapshot.hasError) {
-                return Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Text(
-                      'Unable to load notifications.\n\n'
-                      '${snapshot.error}',
-                      textAlign: TextAlign.center,
+    return Container(
+      color: const Color(0xFFF7F4F9),
+      child: SafeArea(
+        child: Column(
+          children: [
+            // ======================================================
+            // MENU BAR
+            // ======================================================
+
+            Container(
+              height: 56,
+              width: double.infinity,
+              color: Colors.white,
+              alignment: Alignment.centerLeft,
+              child: Builder(
+                builder: (menuContext) {
+                  return IconButton(
+                    tooltip: 'Menu',
+                    onPressed: () {
+                      Scaffold.maybeOf(menuContext)?.openDrawer();
+                    },
+                    icon: const Icon(
+                      Icons.menu,
+                      color: Color(0xFF3D004D),
                     ),
-                  ),
-                );
-              }
-
-              if (snapshot.connectionState ==
-                  ConnectionState.waiting) {
-                return const Center(
-                  child: CircularProgressIndicator(),
-                );
-              }
-
-              final documents = _sortNotifications(
-                snapshot.data?.docs ?? [],
-              );
-
-              if (documents.isEmpty) {
-                return _EmptyNotifications(
-                  onCreate: _openCreateNotification,
-                );
-              }
-
-              return ListView.separated(
-                padding: const EdgeInsets.fromLTRB(
-                  16,
-                  16,
-                  16,
-                  100,
-                ),
-                itemCount: documents.length,
-                separatorBuilder: (_, __) =>
-                    const SizedBox(height: 10),
-                itemBuilder: (
-                  context,
-                  index,
-                ) {
-                  final document = documents[index];
-
-                  final data = document.data();
-
-                  final String userId =
-                      document.reference.parent.parent?.id ?? '';
-
-                  return _NotificationCard(
-                    data: data,
-                    onDelete: userId.isEmpty
-                        ? null
-                        : () => _deleteNotification(
-                              userId,
-                              document.id,
-                            ),
                   );
                 },
-              );
-            },
-          ),
-
-          // ======================================================
-          // LOADING OVERLAY
-          // ======================================================
-
-          if (_loading)
-            Positioned.fill(
-              child: Container(
-                color: Colors.black26,
-                child: const Center(
-                  child: CircularProgressIndicator(),
-                ),
               ),
             ),
-        ],
+
+            // ======================================================
+            // CONTENT
+            // ======================================================
+
+            Expanded(
+              child: Stack(
+                children: [
+                  StreamBuilder<
+                      QuerySnapshot<Map<String, dynamic>>>(
+                    stream: _firestore
+                        .collectionGroup('notifications')
+                        .snapshots(),
+                    builder: (
+                      context,
+                      snapshot,
+                    ) {
+                      if (snapshot.hasError) {
+                        return Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Text(
+                              'Unable to load notifications.\n\n'
+                              '${snapshot.error}',
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        );
+                      }
+
+                      if (snapshot.connectionState ==
+                          ConnectionState.waiting) {
+                        return const Center(
+                          child: CircularProgressIndicator(),
+                        );
+                      }
+
+                      final documents = _sortNotifications(
+                        snapshot.data?.docs ?? [],
+                      );
+
+                      if (documents.isEmpty) {
+                        return _EmptyNotifications(
+                          onCreate: _openCreateNotification,
+                        );
+                      }
+
+                      return ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(
+                          16,
+                          16,
+                          16,
+                          100,
+                        ),
+                        itemCount: documents.length,
+                        separatorBuilder: (_, __) =>
+                            const SizedBox(height: 10),
+                        itemBuilder: (
+                          context,
+                          index,
+                        ) {
+                          final document = documents[index];
+
+                          final data = document.data();
+
+                          final String userId =
+                              document.reference.parent.parent?.id ??
+                                  '';
+
+                          return _NotificationCard(
+                            data: data,
+                            onDelete: userId.isEmpty
+                                ? null
+                                : () => _deleteNotification(
+                                      userId,
+                                      document.id,
+                                    ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+
+                  // ==================================================
+                  // CREATE BUTTON
+                  // ==================================================
+
+                  Positioned(
+                    right: 20,
+                    bottom: 20,
+                    child: FloatingActionButton.extended(
+                      onPressed: _openCreateNotification,
+                      icon: const Icon(
+                        Icons.notifications_active_outlined,
+                      ),
+                      label: const Text(
+                        'Create',
+                      ),
+                    ),
+                  ),
+
+                  // ==================================================
+                  // LOADING OVERLAY
+                  // ==================================================
+
+                  if (_loading)
+                    Positioned.fill(
+                      child: Container(
+                        color: Colors.black26,
+                        child: const Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

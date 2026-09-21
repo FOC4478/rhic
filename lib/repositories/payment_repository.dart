@@ -274,11 +274,10 @@ class PaymentRepository {
         'bookId': item.bookId,
         'title': item.title,
         'author': item.author,
-        'coverObjectKey':
-            item.coverObjectKey,
+        'coverObjectKey': item.coverObjectKey,
+        'ebookObjectKey': item.ebookObjectKey,
         'price': item.price,
-        'currency':
-            item.currency.toUpperCase(),
+        'currency': item.currency.toUpperCase(),
         'quantity': item.quantity,
       };
     }).toList();

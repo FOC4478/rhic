@@ -9,6 +9,10 @@ class CartItemModel {
   // This is NOT a public URL.
   final String coverObjectKey;
 
+  // Private Backblaze B2 object key for the ebook.
+  // This is NOT a public URL.
+  final String ebookObjectKey;
+
   final double price;
   final String currency;
   final int quantity;
@@ -19,6 +23,7 @@ class CartItemModel {
     required this.title,
     required this.author,
     required this.coverObjectKey,
+    required this.ebookObjectKey,
     required this.price,
     required this.currency,
     required this.quantity,
@@ -31,45 +36,40 @@ class CartItemModel {
     final data = doc.data() ?? {};
 
     return CartItemModel(
-      bookId:
-          data['bookId']?.toString() ?? doc.id,
+      bookId: data['bookId']?.toString() ?? doc.id,
 
-      title:
-          data['title']?.toString() ?? '',
+      title: data['title']?.toString() ?? '',
 
-      author:
-          data['author']?.toString() ?? '',
+      author: data['author']?.toString() ?? '',
 
-      // New field.
+      // B2 object key only.
       coverObjectKey:
-          data['coverObjectKey']?.toString() ??
-              // Temporary fallback for old cart documents.
-              data['coverUrl']?.toString() ??
-              '',
+          data['coverObjectKey']?.toString() ?? '',
 
-      price:
-          data['price'] is num
-              ? (data['price'] as num).toDouble()
-              : double.tryParse(
-                    data['price']?.toString() ?? '',
-                  ) ??
-                  0,
+      // B2 ebook object key only.
+      ebookObjectKey:
+          data['ebookObjectKey']?.toString() ?? '',
+
+      price: data['price'] is num
+          ? (data['price'] as num).toDouble()
+          : double.tryParse(
+                data['price']?.toString() ?? '',
+              ) ??
+              0,
 
       currency:
           data['currency']?.toString() ?? 'NGN',
 
-      quantity:
-          data['quantity'] is int
-              ? data['quantity'] as int
-              : int.tryParse(
-                    data['quantity']?.toString() ?? '',
-                  ) ??
-                  1,
+      quantity: data['quantity'] is int
+          ? data['quantity'] as int
+          : int.tryParse(
+                data['quantity']?.toString() ?? '',
+              ) ??
+              1,
 
-      addedAt:
-          data['addedAt'] is Timestamp
-              ? (data['addedAt'] as Timestamp).toDate()
-              : null,
+      addedAt: data['addedAt'] is Timestamp
+          ? (data['addedAt'] as Timestamp).toDate()
+          : null,
     );
   }
 
@@ -91,5 +91,19 @@ class CartItemModel {
     }
 
     return '$currency ${total.toStringAsFixed(2)}';
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'bookId': bookId,
+      'title': title,
+      'author': author,
+      'coverObjectKey': coverObjectKey,
+      'ebookObjectKey': ebookObjectKey,
+      'price': price,
+      'currency': currency,
+      'quantity': quantity,
+      'addedAt': addedAt,
+    };
   }
 }

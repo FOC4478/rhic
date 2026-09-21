@@ -1,9 +1,9 @@
-
 import 'package:church_app/screens/members/resources/sermons_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:church_app/l10n/app_localizations.dart';
-
+import 'package:church_app/screens/members/notifications/notifications_screen.dart';
+import 'package:church_app/repositories/notification_repository.dart';
 import '../../../models/event_model.dart';
 import '../../../repositories/content_repository.dart';
 import '../../../services/media_url_service.dart';
@@ -388,16 +388,24 @@ class _HomeScreenState extends State<HomeScreen>
           // NOTIFICATION
           // ========================================================
 
-          _CircleIconButton(
-            icon: Icons.notifications_none,
-            hasNotification: true,
-            onTap: () {
-              _showComingSoon(
-                context,
-                l10n.notifications,
-                l10n.comingSoon(
-                  l10n.notifications,
-                ),
+          StreamBuilder<int>(
+            stream: NotificationRepository.instance
+                .unreadCountStream(),
+            builder: (context, snapshot) {
+              final unreadCount = snapshot.data ?? 0;
+
+              return _CircleIconButton(
+                icon: Icons.notifications_none,
+                hasNotification: unreadCount > 0,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          const NotificationsScreen(),
+                    ),
+                  );
+                },
               );
             },
           ),
@@ -515,25 +523,6 @@ class _HomeScreenState extends State<HomeScreen>
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  // ============================================================
-  // COMING SOON
-  // ============================================================
-
-  void _showComingSoon(
-    BuildContext context,
-    String title,
-    String message,
-  ) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          message,
-        ),
-        behavior: SnackBarBehavior.floating,
       ),
     );
   }

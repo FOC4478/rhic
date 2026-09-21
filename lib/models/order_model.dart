@@ -4,7 +4,13 @@ class OrderItemModel {
   final String bookId;
   final String title;
   final String author;
+
+  // Private Backblaze B2 object key for the cover.
   final String coverObjectKey;
+
+  // Private Backblaze B2 object key for the ebook.
+  final String ebookObjectKey;
+
   final double price;
   final String currency;
   final int quantity;
@@ -14,6 +20,7 @@ class OrderItemModel {
     required this.title,
     required this.author,
     required this.coverObjectKey,
+    required this.ebookObjectKey,
     required this.price,
     required this.currency,
     required this.quantity,
@@ -23,19 +30,33 @@ class OrderItemModel {
     Map<String, dynamic> data,
   ) {
     return OrderItemModel(
-      bookId: data['bookId']?.toString() ?? '',
-      title: data['title']?.toString() ?? '',
-      author: data['author']?.toString() ?? '',
+      bookId:
+          data['bookId']?.toString() ?? '',
+
+      title:
+          data['title']?.toString() ?? '',
+
+      author:
+          data['author']?.toString() ?? '',
+
+      // B2 object key only.
       coverObjectKey:
           data['coverObjectKey']?.toString() ?? '',
+
+      // B2 object key only.
+      ebookObjectKey:
+          data['ebookObjectKey']?.toString() ?? '',
+
       price: data['price'] is num
           ? (data['price'] as num).toDouble()
           : double.tryParse(
                 data['price']?.toString() ?? '',
               ) ??
               0,
+
       currency:
           data['currency']?.toString() ?? 'NGN',
+
       quantity: data['quantity'] is int
           ? data['quantity'] as int
           : int.tryParse(
@@ -51,13 +72,16 @@ class OrderItemModel {
       'title': title,
       'author': author,
       'coverObjectKey': coverObjectKey,
+      'ebookObjectKey': ebookObjectKey,
       'price': price,
       'currency': currency,
       'quantity': quantity,
     };
   }
 
-  double get total => price * quantity;
+  double get total {
+    return price * quantity;
+  }
 }
 
 class OrderModel {
@@ -109,35 +133,77 @@ class OrderModel {
 
     return OrderModel(
       id: doc.id,
-      userId: data['userId']?.toString() ?? '',
+
+      userId:
+          data['userId']?.toString() ?? '',
+
       items: items,
+
       total: data['total'] is num
           ? (data['total'] as num).toDouble()
           : double.tryParse(
                 data['total']?.toString() ?? '',
               ) ??
               0,
+
       currency:
           data['currency']?.toString() ?? 'NGN',
+
       status:
           data['status']?.toString() ?? 'pending',
+
       paymentMethod:
           data['paymentMethod']?.toString() ??
               'bank_transfer',
+
       paymentReference:
           data['paymentReference']?.toString() ?? '',
+
       adminNote:
           data['adminNote']?.toString() ?? '',
+
       verifiedBy:
           data['verifiedBy']?.toString(),
-      createdAt: data['createdAt'] is Timestamp
-          ? (data['createdAt'] as Timestamp)
-              .toDate()
-          : null,
-      verifiedAt: data['verifiedAt'] is Timestamp
-          ? (data['verifiedAt'] as Timestamp)
-              .toDate()
-          : null,
+
+      createdAt:
+          data['createdAt'] is Timestamp
+              ? (data['createdAt'] as Timestamp)
+                  .toDate()
+              : null,
+
+      verifiedAt:
+          data['verifiedAt'] is Timestamp
+              ? (data['verifiedAt'] as Timestamp)
+                  .toDate()
+              : null,
     );
+  }
+
+  bool get isPending {
+    return status == 'pending';
+  }
+
+  bool get isApproved {
+    return status == 'approved';
+  }
+
+  bool get isRejected {
+    return status == 'rejected';
+  }
+
+  bool containsBook(String bookId) {
+    return items.any(
+      (item) => item.bookId == bookId,
+    );
+  }
+
+  OrderItemModel? itemForBook(String bookId) {
+    for (final item in items) {
+      if (item.bookId == bookId) {
+        return item;
+      }
+    }
+
+    return null;
   }
 }

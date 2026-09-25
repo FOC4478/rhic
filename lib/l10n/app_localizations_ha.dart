@@ -30,7 +30,7 @@ class AppLocalizationsHa extends AppLocalizations {
   String get hausa => 'Hausa';
 
   @override
-  String get yoruba => 'Yorùbá';
+  String get yoruba => 'Yarbanci';
 
   @override
   String get igbo => 'Igbo';
@@ -42,34 +42,34 @@ class AppLocalizationsHa extends AppLocalizations {
   String get skip => 'Tsallake';
 
   @override
-  String get welcomeToRhicApp => 'Barka da zuwa Manhajar RHIC';
+  String get welcomeToRhicApp => 'Barka da zuwa manhajar RHIC';
 
   @override
   String get rhicWelcomeDescription =>
-      'Ka more da damar samun dukkan abubuwan RHIC da ayyukanta a duk lokacin da kake so';
+      'Ji daɗin samun damar dukkan abubuwan RHIC da ayyukansa a kowane lokaci';
 
   @override
   String get rhicLiveDescription =>
-      'Kalli kai tsaye, haɗu da sauran membobi da shugabanni';
+      'Kalli kai tsaye kuma haɗu da sauran mambobi da shugabanni';
 
   @override
-  String get designedWithYouInMind => 'An tsara ta ne tare da kai a zuciya';
+  String get designedWithYouInMind => 'An tsara ta ne domin ku';
 
   @override
   String get rhicSecureDescription =>
-      'Bayanan ka suna cikin tsaro, mu fara ko?';
+      'Bayananka suna cikin tsaro, bari mu fara';
 
   @override
   String get getStarted => 'Fara';
 
   @override
-  String get welcomeBack => 'Barka da Dawowa';
+  String get welcomeBack => 'Barka da dawowa';
 
   @override
   String get email => 'Imel';
 
   @override
-  String get enterEmail => 'Shigar da Imel';
+  String get enterEmail => 'Shigar da imel';
 
   @override
   String get emailRequired => 'Ana buƙatar imel';
@@ -78,10 +78,10 @@ class AppLocalizationsHa extends AppLocalizations {
   String get invalidEmail => 'Da fatan za a shigar da ingantaccen imel';
 
   @override
-  String get password => 'Kalmar Sirri';
+  String get password => 'Kalmar sirri';
 
   @override
-  String get enterPassword => 'Shigar da Kalmar Sirri';
+  String get enterPassword => 'Shigar da kalmar sirri';
 
   @override
   String get passwordRequired => 'Ana buƙatar kalmar sirri';
@@ -91,75 +91,75 @@ class AppLocalizationsHa extends AppLocalizations {
       'Kalmar sirri dole ta kasance aƙalla haruffa 6';
 
   @override
-  String get forgotPassword => 'Ka Manta Kalmar Sirri';
+  String get forgotPassword => 'Ka manta kalmar sirri?';
 
   @override
   String get login => 'Shiga';
 
   @override
-  String get dontHaveAccount => 'Ba ka da Asusun?';
+  String get dontHaveAccount => 'Ba ka da asusu?';
 
   @override
-  String get signUp => 'Yi Rajista';
+  String get signUp => 'Yi rajista';
 
   @override
-  String get createAccount => 'Ƙirƙiri Asusun';
+  String get createAccount => 'Ƙirƙiri asusu';
 
   @override
-  String get firstName => 'Sunan Farko';
+  String get firstName => 'Sunan farko';
 
   @override
-  String get enterFirstName => 'Shigar da Sunan Farko';
+  String get enterFirstName => 'Shigar da sunan farko';
 
   @override
   String get firstNameRequired => 'Ana buƙatar sunan farko';
 
   @override
-  String get lastName => 'Sunan Ƙarshe';
+  String get lastName => 'Sunan ƙarshe';
 
   @override
-  String get enterLastName => 'Shigar da Sunan Ƙarshe';
+  String get enterLastName => 'Shigar da sunan ƙarshe';
 
   @override
   String get lastNameRequired => 'Ana buƙatar sunan ƙarshe';
 
   @override
-  String get enterEmailAddress => 'Shigar da Adireshin Imel';
+  String get enterEmailAddress => 'Shigar da adireshin imel';
 
   @override
-  String get agreeToTerms => 'Na fahimta kuma na yarda da';
+  String get agreeToTerms => 'Na fahimta kuma na amince da';
 
   @override
   String get termsOfService => 'Sharuɗɗan Amfani';
 
   @override
-  String get ofUsingRhicApp => 'na Amfani da RHIC Global App';
+  String get ofUsingRhicApp => 'na amfani da manhajar RHIC Global';
 
   @override
   String get continueText => 'Ci gaba';
 
   @override
-  String get alreadyHaveAccount => 'Kana da Asusun tuni?';
+  String get alreadyHaveAccount => 'Kana da asusu tuni?';
 
   @override
-  String get verifyYourEmail => 'Tabbatar da Imel ɗinka';
+  String get verifyYourEmail => 'Tabbatar da imel ɗinka';
 
   @override
   String get verificationDescription =>
       'Mun aika hanyar tabbatarwa zuwa adireshin imel ɗinka. Da fatan za ka duba akwatin saƙonka sannan ka tabbatar da imel ɗinka domin ci gaba.';
 
   @override
-  String get resendVerificationEmail => 'Sake Aika Imel na Tabbatarwa';
+  String get resendVerificationEmail => 'Sake aika imel ɗin tabbatarwa';
 
   @override
-  String get iHaveVerified => 'Na Tabbatar da Imel ɗina';
+  String get iHaveVerified => 'Na tabbatar da imel ɗina';
 
   @override
   String get checkYourInbox =>
-      'Da fatan za ka duba akwatin saƙonka da babban fayil ɗin spam domin samun imel ɗin tabbatarwa.';
+      'Da fatan za ka duba akwatin saƙonka da babban fayil ɗin spam don imel ɗin tabbatarwa.';
 
   @override
-  String get useAnotherAccount => 'Yi Amfani da Wani Asusun';
+  String get useAnotherAccount => 'Yi amfani da wani asusu';
 
   @override
   String get hello => 'Sannu';
@@ -168,7 +168,7 @@ class AppLocalizationsHa extends AppLocalizations {
   String get friend => 'Aboki';
 
   @override
-  String get give => 'Ba da Kyauta';
+  String get give => 'Bayarwa';
 
   @override
   String get supportRhic => 'Tallafa wa RHIC';
@@ -177,7 +177,7 @@ class AppLocalizationsHa extends AppLocalizations {
   String get ourChurches => 'Cocinmu';
 
   @override
-  String get findALocation => 'Nemo Wuri';
+  String get findALocation => 'Nemo wuri';
 
   @override
   String get exploreRhic => 'Bincika RHIC';
@@ -192,13 +192,13 @@ class AppLocalizationsHa extends AppLocalizations {
   String get family => 'Iyali';
 
   @override
-  String get events => 'Abubuwan Taro';
+  String get events => 'Abubuwan da ke faruwa';
 
   @override
   String get gallery => 'Hotuna';
 
   @override
-  String get live => 'Kai Tsaye';
+  String get live => 'Kai tsaye';
 
   @override
   String get home => 'Gida';
@@ -207,7 +207,7 @@ class AppLocalizationsHa extends AppLocalizations {
   String get myLibrary => 'Laburaren Na';
 
   @override
-  String get resources => 'Abubuwan Amfani';
+  String get resources => 'Albarkatu';
 
   @override
   String get account => 'Asusu';
@@ -223,9 +223,4 @@ class AppLocalizationsHa extends AppLocalizations {
 
   @override
   String get close => 'Rufe';
-
-  @override
-  String comingSoon(String title) {
-    return '$title zai zo nan ba da jimawa ba.';
-  }
 }

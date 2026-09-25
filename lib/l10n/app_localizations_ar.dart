@@ -46,20 +46,20 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get rhicWelcomeDescription =>
-      'استمتع بالوصول إلى جميع محتويات وخدمات RHIC أثناء التنقل';
+      'استمتع بالوصول إلى جميع محتويات وخدمات RHIC أينما كنت';
 
   @override
   String get rhicLiveDescription =>
       'شاهد البث المباشر وتواصل مع الأعضاء والقادة الآخرين';
 
   @override
-  String get designedWithYouInMind => 'صُمم التطبيق مع وضعك في الاعتبار';
+  String get designedWithYouInMind => 'صُمم خصيصًا من أجلك';
 
   @override
-  String get rhicSecureDescription => 'معلوماتك آمنة، فلنبدأ الآن';
+  String get rhicSecureDescription => 'معلوماتك آمنة، فلنبدأ معًا';
 
   @override
-  String get getStarted => 'ابدأ';
+  String get getStarted => 'ابدأ الآن';
 
   @override
   String get welcomeBack => 'مرحبًا بعودتك';
@@ -68,7 +68,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get email => 'البريد الإلكتروني';
 
   @override
-  String get enterEmail => 'أدخل البريد الإلكتروني';
+  String get enterEmail => 'أدخل بريدك الإلكتروني';
 
   @override
   String get emailRequired => 'البريد الإلكتروني مطلوب';
@@ -107,7 +107,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get firstName => 'الاسم الأول';
 
   @override
-  String get enterFirstName => 'أدخل الاسم الأول';
+  String get enterFirstName => 'أدخل اسمك الأول';
 
   @override
   String get firstNameRequired => 'الاسم الأول مطلوب';
@@ -122,7 +122,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get lastNameRequired => 'اسم العائلة مطلوب';
 
   @override
-  String get enterEmailAddress => 'أدخل عنوان البريد الإلكتروني';
+  String get enterEmailAddress => 'أدخل عنوان بريدك الإلكتروني';
 
   @override
   String get agreeToTerms => 'أفهم وأوافق على';
@@ -144,7 +144,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get verificationDescription =>
-      'لقد أرسلنا رابط التحقق إلى بريدك الإلكتروني. يرجى التحقق من صندوق الوارد وتأكيد بريدك الإلكتروني للمتابعة.';
+      'لقد أرسلنا رابط تحقق إلى بريدك الإلكتروني. يرجى التحقق من صندوق الوارد وتأكيد بريدك الإلكتروني للمتابعة.';
 
   @override
   String get resendVerificationEmail => 'إعادة إرسال رسالة التحقق';
@@ -166,7 +166,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get friend => 'صديق';
 
   @override
-  String get give => 'تبرع';
+  String get give => 'العطاء';
 
   @override
   String get supportRhic => 'ادعم RHIC';
@@ -175,7 +175,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get ourChurches => 'كنائسنا';
 
   @override
-  String get findALocation => 'العثور على موقع';
+  String get findALocation => 'ابحث عن موقع';
 
   @override
   String get exploreRhic => 'استكشف RHIC';
@@ -214,16 +214,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notifications => 'الإشعارات';
 
   @override
-  String get giving => 'التبرعات';
+  String get giving => 'العطاء';
 
   @override
   String get churchLocations => 'مواقع الكنائس';
 
   @override
   String get close => 'إغلاق';
-
-  @override
-  String comingSoon(String title) {
-    return '$title قادم قريبًا.';
-  }
 }

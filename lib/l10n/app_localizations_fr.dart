@@ -46,11 +46,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get rhicWelcomeDescription =>
-      'Profitez de tous les contenus et services de RHIC où que vous soyez';
+      'Accédez à tous les contenus et services de RHIC où que vous soyez';
 
   @override
   String get rhicLiveDescription =>
-      'Regardez en direct et connectez-vous avec les autres membres et responsables';
+      'Regardez en direct, connectez-vous avec les membres et les responsables';
 
   @override
   String get designedWithYouInMind => 'Conçue pour vous';
@@ -63,7 +63,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get getStarted => 'Commencer';
 
   @override
-  String get welcomeBack => 'Bon retour ';
+  String get welcomeBack => 'Bon retour';
 
   @override
   String get email => 'E-mail';
@@ -72,7 +72,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get enterEmail => 'Entrez votre e-mail';
 
   @override
-  String get emailRequired => 'L’e-mail est requis';
+  String get emailRequired => 'L’e-mail est obligatoire';
 
   @override
   String get invalidEmail => 'Veuillez entrer une adresse e-mail valide';
@@ -84,7 +84,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get enterPassword => 'Entrez votre mot de passe';
 
   @override
-  String get passwordRequired => 'Le mot de passe est requis';
+  String get passwordRequired => 'Le mot de passe est obligatoire';
 
   @override
   String get passwordTooShort =>
@@ -112,7 +112,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get enterFirstName => 'Entrez votre prénom';
 
   @override
-  String get firstNameRequired => 'Le prénom est requis';
+  String get firstNameRequired => 'Le prénom est obligatoire';
 
   @override
   String get lastName => 'Nom';
@@ -121,19 +121,19 @@ class AppLocalizationsFr extends AppLocalizations {
   String get enterLastName => 'Entrez votre nom';
 
   @override
-  String get lastNameRequired => 'Le nom est requis';
+  String get lastNameRequired => 'Le nom est obligatoire';
 
   @override
   String get enterEmailAddress => 'Entrez votre adresse e-mail';
 
   @override
-  String get agreeToTerms => 'J\'accepte les';
+  String get agreeToTerms => 'Je comprends et j’accepte les';
 
   @override
-  String get termsOfService => 'Conditions d\'utilisation';
+  String get termsOfService => 'Conditions d’utilisation';
 
   @override
-  String get ofUsingRhicApp => 'de l\'utilisation de l\'application RHIC';
+  String get ofUsingRhicApp => 'd’utilisation de l’application RHIC Global';
 
   @override
   String get continueText => 'Continuer';
@@ -142,21 +142,21 @@ class AppLocalizationsFr extends AppLocalizations {
   String get alreadyHaveAccount => 'Vous avez déjà un compte ?';
 
   @override
-  String get verifyYourEmail => 'Vérifiez votre adresse e-mail';
+  String get verifyYourEmail => 'Vérifiez votre e-mail';
 
   @override
   String get verificationDescription =>
-      'Nous avons envoyé un lien de vérification à votre adresse e-mail. Veuillez consulter votre boîte de réception et vérifier votre adresse e-mail pour continuer.';
+      'Nous avons envoyé un lien de vérification à votre adresse e-mail. Consultez votre boîte de réception et vérifiez votre e-mail pour continuer.';
 
   @override
-  String get resendVerificationEmail => 'Renvoyer l\'e-mail de vérification';
+  String get resendVerificationEmail => 'Renvoyer l’e-mail de vérification';
 
   @override
-  String get iHaveVerified => 'J\'ai vérifié mon e-mail';
+  String get iHaveVerified => 'J’ai vérifié mon e-mail';
 
   @override
   String get checkYourInbox =>
-      'Veuillez vérifier votre boîte de réception et votre dossier spam pour trouver l\'e-mail de vérification.';
+      'Veuillez vérifier votre boîte de réception et votre dossier spam pour trouver l’e-mail de vérification.';
 
   @override
   String get useAnotherAccount => 'Utiliser un autre compte';
@@ -198,7 +198,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get gallery => 'Galerie';
 
   @override
-  String get live => 'En direct';
+  String get live => 'Direct';
 
   @override
   String get home => 'Accueil';
@@ -219,13 +219,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get giving => 'Dons';
 
   @override
-  String get churchLocations => 'Lieux des églises';
+  String get churchLocations => 'Emplacements des églises';
 
   @override
   String get close => 'Fermer';
-
-  @override
-  String comingSoon(String title) {
-    return '$title sera bientôt disponible.';
-  }
 }

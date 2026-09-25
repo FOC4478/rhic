@@ -46,11 +46,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get rhicWelcomeDescription =>
-      'Disfruta de todo el contenido y los servicios de RHIC estés donde estés';
+      'Disfruta de acceso a todo el contenido y los servicios de RHIC estés donde estés';
 
   @override
   String get rhicLiveDescription =>
-      'Mira en vivo y conecta con otros miembros y líderes';
+      'Mira en directo y conéctate con otros miembros y líderes';
 
   @override
   String get designedWithYouInMind => 'Diseñada pensando en ti';
@@ -63,25 +63,25 @@ class AppLocalizationsEs extends AppLocalizations {
   String get getStarted => 'Comenzar';
 
   @override
-  String get welcomeBack => 'Bienvenido de nuevo ';
+  String get welcomeBack => 'Bienvenido de nuevo';
 
   @override
   String get email => 'Correo electrónico';
 
   @override
-  String get enterEmail => 'Ingresa tu correo electrónico';
+  String get enterEmail => 'Introduce tu correo electrónico';
 
   @override
   String get emailRequired => 'El correo electrónico es obligatorio';
 
   @override
-  String get invalidEmail => 'Ingresa un correo electrónico válido';
+  String get invalidEmail => 'Introduce un correo electrónico válido';
 
   @override
   String get password => 'Contraseña';
 
   @override
-  String get enterPassword => 'Ingresa tu contraseña';
+  String get enterPassword => 'Introduce tu contraseña';
 
   @override
   String get passwordRequired => 'La contraseña es obligatoria';
@@ -103,7 +103,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get signUp => 'Registrarse';
 
   @override
-  String get createAccount => 'Crear una cuenta';
+  String get createAccount => 'Crear cuenta';
 
   @override
   String get firstName => 'Nombre';
@@ -128,13 +128,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'Introduce tu dirección de correo electrónico';
 
   @override
-  String get agreeToTerms => 'Acepto los';
+  String get agreeToTerms => 'Entiendo y acepto los';
 
   @override
   String get termsOfService => 'Términos de servicio';
 
   @override
-  String get ofUsingRhicApp => 'del uso de la aplicación RHIC';
+  String get ofUsingRhicApp => 'de uso de la aplicación RHIC Global';
 
   @override
   String get continueText => 'Continuar';
@@ -147,13 +147,13 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get verificationDescription =>
-      'Hemos enviado un enlace de verificación a tu dirección de correo electrónico. Revisa tu bandeja de entrada y verifica tu correo para continuar.';
+      'Hemos enviado un enlace de verificación a tu correo electrónico. Revisa tu bandeja de entrada y verifica tu correo para continuar.';
 
   @override
   String get resendVerificationEmail => 'Reenviar correo de verificación';
 
   @override
-  String get iHaveVerified => 'He verificado mi correo electrónico';
+  String get iHaveVerified => 'He verificado mi correo';
 
   @override
   String get checkYourInbox =>
@@ -169,7 +169,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get friend => 'Amigo';
 
   @override
-  String get give => 'Donar';
+  String get give => 'Dar';
 
   @override
   String get supportRhic => 'Apoyar a RHIC';
@@ -224,9 +224,4 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get close => 'Cerrar';
-
-  @override
-  String comingSoon(String title) {
-    return '$title estará disponible próximamente.';
-  }
 }

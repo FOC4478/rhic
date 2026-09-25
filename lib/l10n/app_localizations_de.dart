@@ -42,28 +42,28 @@ class AppLocalizationsDe extends AppLocalizations {
   String get skip => 'Überspringen';
 
   @override
-  String get welcomeToRhicApp => 'Willkommen bei der RHIC-App';
+  String get welcomeToRhicApp => 'Willkommen bei der RHIC App';
 
   @override
   String get rhicWelcomeDescription =>
-      'Genieße unterwegs den Zugriff auf alle Inhalte und Angebote von RHIC';
+      'Greife jederzeit auf alle Inhalte und Dienste von RHIC zu';
 
   @override
   String get rhicLiveDescription =>
-      'Schau live zu und verbinde dich mit anderen Mitgliedern und Leitern';
+      'Sieh dir Live-Übertragungen an und verbinde dich mit anderen Mitgliedern und Leitern';
 
   @override
   String get designedWithYouInMind => 'Für dich entwickelt';
 
   @override
   String get rhicSecureDescription =>
-      'Deine Informationen sind sicher. Lass uns anfangen, einverstanden?';
+      'Deine Informationen sind sicher. Lass uns beginnen.';
 
   @override
   String get getStarted => 'Loslegen';
 
   @override
-  String get welcomeBack => 'Willkommen zurück ';
+  String get welcomeBack => 'Willkommen zurück';
 
   @override
   String get email => 'E-Mail';
@@ -75,7 +75,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get emailRequired => 'E-Mail ist erforderlich';
 
   @override
-  String get invalidEmail => 'Bitte geben Sie eine gültige E-Mail-Adresse ein';
+  String get invalidEmail => 'Bitte gib eine gültige E-Mail-Adresse ein';
 
   @override
   String get password => 'Passwort';
@@ -88,16 +88,16 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get passwordTooShort =>
-      'Das Passwort muss mindestens 6 Zeichen lang sein';
+      'Das Passwort muss mindestens 6 Zeichen enthalten';
 
   @override
-  String get forgotPassword => 'Passwort vergessen?';
+  String get forgotPassword => 'Passwort vergessen';
 
   @override
   String get login => 'Anmelden';
 
   @override
-  String get dontHaveAccount => 'Noch kein Konto?';
+  String get dontHaveAccount => 'Du hast noch kein Konto?';
 
   @override
   String get signUp => 'Registrieren';
@@ -109,7 +109,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get firstName => 'Vorname';
 
   @override
-  String get enterFirstName => 'Vornamen eingeben';
+  String get enterFirstName => 'Vorname eingeben';
 
   @override
   String get firstNameRequired => 'Vorname ist erforderlich';
@@ -118,7 +118,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get lastName => 'Nachname';
 
   @override
-  String get enterLastName => 'Nachnamen eingeben';
+  String get enterLastName => 'Nachname eingeben';
 
   @override
   String get lastNameRequired => 'Nachname ist erforderlich';
@@ -127,13 +127,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get enterEmailAddress => 'E-Mail-Adresse eingeben';
 
   @override
-  String get agreeToTerms => 'Ich verstehe und stimme den';
+  String get agreeToTerms => 'Ich verstehe und akzeptiere die';
 
   @override
   String get termsOfService => 'Nutzungsbedingungen';
 
   @override
-  String get ofUsingRhicApp => 'für die Nutzung der RHIC Global App zu';
+  String get ofUsingRhicApp => 'zur Nutzung der RHIC Global App';
 
   @override
   String get continueText => 'Weiter';
@@ -142,11 +142,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get alreadyHaveAccount => 'Du hast bereits ein Konto?';
 
   @override
-  String get verifyYourEmail => 'E-Mail-Adresse bestätigen';
+  String get verifyYourEmail => 'E-Mail bestätigen';
 
   @override
   String get verificationDescription =>
-      'Wir haben einen Bestätigungslink an deine E-Mail-Adresse gesendet. Bitte überprüfe deinen Posteingang und bestätige deine E-Mail-Adresse, um fortzufahren.';
+      'Wir haben einen Bestätigungslink an deine E-Mail-Adresse gesendet. Bitte überprüfe deinen Posteingang und bestätige deine E-Mail, um fortzufahren.';
 
   @override
   String get resendVerificationEmail => 'Bestätigungs-E-Mail erneut senden';
@@ -156,7 +156,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get checkYourInbox =>
-      'Bitte überprüfe deinen Posteingang und den Spam-Ordner auf die Bestätigungs-E-Mail.';
+      'Bitte überprüfe deinen Posteingang und Spam-Ordner auf die Bestätigungs-E-Mail.';
 
   @override
   String get useAnotherAccount => 'Anderes Konto verwenden';
@@ -168,7 +168,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get friend => 'Freund';
 
   @override
-  String get give => 'Spenden';
+  String get give => 'Geben';
 
   @override
   String get supportRhic => 'RHIC unterstützen';
@@ -186,7 +186,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get teachings => 'Lehren';
 
   @override
-  String get rhicCommunity => 'RHIC-Gemeinschaft';
+  String get rhicCommunity => 'RHIC Gemeinschaft';
 
   @override
   String get family => 'Familie';
@@ -223,9 +223,4 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get close => 'Schließen';
-
-  @override
-  String comingSoon(String title) {
-    return '$title ist bald verfügbar.';
-  }
 }

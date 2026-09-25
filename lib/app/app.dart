@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'package:church_app/l10n/app_localizations.dart';
 import 'package:church_app/app/locale_controller.dart';
@@ -38,18 +39,83 @@ class ChurchApp extends StatelessWidget {
     return AnimatedBuilder(
       animation: RhicLocaleController.instance,
       builder: (context, child) {
+        final selectedLocale =
+            RhicLocaleController.instance.locale;
+
         return MaterialApp(
           debugShowCheckedModeBanner: false,
 
           title: 'RHIC',
 
-          locale: RhicLocaleController.instance.locale,
+          locale: selectedLocale,
 
-          localizationsDelegates:
-              AppLocalizations.localizationsDelegates,
+          // ==========================================================
+          // LOCALIZATION DELEGATES
+          // ==========================================================
 
-          supportedLocales:
-              AppLocalizations.supportedLocales,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+
+            // Flutter Material widgets.
+            GlobalMaterialLocalizations.delegate,
+
+            // Flutter general widgets.
+            GlobalWidgetsLocalizations.delegate,
+
+            // Flutter Cupertino widgets.
+            GlobalCupertinoLocalizations.delegate,
+          ],
+
+          // ==========================================================
+          // RHIC SUPPORTED LANGUAGES
+          // ==========================================================
+
+          supportedLocales: const [
+            Locale('en'),
+            Locale('fr'),
+            Locale('es'),
+            Locale('ar'),
+            Locale('de'),
+            Locale('ha'),
+            Locale('yo'),
+            Locale('ig'),
+          ],
+
+          // ==========================================================
+          // LOCALE RESOLUTION
+          // ==========================================================
+
+          localeResolutionCallback: (
+            locale,
+            supportedLocales,
+          ) {
+            if (locale == null) {
+              return const Locale('en');
+            }
+
+            // Exact language + country match first.
+            for (final supportedLocale
+                in supportedLocales) {
+              if (supportedLocale.languageCode ==
+                      locale.languageCode &&
+                  supportedLocale.countryCode ==
+                      locale.countryCode) {
+                return supportedLocale;
+              }
+            }
+
+            // Language-only match.
+            for (final supportedLocale
+                in supportedLocales) {
+              if (supportedLocale.languageCode ==
+                  locale.languageCode) {
+                return supportedLocale;
+              }
+            }
+
+            // Safe fallback.
+            return const Locale('en');
+          },
 
           initialRoute: '/splash',
 
@@ -78,8 +144,12 @@ class ChurchApp extends StatelessWidget {
             '/language': (context) =>
                 const LanguageScreen(),
 
-                '/notifications': (context) =>
-    const NotificationsScreen(),
+            // ====================================================
+            // NOTIFICATIONS
+            // ====================================================
+
+            '/notifications': (context) =>
+                const NotificationsScreen(),
 
             // ====================================================
             // ONBOARDING
@@ -119,14 +189,15 @@ class ChurchApp extends StatelessWidget {
 
             '/resources': (context) =>
                 const ResourcesScreen(),
-             '/shop': (context) =>
-    const ShopScreen(),
 
-'/cart': (context) =>
-    const CartScreen(),    
+            '/shop': (context) =>
+                const ShopScreen(),
 
-         '/account': (context) => 
-         const AccountScreen(),
+            '/cart': (context) =>
+                const CartScreen(),
+
+            '/account': (context) =>
+                const AccountScreen(),
 
             // ====================================================
             // GIVING
@@ -199,7 +270,8 @@ class ChurchApp extends StatelessWidget {
                       'Community group ID is missing.',
                       style: TextStyle(
                         fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                        fontWeight:
+                            FontWeight.w600,
                       ),
                     ),
                   ),
@@ -210,8 +282,6 @@ class ChurchApp extends StatelessWidget {
                 groupId: arguments,
               );
             },
-
-            
 
             // ====================================================
             // COMMUNITY GROUP DETAILS
@@ -231,7 +301,8 @@ class ChurchApp extends StatelessWidget {
                       'Community group ID is missing.',
                       style: TextStyle(
                         fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                        fontWeight:
+                            FontWeight.w600,
                       ),
                     ),
                   ),
@@ -244,16 +315,14 @@ class ChurchApp extends StatelessWidget {
             },
 
             // ====================================================
-        // ADMIN
+            // ADMIN
+            // ====================================================
 
+            '/admin/login': (context) =>
+                const AdminLoginScreen(),
 
-         '/admin/login': (context) =>
-           const AdminLoginScreen(),
-
-         '/admin/dashboard': (context) =>
-          const AdminDashboardScreen(),
-
-
+            '/admin/dashboard': (context) =>
+                const AdminDashboardScreen(),
           },
         );
       },

@@ -529,12 +529,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Close'**
   String get close;
-
-  /// No description provided for @comingSoon.
-  ///
-  /// In en, this message translates to:
-  /// **'{title} is coming soon.'**
-  String comingSoon(String title);
 }
 
 class _AppLocalizationsDelegate

@@ -222,9 +222,4 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get close => 'Close';
-
-  @override
-  String comingSoon(String title) {
-    return '$title is coming soon.';
-  }
 }

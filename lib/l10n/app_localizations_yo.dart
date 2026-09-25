@@ -42,124 +42,122 @@ class AppLocalizationsYo extends AppLocalizations {
   String get skip => 'Foju kọ́';
 
   @override
-  String get welcomeToRhicApp => 'Káàbọ̀ sí Àpù RHIC';
+  String get welcomeToRhicApp => 'Ẹ káàbọ̀ sí Àpù RHIC';
 
   @override
   String get rhicWelcomeDescription =>
-      'Gbadun iraye si gbogbo akoonu ati awọn iṣẹ RHIC nibikibi ati nigbakugba';
+      'Gbadun ànfàní láti wọlé sí gbogbo àkóónú àti iṣẹ́ RHIC nígbàkúgbà';
 
   @override
   String get rhicLiveDescription =>
-      'Wo eto laaye, ki o si sopọ pẹlu awọn ọmọ ẹgbẹ ati awọn olori miiran';
+      'Wo ètò ní tààrà kí o sì bá àwọn ọmọ ẹgbẹ́ àti aṣáájú mìíràn ṣọ̀rẹ́';
 
   @override
-  String get designedWithYouInMind => 'A ṣe apẹrẹ rẹ̀ pẹ̀lú rẹ ní èrò';
+  String get designedWithYouInMind => 'A ṣe é pẹ̀lú rẹ ní èrò';
 
   @override
-  String get rhicSecureDescription =>
-      'Alaye rẹ wa ni aabo, ẹ jẹ́ ká bẹ̀rẹ̀, àbí?';
+  String get rhicSecureDescription => 'Àlàyé rẹ wà ní ààbò, ẹ jẹ́ kí a bẹ̀rẹ̀';
 
   @override
   String get getStarted => 'Bẹ̀rẹ̀';
 
   @override
-  String get welcomeBack => 'Kaabo lẹ́ẹ̀kansi ';
+  String get welcomeBack => 'Ẹ káàbọ̀ padà';
 
   @override
-  String get email => 'Imeeli';
+  String get email => 'Ímeèlì';
 
   @override
-  String get enterEmail => 'Tẹ imeeli rẹ sii';
+  String get enterEmail => 'Tẹ ímeèlì sílẹ̀';
 
   @override
-  String get emailRequired => 'A nilo imeeli';
+  String get emailRequired => 'A nílò ímeèlì';
 
   @override
-  String get invalidEmail => 'Jọwọ tẹ imeeli tó tọ sii';
+  String get invalidEmail => 'Jọ̀wọ́ tẹ ímeèlì tó wúlò sílẹ̀';
 
   @override
   String get password => 'Ọ̀rọ̀ aṣínà';
 
   @override
-  String get enterPassword => 'Tẹ ọ̀rọ̀ aṣínà rẹ sii';
+  String get enterPassword => 'Tẹ ọ̀rọ̀ aṣínà sílẹ̀';
 
   @override
-  String get passwordRequired => 'A nilo ọ̀rọ̀ aṣínà';
+  String get passwordRequired => 'A nílò ọ̀rọ̀ aṣínà';
 
   @override
-  String get passwordTooShort =>
-      'Ọ̀rọ̀ aṣínà gbọdọ̀ ní o kere ju àwọn ohun kikọ 6';
+  String get passwordTooShort => 'Ọ̀rọ̀ aṣínà gbọ́dọ̀ ní ó kéré tán àwọn àmì 6';
 
   @override
-  String get forgotPassword => 'Ṣe o gbàgbé ọ̀rọ̀ aṣínà?';
+  String get forgotPassword => 'Ṣé o gbàgbé ọ̀rọ̀ aṣínà?';
 
   @override
   String get login => 'Wọlé';
 
   @override
-  String get dontHaveAccount => 'Ṣe o kò ní àkọọ́lẹ̀?';
+  String get dontHaveAccount => 'Ṣé o kò ní àkọọ́lẹ̀?';
 
   @override
-  String get signUp => 'Forúkọ sílẹ̀';
+  String get signUp => 'Forúkọsílẹ̀';
 
   @override
-  String get createAccount => 'Ṣẹda Akọọlẹ';
+  String get createAccount => 'Ṣẹ̀dá àkọọ́lẹ̀';
 
   @override
-  String get firstName => 'Orúkọ Àkọ́kọ́';
+  String get firstName => 'Orúkọ àkọ́kọ́';
 
   @override
-  String get enterFirstName => 'Tẹ Orúkọ Àkọ́kọ́ sí';
+  String get enterFirstName => 'Tẹ orúkọ àkọ́kọ́ sílẹ̀';
 
   @override
   String get firstNameRequired => 'A nílò orúkọ àkọ́kọ́';
 
   @override
-  String get lastName => 'Orúkọ Ìdílé';
+  String get lastName => 'Orúkọ ìdílé';
 
   @override
-  String get enterLastName => 'Tẹ Orúkọ Ìdílé sí';
+  String get enterLastName => 'Tẹ orúkọ ìdílé sílẹ̀';
 
   @override
   String get lastNameRequired => 'A nílò orúkọ ìdílé';
 
   @override
-  String get enterEmailAddress => 'Tẹ Àdírẹ́sì Imeeli sí';
+  String get enterEmailAddress => 'Tẹ àdírẹ́sì ímeèlì sílẹ̀';
 
   @override
   String get agreeToTerms => 'Mo lóye mo sì gba';
 
   @override
-  String get termsOfService => 'Àwọn Ofin Iṣẹ́';
+  String get termsOfService => 'Àwọn Òfin Ìlò';
 
   @override
-  String get ofUsingRhicApp => 'ti lílo RHIC Global App';
+  String get ofUsingRhicApp => 'fún lílo Àpù RHIC Global';
 
   @override
   String get continueText => 'Tẹ̀síwájú';
 
   @override
-  String get alreadyHaveAccount => 'Ṣe o ti ní Akọọlẹ kan?';
+  String get alreadyHaveAccount => 'Ṣé o ti ní àkọọ́lẹ̀ kan tẹ́lẹ̀?';
 
   @override
-  String get verifyYourEmail => 'Jẹ́rìí Imeeli Rẹ';
+  String get verifyYourEmail => 'Jẹ́rìí ímeèlì rẹ';
 
   @override
   String get verificationDescription =>
-      'A ti fi ọna asopọ ìjẹ́rìí ranṣẹ́ sí imeeli rẹ. Jọwọ ṣayẹwo apo-iwọle rẹ ki o jẹ́rìí imeeli rẹ lati tẹsiwaju.';
+      'A ti fi ìjápọ̀ ìjẹ́rìí ránṣẹ́ sí àdírẹ́sì ímeèlì rẹ. Jọ̀wọ́ ṣàyẹ̀wò àpótí ìfìránṣẹ́ rẹ kí o sì jẹ́rìí ímeèlì rẹ láti tẹ̀síwájú.';
 
   @override
-  String get resendVerificationEmail => 'Tun Firanṣẹ́ Imeeli Ìjẹ́rìí';
+  String get resendVerificationEmail => 'Tun rán ímeèlì ìjẹ́rìí';
 
   @override
-  String get iHaveVerified => 'Mo Ti Jẹ́rìí Imeeli Mi';
+  String get iHaveVerified => 'Mo ti jẹ́rìí ímeèlì mi';
 
   @override
   String get checkYourInbox =>
-      'Jọwọ ṣayẹwo apo-iwọle rẹ àti folda spam fun imeeli ìjẹ́rìí.';
+      'Jọ̀wọ́ ṣàyẹ̀wò àpótí ìfìránṣẹ́ àti àpótí spam rẹ fún ímeèlì ìjẹ́rìí.';
 
   @override
-  String get useAnotherAccount => 'Lo Akọọlẹ Miiran';
+  String get useAnotherAccount => 'Lo àkọọ́lẹ̀ mìíràn';
 
   @override
   String get hello => 'Pẹ̀lẹ́';
@@ -174,7 +172,7 @@ class AppLocalizationsYo extends AppLocalizations {
   String get supportRhic => 'Ṣe àtìlẹ́yìn fún RHIC';
 
   @override
-  String get ourChurches => 'Àwọn ṣọ́ọ̀ṣì wa';
+  String get ourChurches => 'Àwọn Ṣọ́ọ̀ṣì wa';
 
   @override
   String get findALocation => 'Wa ibi kan';
@@ -198,16 +196,16 @@ class AppLocalizationsYo extends AppLocalizations {
   String get gallery => 'Àwòrán';
 
   @override
-  String get live => 'Taara';
+  String get live => 'Tààrà';
 
   @override
   String get home => 'Ilé';
 
   @override
-  String get myLibrary => 'Ilé-ìkàwé mi';
+  String get myLibrary => 'Ilé ìkàwé mi';
 
   @override
-  String get resources => 'Àwọn ohun àmúlò';
+  String get resources => 'Àwọn ohun èlò';
 
   @override
   String get account => 'Àkọọ́lẹ̀';
@@ -216,16 +214,11 @@ class AppLocalizationsYo extends AppLocalizations {
   String get notifications => 'Àwọn ìfitónilétí';
 
   @override
-  String get giving => 'Ìtọrẹ';
+  String get giving => 'Fífúnni';
 
   @override
-  String get churchLocations => 'Àwọn ibi ṣọ́ọ̀ṣì';
+  String get churchLocations => 'Àwọn ibi tí Ṣọ́ọ̀ṣì wà';
 
   @override
   String get close => 'Pa';
-
-  @override
-  String comingSoon(String title) {
-    return '$title yóò wà láìpẹ́.';
-  }
 }

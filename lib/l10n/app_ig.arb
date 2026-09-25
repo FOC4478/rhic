@@ -12,82 +12,81 @@
   "igbo": "Igbo",
   "continueButton": "Gaa n'ihu",
 
-  "skip": "Mafere",
+  "skip": "Gafere",
   "welcomeToRhicApp": "Nnọọ na ngwa RHIC",
-  "rhicWelcomeDescription": "Nwee obi ụtọ ịnweta ọdịnaya na ọrụ RHIC niile n'oge ọ bụla na ebe ọ bụla",
-  "rhicLiveDescription": "Lelee ihe na-aga ugbu a, jikọọkwa na ndị otu na ndị ndu ndị ọzọ",
-  "designedWithYouInMind": "E mere ya n'uche banyere gị",
-  "rhicSecureDescription": "Ozi gị dị nchebe, ka anyị bido, ọ dị mma?",
+  "rhicWelcomeDescription": "Nwee ohere ịnweta ọdịnaya na ọrụ RHIC niile n'oge ọ bụla",
+  "rhicLiveDescription": "Lelee ihe na-aga ugbu a ma jikọọ na ndị otu na ndị ndu ndị ọzọ",
+  "designedWithYouInMind": "E mere ya maka gị",
+  "rhicSecureDescription": "Ozi gị dị nchebe, ka anyị bido",
   "getStarted": "Bido",
 
- "welcomeBack": "Nnọọ ọzọ ",
-  "email": "Ozi-e",
-  "enterEmail": "Tinye ozi-e gị",
-  "emailRequired": "Achọrọ ozi-e",
-  "invalidEmail": "Biko tinye ozi-e ziri ezi",
+  "welcomeBack": "Nnọọ ọzọ",
+  "email": "Email",
+  "enterEmail": "Tinye email",
+  "emailRequired": "A chọrọ email",
+  "invalidEmail": "Biko tinye email ziri ezi",
   "password": "Okwuntughe",
-  "enterPassword": "Tinye okwuntughe gị",
-  "passwordRequired": "Achọrọ okwuntughe",
-  "passwordTooShort": "Okwuntughe ga-enwe opekata mpe mkpụrụedemede 6",
-  "forgotPassword": "Chefuru okwuntughe?",
+  "enterPassword": "Tinye okwuntughe",
+  "passwordRequired": "A chọrọ okwuntughe",
+  "passwordTooShort": "Okwuntughe ga-abụrịrị mkpụrụedemede 6 ma ọ bụ karịa",
+  "forgotPassword": "Ị chefuru okwuntughe?",
   "login": "Banye",
   "dontHaveAccount": "Ị nweghị akaụntụ?",
-  "signUp": "Mepụta akaụntụ",
+  "signUp": "Debanye aha",
 
+  "createAccount": "Mepụta akaụntụ",
 
-    "createAccount": "Mepụta Akaụntụ",
-  "firstName": "Aha Mbụ",
-  "enterFirstName": "Tinye Aha Mbụ",
-  "firstNameRequired": "Achọrọ aha mbụ",
-  "lastName": "Aha Ikpeazụ",
-  "enterLastName": "Tinye Aha Ikpeazụ",
-  "lastNameRequired": "Achọrọ aha ikpeazụ",
-  "enterEmailAddress": "Tinye Adreesị Email",
+  "firstName": "Aha mbụ",
+  "enterFirstName": "Tinye aha mbụ",
+  "firstNameRequired": "A chọrọ aha mbụ",
+
+  "lastName": "Aha nna",
+  "enterLastName": "Tinye aha nna",
+  "lastNameRequired": "A chọrọ aha nna",
+
+  "enterEmailAddress": "Tinye adreesị email",
+
   "agreeToTerms": "Aghọtara m ma kwenye na",
   "termsOfService": "Usoro Ọrụ",
-  "ofUsingRhicApp": "nke iji RHIC Global App",
+  "ofUsingRhicApp": "nke iji ngwa RHIC Global",
+
   "continueText": "Gaa n'ihu",
-  "alreadyHaveAccount": "Ị nweela Akaụntụ?",
 
-  "verifyYourEmail": "Kwenye Email Gị",
-  "verificationDescription": "Anyị ezigarala njikọ nkwenye na email gị. Biko lelee igbe ozi gị ma kwado email gị iji gaa n'ihu.",
-  "resendVerificationEmail": "Zipụkwa Email Nkwenye",
-  "iHaveVerified": "Ekwenyela M Email M",
-  "checkYourInbox": "Biko lelee igbe ozi gị na folda spam maka email nkwenye.",
-  "useAnotherAccount": "Jiri Akaụntụ Ọzọ",
+  "alreadyHaveAccount": "Ị nwere akaụntụ ugbu a?",
 
+  "verifyYourEmail": "Kwenye email gị",
+  "verificationDescription": "Anyị ezipụla njikọ nkwenye na email gị. Biko lelee igbe ozi gị ma kwenye email gị iji gaa n'ihu.",
+  "resendVerificationEmail": "Zipụ email nkwenye ọzọ",
+  "iHaveVerified": "Ekwenyela m email m",
+  "checkYourInbox": "Biko lelee igbe ozi gị na nchekwa spam maka email nkwenye ahụ.",
+  "useAnotherAccount": "Jiri akaụntụ ọzọ",
 
-  
-  "hello": "Nnọọ",
+  "hello": "Ndewo",
   "friend": "Enyi",
-  "give": "Nye",
+
+  "give": "Inye",
   "supportRhic": "Kwado RHIC",
+
   "ourChurches": "Ụka anyị",
   "findALocation": "Chọta ebe",
-  "exploreRhic": "Chọpụta RHIC",
+
+  "exploreRhic": "Nyochaa RHIC",
+
   "teachings": "Ozizi",
   "rhicCommunity": "Obodo RHIC",
   "family": "Ezinụlọ",
   "events": "Ihe omume",
-  "gallery": "Foto",
-  "live": "Ndụ",
+  "gallery": "Ụlọ ihe osise",
+  "live": "Na-aga ugbu a",
+
   "home": "Ụlọ",
   "myLibrary": "Ọbá akwụkwọ m",
   "resources": "Akụrụngwa",
   "account": "Akaụntụ",
+
   "notifications": "Ọkwa",
   "giving": "Inye onyinye",
   "churchLocations": "Ebe ụka dị",
-  "close": "Mechie",
 
-  "comingSoon": "{title} ga-abịa n'oge na-adịghị anya.",
-  "@comingSoon": {
-    "placeholders": {
-      "title": {
-        "type": "String"
-      }
-    }
-  }
-
-
+  "close": "Mechie"
 }

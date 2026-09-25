@@ -8,93 +8,85 @@
   "spanish": "Sifaniyanci",
   "german": "Jamusanci",
   "hausa": "Hausa",
-  "yoruba": "Yorùbá",
+  "yoruba": "Yarbanci",
   "igbo": "Igbo",
   "continueButton": "Ci gaba",
 
   "skip": "Tsallake",
-  "welcomeToRhicApp": "Barka da zuwa Manhajar RHIC",
-  "rhicWelcomeDescription": "Ka more da damar samun dukkan abubuwan RHIC da ayyukanta a duk lokacin da kake so",
-  "rhicLiveDescription": "Kalli kai tsaye, haɗu da sauran membobi da shugabanni",
-  "designedWithYouInMind": "An tsara ta ne tare da kai a zuciya",
-  "rhicSecureDescription": "Bayanan ka suna cikin tsaro, mu fara ko?",
+  "welcomeToRhicApp": "Barka da zuwa manhajar RHIC",
+  "rhicWelcomeDescription": "Ji daɗin samun damar dukkan abubuwan RHIC da ayyukansa a kowane lokaci",
+  "rhicLiveDescription": "Kalli kai tsaye kuma haɗu da sauran mambobi da shugabanni",
+  "designedWithYouInMind": "An tsara ta ne domin ku",
+  "rhicSecureDescription": "Bayananka suna cikin tsaro, bari mu fara",
   "getStarted": "Fara",
 
-  "welcomeBack": "Barka da Dawowa",
+  "welcomeBack": "Barka da dawowa",
   "email": "Imel",
-  "enterEmail": "Shigar da Imel",
+  "enterEmail": "Shigar da imel",
   "emailRequired": "Ana buƙatar imel",
   "invalidEmail": "Da fatan za a shigar da ingantaccen imel",
-  "password": "Kalmar Sirri",
-  "enterPassword": "Shigar da Kalmar Sirri",
+  "password": "Kalmar sirri",
+  "enterPassword": "Shigar da kalmar sirri",
   "passwordRequired": "Ana buƙatar kalmar sirri",
   "passwordTooShort": "Kalmar sirri dole ta kasance aƙalla haruffa 6",
-  "forgotPassword": "Ka Manta Kalmar Sirri",
+  "forgotPassword": "Ka manta kalmar sirri?",
   "login": "Shiga",
-  "dontHaveAccount": "Ba ka da Asusun?",
-  "signUp": "Yi Rajista",
+  "dontHaveAccount": "Ba ka da asusu?",
+  "signUp": "Yi rajista",
 
-  "createAccount": "Ƙirƙiri Asusun",
+  "createAccount": "Ƙirƙiri asusu",
 
-  "firstName": "Sunan Farko",
-  "enterFirstName": "Shigar da Sunan Farko",
+  "firstName": "Sunan farko",
+  "enterFirstName": "Shigar da sunan farko",
   "firstNameRequired": "Ana buƙatar sunan farko",
 
-  "lastName": "Sunan Ƙarshe",
-  "enterLastName": "Shigar da Sunan Ƙarshe",
+  "lastName": "Sunan ƙarshe",
+  "enterLastName": "Shigar da sunan ƙarshe",
   "lastNameRequired": "Ana buƙatar sunan ƙarshe",
 
-  "enterEmailAddress": "Shigar da Adireshin Imel",
+  "enterEmailAddress": "Shigar da adireshin imel",
 
-  "agreeToTerms": "Na fahimta kuma na yarda da",
+  "agreeToTerms": "Na fahimta kuma na amince da",
   "termsOfService": "Sharuɗɗan Amfani",
-  "ofUsingRhicApp": "na Amfani da RHIC Global App",
+  "ofUsingRhicApp": "na amfani da manhajar RHIC Global",
 
   "continueText": "Ci gaba",
 
-  "alreadyHaveAccount": "Kana da Asusun tuni?",
+  "alreadyHaveAccount": "Kana da asusu tuni?",
 
-  "verifyYourEmail": "Tabbatar da Imel ɗinka",
+  "verifyYourEmail": "Tabbatar da imel ɗinka",
   "verificationDescription": "Mun aika hanyar tabbatarwa zuwa adireshin imel ɗinka. Da fatan za ka duba akwatin saƙonka sannan ka tabbatar da imel ɗinka domin ci gaba.",
-  "resendVerificationEmail": "Sake Aika Imel na Tabbatarwa",
-  "iHaveVerified": "Na Tabbatar da Imel ɗina",
-  "checkYourInbox": "Da fatan za ka duba akwatin saƙonka da babban fayil ɗin spam domin samun imel ɗin tabbatarwa.",
-  "useAnotherAccount": "Yi Amfani da Wani Asusun",
+  "resendVerificationEmail": "Sake aika imel ɗin tabbatarwa",
+  "iHaveVerified": "Na tabbatar da imel ɗina",
+  "checkYourInbox": "Da fatan za ka duba akwatin saƙonka da babban fayil ɗin spam don imel ɗin tabbatarwa.",
+  "useAnotherAccount": "Yi amfani da wani asusu",
 
   "hello": "Sannu",
   "friend": "Aboki",
 
-  "give": "Ba da Kyauta",
+  "give": "Bayarwa",
   "supportRhic": "Tallafa wa RHIC",
 
   "ourChurches": "Cocinmu",
-  "findALocation": "Nemo Wuri",
+  "findALocation": "Nemo wuri",
 
   "exploreRhic": "Bincika RHIC",
 
   "teachings": "Koyarwa",
   "rhicCommunity": "Al'ummar RHIC",
   "family": "Iyali",
-  "events": "Abubuwan Taro",
+  "events": "Abubuwan da ke faruwa",
   "gallery": "Hotuna",
-  "live": "Kai Tsaye",
+  "live": "Kai tsaye",
 
   "home": "Gida",
   "myLibrary": "Laburaren Na",
-  "resources": "Abubuwan Amfani",
+  "resources": "Albarkatu",
   "account": "Asusu",
 
   "notifications": "Sanarwa",
   "giving": "Bayarwa",
   "churchLocations": "Wuraren Coci",
 
-  "close": "Rufe",
-  "comingSoon": "{title} zai zo nan ba da jimawa ba.",
-  "@comingSoon": {
-    "placeholders": {
-      "title": {
-        "type": "String"
-      }
-    }
-  }
+  "close": "Rufe"
 }

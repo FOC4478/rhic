@@ -12,14 +12,13 @@
   "igbo": "Igbo",
   "continueButton": "Continue",
 
- "skip": "Skip",
-"welcomeToRhicApp": "Welcome to The RHIC App",
-"rhicWelcomeDescription": "Enjoy access to all of RHIC’s contents and processes on the go",
-"rhicLiveDescription": "Watch live, connect with other members and leaders",
-"designedWithYouInMind": "Designed with You in mind",
-"rhicSecureDescription": "Your information is secure, let’s get started shall we?",
-"getStarted": "Get started",
-
+  "skip": "Skip",
+  "welcomeToRhicApp": "Welcome to The RHIC App",
+  "rhicWelcomeDescription": "Enjoy access to all of RHIC’s contents and processes on the go",
+  "rhicLiveDescription": "Watch live, connect with other members and leaders",
+  "designedWithYouInMind": "Designed with You in mind",
+  "rhicSecureDescription": "Your information is secure, let’s get started shall we?",
+  "getStarted": "Get started",
 
   "welcomeBack": "Welcome Back",
   "email": "Email",
@@ -35,7 +34,7 @@
   "dontHaveAccount": "Don't have an Account?",
   "signUp": "Sign Up",
 
-    "createAccount": "Create Account",
+  "createAccount": "Create Account",
 
   "firstName": "First Name",
   "enterFirstName": "Enter First Name",
@@ -55,7 +54,6 @@
 
   "alreadyHaveAccount": "Already have an Account?",
 
-  
   "verifyYourEmail": "Verify Your Email",
   "verificationDescription": "We've sent a verification link to your email address. Please check your inbox and verify your email to continue.",
   "resendVerificationEmail": "Resend Verification Email",
@@ -63,7 +61,7 @@
   "checkYourInbox": "Please check your inbox and spam folder for the verification email.",
   "useAnotherAccount": "Use Another Account",
 
-     "hello": "Hello",
+  "hello": "Hello",
   "friend": "Friend",
 
   "give": "Give",
@@ -90,15 +88,5 @@
   "giving": "Giving",
   "churchLocations": "Church Locations",
 
-  "close": "Close",
-  "comingSoon": "{title} is coming soon.",
-  "@comingSoon": {
-    "placeholders": {
-      "title": {
-        "type": "String"
-      }
-    }
-  }
-
-
+  "close": "Close"
 }

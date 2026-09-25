@@ -11,21 +11,22 @@
   "yoruba": "Yorùbá",
   "igbo": "Igbo",
   "continueButton": "Continuar",
+
   "skip": "Omitir",
   "welcomeToRhicApp": "Bienvenido a la aplicación RHIC",
-  "rhicWelcomeDescription": "Disfruta de todo el contenido y los servicios de RHIC estés donde estés",
-  "rhicLiveDescription": "Mira en vivo y conecta con otros miembros y líderes",
+  "rhicWelcomeDescription": "Disfruta de acceso a todo el contenido y los servicios de RHIC estés donde estés",
+  "rhicLiveDescription": "Mira en directo y conéctate con otros miembros y líderes",
   "designedWithYouInMind": "Diseñada pensando en ti",
   "rhicSecureDescription": "Tu información está segura. Comencemos, ¿de acuerdo?",
   "getStarted": "Comenzar",
 
- "welcomeBack": "Bienvenido de nuevo ",
+  "welcomeBack": "Bienvenido de nuevo",
   "email": "Correo electrónico",
-  "enterEmail": "Ingresa tu correo electrónico",
+  "enterEmail": "Introduce tu correo electrónico",
   "emailRequired": "El correo electrónico es obligatorio",
-  "invalidEmail": "Ingresa un correo electrónico válido",
+  "invalidEmail": "Introduce un correo electrónico válido",
   "password": "Contraseña",
-  "enterPassword": "Ingresa tu contraseña",
+  "enterPassword": "Introduce tu contraseña",
   "passwordRequired": "La contraseña es obligatoria",
   "passwordTooShort": "La contraseña debe tener al menos 6 caracteres",
   "forgotPassword": "¿Olvidaste tu contraseña?",
@@ -33,62 +34,59 @@
   "dontHaveAccount": "¿No tienes una cuenta?",
   "signUp": "Registrarse",
 
-   "createAccount": "Crear una cuenta",
+  "createAccount": "Crear cuenta",
+
   "firstName": "Nombre",
   "enterFirstName": "Introduce tu nombre",
   "firstNameRequired": "El nombre es obligatorio",
+
   "lastName": "Apellido",
   "enterLastName": "Introduce tu apellido",
   "lastNameRequired": "El apellido es obligatorio",
-  "enterEmailAddress": "Introduce tu dirección de correo electrónico",
-  "agreeToTerms": "Acepto los",
-  "termsOfService": "Términos de servicio",
-  "ofUsingRhicApp": "del uso de la aplicación RHIC",
-  "continueText": "Continuar",
-  "alreadyHaveAccount": "¿Ya tienes una cuenta?",
-  "login": "Iniciar sesión",
 
-  
+  "enterEmailAddress": "Introduce tu dirección de correo electrónico",
+
+  "agreeToTerms": "Entiendo y acepto los",
+  "termsOfService": "Términos de servicio",
+  "ofUsingRhicApp": "de uso de la aplicación RHIC Global",
+
+  "continueText": "Continuar",
+
+  "alreadyHaveAccount": "¿Ya tienes una cuenta?",
+
   "verifyYourEmail": "Verifica tu correo electrónico",
-  "verificationDescription": "Hemos enviado un enlace de verificación a tu dirección de correo electrónico. Revisa tu bandeja de entrada y verifica tu correo para continuar.",
+  "verificationDescription": "Hemos enviado un enlace de verificación a tu correo electrónico. Revisa tu bandeja de entrada y verifica tu correo para continuar.",
   "resendVerificationEmail": "Reenviar correo de verificación",
-  "iHaveVerified": "He verificado mi correo electrónico",
+  "iHaveVerified": "He verificado mi correo",
   "checkYourInbox": "Revisa tu bandeja de entrada y la carpeta de spam para encontrar el correo de verificación.",
   "useAnotherAccount": "Usar otra cuenta",
 
-
-
   "hello": "Hola",
   "friend": "Amigo",
-  "give": "Donar",
+
+  "give": "Dar",
   "supportRhic": "Apoyar a RHIC",
+
   "ourChurches": "Nuestras iglesias",
   "findALocation": "Encontrar una ubicación",
+
   "exploreRhic": "Explorar RHIC",
+
   "teachings": "Enseñanzas",
   "rhicCommunity": "Comunidad RHIC",
   "family": "Familia",
   "events": "Eventos",
   "gallery": "Galería",
   "live": "En directo",
+
   "home": "Inicio",
   "myLibrary": "Mi biblioteca",
   "resources": "Recursos",
   "account": "Cuenta",
+
   "notifications": "Notificaciones",
   "giving": "Donaciones",
   "churchLocations": "Ubicaciones de las iglesias",
-  "close": "Cerrar",
 
-  "comingSoon": "{title} estará disponible próximamente.",
-  "@comingSoon": {
-    "placeholders": {
-      "title": {
-        "type": "String"
-      }
-    }
-  }
-
-
-
+  "close": "Cerrar"
 }

@@ -11,81 +11,82 @@
   "yoruba": "Yorùbá",
   "igbo": "Igbo",
   "continueButton": "Weiter",
- "skip": "Überspringen",
-  "welcomeToRhicApp": "Willkommen bei der RHIC-App",
-  "rhicWelcomeDescription": "Genieße unterwegs den Zugriff auf alle Inhalte und Angebote von RHIC",
-  "rhicLiveDescription": "Schau live zu und verbinde dich mit anderen Mitgliedern und Leitern",
+
+  "skip": "Überspringen",
+  "welcomeToRhicApp": "Willkommen bei der RHIC App",
+  "rhicWelcomeDescription": "Greife jederzeit auf alle Inhalte und Dienste von RHIC zu",
+  "rhicLiveDescription": "Sieh dir Live-Übertragungen an und verbinde dich mit anderen Mitgliedern und Leitern",
   "designedWithYouInMind": "Für dich entwickelt",
-  "rhicSecureDescription": "Deine Informationen sind sicher. Lass uns anfangen, einverstanden?",
+  "rhicSecureDescription": "Deine Informationen sind sicher. Lass uns beginnen.",
   "getStarted": "Loslegen",
 
- "welcomeBack": "Willkommen zurück ",
+  "welcomeBack": "Willkommen zurück",
   "email": "E-Mail",
   "enterEmail": "E-Mail eingeben",
   "emailRequired": "E-Mail ist erforderlich",
-  "invalidEmail": "Bitte geben Sie eine gültige E-Mail-Adresse ein",
+  "invalidEmail": "Bitte gib eine gültige E-Mail-Adresse ein",
   "password": "Passwort",
   "enterPassword": "Passwort eingeben",
   "passwordRequired": "Passwort ist erforderlich",
-  "passwordTooShort": "Das Passwort muss mindestens 6 Zeichen lang sein",
-  "forgotPassword": "Passwort vergessen?",
+  "passwordTooShort": "Das Passwort muss mindestens 6 Zeichen enthalten",
+  "forgotPassword": "Passwort vergessen",
   "login": "Anmelden",
-  "dontHaveAccount": "Noch kein Konto?",
+  "dontHaveAccount": "Du hast noch kein Konto?",
   "signUp": "Registrieren",
 
-
   "createAccount": "Konto erstellen",
+
   "firstName": "Vorname",
-  "enterFirstName": "Vornamen eingeben",
+  "enterFirstName": "Vorname eingeben",
   "firstNameRequired": "Vorname ist erforderlich",
+
   "lastName": "Nachname",
-  "enterLastName": "Nachnamen eingeben",
+  "enterLastName": "Nachname eingeben",
   "lastNameRequired": "Nachname ist erforderlich",
+
   "enterEmailAddress": "E-Mail-Adresse eingeben",
-  "agreeToTerms": "Ich verstehe und stimme den",
+
+  "agreeToTerms": "Ich verstehe und akzeptiere die",
   "termsOfService": "Nutzungsbedingungen",
-  "ofUsingRhicApp": "für die Nutzung der RHIC Global App zu",
+  "ofUsingRhicApp": "zur Nutzung der RHIC Global App",
+
   "continueText": "Weiter",
+
   "alreadyHaveAccount": "Du hast bereits ein Konto?",
 
-  
-  "verifyYourEmail": "E-Mail-Adresse bestätigen",
-  "verificationDescription": "Wir haben einen Bestätigungslink an deine E-Mail-Adresse gesendet. Bitte überprüfe deinen Posteingang und bestätige deine E-Mail-Adresse, um fortzufahren.",
+  "verifyYourEmail": "E-Mail bestätigen",
+  "verificationDescription": "Wir haben einen Bestätigungslink an deine E-Mail-Adresse gesendet. Bitte überprüfe deinen Posteingang und bestätige deine E-Mail, um fortzufahren.",
   "resendVerificationEmail": "Bestätigungs-E-Mail erneut senden",
   "iHaveVerified": "Ich habe meine E-Mail bestätigt",
-  "checkYourInbox": "Bitte überprüfe deinen Posteingang und den Spam-Ordner auf die Bestätigungs-E-Mail.",
+  "checkYourInbox": "Bitte überprüfe deinen Posteingang und Spam-Ordner auf die Bestätigungs-E-Mail.",
   "useAnotherAccount": "Anderes Konto verwenden",
 
-    "hello": "Hallo",
+  "hello": "Hallo",
   "friend": "Freund",
-  "give": "Spenden",
+
+  "give": "Geben",
   "supportRhic": "RHIC unterstützen",
+
   "ourChurches": "Unsere Kirchen",
   "findALocation": "Standort finden",
+
   "exploreRhic": "RHIC entdecken",
+
   "teachings": "Lehren",
-  "rhicCommunity": "RHIC-Gemeinschaft",
+  "rhicCommunity": "RHIC Gemeinschaft",
   "family": "Familie",
   "events": "Veranstaltungen",
   "gallery": "Galerie",
   "live": "Live",
+
   "home": "Startseite",
   "myLibrary": "Meine Bibliothek",
   "resources": "Ressourcen",
   "account": "Konto",
+
   "notifications": "Benachrichtigungen",
   "giving": "Spenden",
   "churchLocations": "Kirchenstandorte",
-  "close": "Schließen",
 
-  "comingSoon": "{title} ist bald verfügbar.",
-  "@comingSoon": {
-    "placeholders": {
-      "title": {
-        "type": "String"
-      }
-    }
-  }
-
-
+  "close": "Schließen"
 }

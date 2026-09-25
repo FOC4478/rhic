@@ -12,89 +12,81 @@
   "igbo": "Ìgbò",
   "continueButton": "Tẹ̀síwájú",
 
-  
   "skip": "Foju kọ́",
-  "welcomeToRhicApp": "Káàbọ̀ sí Àpù RHIC",
-  "rhicWelcomeDescription": "Gbadun iraye si gbogbo akoonu ati awọn iṣẹ RHIC nibikibi ati nigbakugba",
-  "rhicLiveDescription": "Wo eto laaye, ki o si sopọ pẹlu awọn ọmọ ẹgbẹ ati awọn olori miiran",
-  "designedWithYouInMind": "A ṣe apẹrẹ rẹ̀ pẹ̀lú rẹ ní èrò",
-  "rhicSecureDescription": "Alaye rẹ wa ni aabo, ẹ jẹ́ ká bẹ̀rẹ̀, àbí?",
+  "welcomeToRhicApp": "Ẹ káàbọ̀ sí Àpù RHIC",
+  "rhicWelcomeDescription": "Gbadun ànfàní láti wọlé sí gbogbo àkóónú àti iṣẹ́ RHIC nígbàkúgbà",
+  "rhicLiveDescription": "Wo ètò ní tààrà kí o sì bá àwọn ọmọ ẹgbẹ́ àti aṣáájú mìíràn ṣọ̀rẹ́",
+  "designedWithYouInMind": "A ṣe é pẹ̀lú rẹ ní èrò",
+  "rhicSecureDescription": "Àlàyé rẹ wà ní ààbò, ẹ jẹ́ kí a bẹ̀rẹ̀",
   "getStarted": "Bẹ̀rẹ̀",
 
-   "welcomeBack": "Kaabo lẹ́ẹ̀kansi ",
-  "email": "Imeeli",
-  "enterEmail": "Tẹ imeeli rẹ sii",
-  "emailRequired": "A nilo imeeli",
-  "invalidEmail": "Jọwọ tẹ imeeli tó tọ sii",
+  "welcomeBack": "Ẹ káàbọ̀ padà",
+  "email": "Ímeèlì",
+  "enterEmail": "Tẹ ímeèlì sílẹ̀",
+  "emailRequired": "A nílò ímeèlì",
+  "invalidEmail": "Jọ̀wọ́ tẹ ímeèlì tó wúlò sílẹ̀",
   "password": "Ọ̀rọ̀ aṣínà",
-  "enterPassword": "Tẹ ọ̀rọ̀ aṣínà rẹ sii",
-  "passwordRequired": "A nilo ọ̀rọ̀ aṣínà",
-  "passwordTooShort": "Ọ̀rọ̀ aṣínà gbọdọ̀ ní o kere ju àwọn ohun kikọ 6",
-  "forgotPassword": "Ṣe o gbàgbé ọ̀rọ̀ aṣínà?",
+  "enterPassword": "Tẹ ọ̀rọ̀ aṣínà sílẹ̀",
+  "passwordRequired": "A nílò ọ̀rọ̀ aṣínà",
+  "passwordTooShort": "Ọ̀rọ̀ aṣínà gbọ́dọ̀ ní ó kéré tán àwọn àmì 6",
+  "forgotPassword": "Ṣé o gbàgbé ọ̀rọ̀ aṣínà?",
   "login": "Wọlé",
-  "dontHaveAccount": "Ṣe o kò ní àkọọ́lẹ̀?",
-  "signUp": "Forúkọ sílẹ̀",
+  "dontHaveAccount": "Ṣé o kò ní àkọọ́lẹ̀?",
+  "signUp": "Forúkọsílẹ̀",
 
+  "createAccount": "Ṣẹ̀dá àkọọ́lẹ̀",
 
-  "createAccount": "Ṣẹda Akọọlẹ",
-
-  "firstName": "Orúkọ Àkọ́kọ́",
-  "enterFirstName": "Tẹ Orúkọ Àkọ́kọ́ sí",
+  "firstName": "Orúkọ àkọ́kọ́",
+  "enterFirstName": "Tẹ orúkọ àkọ́kọ́ sílẹ̀",
   "firstNameRequired": "A nílò orúkọ àkọ́kọ́",
 
-  "lastName": "Orúkọ Ìdílé",
-  "enterLastName": "Tẹ Orúkọ Ìdílé sí",
+  "lastName": "Orúkọ ìdílé",
+  "enterLastName": "Tẹ orúkọ ìdílé sílẹ̀",
   "lastNameRequired": "A nílò orúkọ ìdílé",
 
-  "enterEmailAddress": "Tẹ Àdírẹ́sì Imeeli sí",
+  "enterEmailAddress": "Tẹ àdírẹ́sì ímeèlì sílẹ̀",
 
   "agreeToTerms": "Mo lóye mo sì gba",
-  "termsOfService": "Àwọn Ofin Iṣẹ́",
-  "ofUsingRhicApp": "ti lílo RHIC Global App",
+  "termsOfService": "Àwọn Òfin Ìlò",
+  "ofUsingRhicApp": "fún lílo Àpù RHIC Global",
 
   "continueText": "Tẹ̀síwájú",
 
-  "alreadyHaveAccount": "Ṣe o ti ní Akọọlẹ kan?",
+  "alreadyHaveAccount": "Ṣé o ti ní àkọọ́lẹ̀ kan tẹ́lẹ̀?",
 
-
-  "verifyYourEmail": "Jẹ́rìí Imeeli Rẹ",
-  "verificationDescription": "A ti fi ọna asopọ ìjẹ́rìí ranṣẹ́ sí imeeli rẹ. Jọwọ ṣayẹwo apo-iwọle rẹ ki o jẹ́rìí imeeli rẹ lati tẹsiwaju.",
-  "resendVerificationEmail": "Tun Firanṣẹ́ Imeeli Ìjẹ́rìí",
-  "iHaveVerified": "Mo Ti Jẹ́rìí Imeeli Mi",
-  "checkYourInbox": "Jọwọ ṣayẹwo apo-iwọle rẹ àti folda spam fun imeeli ìjẹ́rìí.",
-  "useAnotherAccount": "Lo Akọọlẹ Miiran",
+  "verifyYourEmail": "Jẹ́rìí ímeèlì rẹ",
+  "verificationDescription": "A ti fi ìjápọ̀ ìjẹ́rìí ránṣẹ́ sí àdírẹ́sì ímeèlì rẹ. Jọ̀wọ́ ṣàyẹ̀wò àpótí ìfìránṣẹ́ rẹ kí o sì jẹ́rìí ímeèlì rẹ láti tẹ̀síwájú.",
+  "resendVerificationEmail": "Tun rán ímeèlì ìjẹ́rìí",
+  "iHaveVerified": "Mo ti jẹ́rìí ímeèlì mi",
+  "checkYourInbox": "Jọ̀wọ́ ṣàyẹ̀wò àpótí ìfìránṣẹ́ àti àpótí spam rẹ fún ímeèlì ìjẹ́rìí.",
+  "useAnotherAccount": "Lo àkọọ́lẹ̀ mìíràn",
 
   "hello": "Pẹ̀lẹ́",
   "friend": "Ọ̀rẹ́",
+
   "give": "Fúnni",
   "supportRhic": "Ṣe àtìlẹ́yìn fún RHIC",
-  "ourChurches": "Àwọn ṣọ́ọ̀ṣì wa",
+
+  "ourChurches": "Àwọn Ṣọ́ọ̀ṣì wa",
   "findALocation": "Wa ibi kan",
+
   "exploreRhic": "Ṣàwárí RHIC",
+
   "teachings": "Àwọn ẹ̀kọ́",
   "rhicCommunity": "Àwùjọ RHIC",
   "family": "Ìdílé",
   "events": "Àwọn ìṣẹ̀lẹ̀",
   "gallery": "Àwòrán",
-  "live": "Taara",
+  "live": "Tààrà",
+
   "home": "Ilé",
-  "myLibrary": "Ilé-ìkàwé mi",
-  "resources": "Àwọn ohun àmúlò",
+  "myLibrary": "Ilé ìkàwé mi",
+  "resources": "Àwọn ohun èlò",
   "account": "Àkọọ́lẹ̀",
+
   "notifications": "Àwọn ìfitónilétí",
-  "giving": "Ìtọrẹ",
-  "churchLocations": "Àwọn ibi ṣọ́ọ̀ṣì",
-  "close": "Pa",
+  "giving": "Fífúnni",
+  "churchLocations": "Àwọn ibi tí Ṣọ́ọ̀ṣì wà",
 
-  "comingSoon": "{title} yóò wà láìpẹ́.",
-   "@comingSoon": {
-    "placeholders": {
-      "title": {
-        "type": "String"
-      }
-    }
-  }
-
-
-
+  "close": "Pa"
 }

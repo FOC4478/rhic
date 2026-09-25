@@ -14,80 +14,79 @@
 
   "skip": "Passer",
   "welcomeToRhicApp": "Bienvenue sur l’application RHIC",
-  "rhicWelcomeDescription": "Profitez de tous les contenus et services de RHIC où que vous soyez",
-  "rhicLiveDescription": "Regardez en direct et connectez-vous avec les autres membres et responsables",
+  "rhicWelcomeDescription": "Accédez à tous les contenus et services de RHIC où que vous soyez",
+  "rhicLiveDescription": "Regardez en direct, connectez-vous avec les membres et les responsables",
   "designedWithYouInMind": "Conçue pour vous",
   "rhicSecureDescription": "Vos informations sont sécurisées. Commençons, voulez-vous ?",
   "getStarted": "Commencer",
 
-  "welcomeBack": "Bon retour ",
+  "welcomeBack": "Bon retour",
   "email": "E-mail",
   "enterEmail": "Entrez votre e-mail",
-  "emailRequired": "L’e-mail est requis",
+  "emailRequired": "L’e-mail est obligatoire",
   "invalidEmail": "Veuillez entrer une adresse e-mail valide",
   "password": "Mot de passe",
   "enterPassword": "Entrez votre mot de passe",
-  "passwordRequired": "Le mot de passe est requis",
+  "passwordRequired": "Le mot de passe est obligatoire",
   "passwordTooShort": "Le mot de passe doit comporter au moins 6 caractères",
   "forgotPassword": "Mot de passe oublié",
   "login": "Se connecter",
   "dontHaveAccount": "Vous n’avez pas de compte ?",
   "signUp": "S’inscrire",
 
-   "createAccount": "Créer un compte",
+  "createAccount": "Créer un compte",
+
   "firstName": "Prénom",
   "enterFirstName": "Entrez votre prénom",
-  "firstNameRequired": "Le prénom est requis",
+  "firstNameRequired": "Le prénom est obligatoire",
+
   "lastName": "Nom",
   "enterLastName": "Entrez votre nom",
-  "lastNameRequired": "Le nom est requis",
+  "lastNameRequired": "Le nom est obligatoire",
+
   "enterEmailAddress": "Entrez votre adresse e-mail",
-  "agreeToTerms": "J'accepte les",
-  "termsOfService": "Conditions d'utilisation",
-  "ofUsingRhicApp": "de l'utilisation de l'application RHIC",
+
+  "agreeToTerms": "Je comprends et j’accepte les",
+  "termsOfService": "Conditions d’utilisation",
+  "ofUsingRhicApp": "d’utilisation de l’application RHIC Global",
+
   "continueText": "Continuer",
+
   "alreadyHaveAccount": "Vous avez déjà un compte ?",
-  "login": "Se connecter",
 
-  
-  "verifyYourEmail": "Vérifiez votre adresse e-mail",
-  "verificationDescription": "Nous avons envoyé un lien de vérification à votre adresse e-mail. Veuillez consulter votre boîte de réception et vérifier votre adresse e-mail pour continuer.",
-  "resendVerificationEmail": "Renvoyer l'e-mail de vérification",
-  "iHaveVerified": "J'ai vérifié mon e-mail",
-  "checkYourInbox": "Veuillez vérifier votre boîte de réception et votre dossier spam pour trouver l'e-mail de vérification.",
+  "verifyYourEmail": "Vérifiez votre e-mail",
+  "verificationDescription": "Nous avons envoyé un lien de vérification à votre adresse e-mail. Consultez votre boîte de réception et vérifiez votre e-mail pour continuer.",
+  "resendVerificationEmail": "Renvoyer l’e-mail de vérification",
+  "iHaveVerified": "J’ai vérifié mon e-mail",
+  "checkYourInbox": "Veuillez vérifier votre boîte de réception et votre dossier spam pour trouver l’e-mail de vérification.",
   "useAnotherAccount": "Utiliser un autre compte",
-
 
   "hello": "Bonjour",
   "friend": "Ami",
+
   "give": "Donner",
   "supportRhic": "Soutenir RHIC",
+
   "ourChurches": "Nos églises",
   "findALocation": "Trouver un lieu",
+
   "exploreRhic": "Découvrir RHIC",
+
   "teachings": "Enseignements",
   "rhicCommunity": "Communauté RHIC",
   "family": "Famille",
   "events": "Événements",
   "gallery": "Galerie",
-  "live": "En direct",
+  "live": "Direct",
+
   "home": "Accueil",
   "myLibrary": "Ma bibliothèque",
   "resources": "Ressources",
   "account": "Compte",
+
   "notifications": "Notifications",
   "giving": "Dons",
-  "churchLocations": "Lieux des églises",
-  "close": "Fermer",
+  "churchLocations": "Emplacements des églises",
 
-  "comingSoon": "{title} sera bientôt disponible.",
-  "@comingSoon": {
-    "placeholders": {
-      "title": {
-        "type": "String"
-      }
-    }
-  }
-
-
+  "close": "Fermer"
 }

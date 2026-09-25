@@ -1,7 +1,7 @@
+
 import 'package:flutter/material.dart';
 
 import 'package:church_app/l10n/app_localizations.dart';
-
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -144,7 +144,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       body: PageView.builder(
         controller: _pageController,
         itemCount: _pages.length,
-
         onPageChanged: (index) {
           setState(() {
             _currentPage = index;
@@ -152,7 +151,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
           _restartTextAnimation();
         },
-
         itemBuilder: (context, index) {
           return _buildOnboardingPage(
             context,
@@ -231,11 +229,16 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                       CrossAxisAlignment.start,
                   children: [
                     // RHIC LOGO
-                    Image.asset(
-                      'assets/images/coza_logo.png',
-                      width: 64,
-                      height: 64,
-                      fit: BoxFit.contain,
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        top: 16,
+                      ),
+                      child: Image.asset(
+                        'assets/images/coza_logo.png',
+                        width: 54,
+                        height: 54,
+                        fit: BoxFit.contain,
+                      ),
                     ),
 
                     // SKIP
@@ -295,9 +298,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                               fontWeight: FontWeight.w700,
                             ),
                           ),
-
                           const SizedBox(height: 14),
-
                           Text(
                             _getDescription(
                               l10n,
@@ -463,3 +464,4 @@ class OnboardingPageData {
     required this.description,
   });
 }
+

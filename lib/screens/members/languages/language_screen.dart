@@ -127,95 +127,196 @@ class _LanguageScreenState extends State<LanguageScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFFFFEFB),
       body: SafeArea(
-        child: Column(
-          children: [
-            const SizedBox(height: 30),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final screenWidth = constraints.maxWidth;
+            final screenHeight = constraints.maxHeight;
 
-            Text(
-              l10n.selectLanguage,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF330044),
-              ),
-            ),
+            // Responsive horizontal padding.
+            final horizontalPadding = screenWidth < 360
+                ? 16.0
+                : screenWidth < 600
+                    ? 24.0
+                    : 40.0;
 
-            const SizedBox(height: 30),
+            // Responsive top spacing.
+            final topSpacing = screenHeight < 600
+                ? 16.0
+                : screenWidth < 600
+                    ? 30.0
+                    : 40.0;
 
-            Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
+            // Responsive title size.
+            final titleSize = screenWidth < 360
+                ? 21.0
+                : screenWidth < 600
+                    ? 24.0
+                    : 28.0;
+
+            return SingleChildScrollView(
+              scrollDirection: Axis.vertical,
+              physics: const BouncingScrollPhysics(),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight,
                 ),
-                itemCount: _languageCodes.length,
-                separatorBuilder: (_, __) {
-                  return const SizedBox(height: 14);
-                },
-                itemBuilder: (context, index) {
-                  final languageCode =
-                      _languageCodes[index];
-
-                  final countryCode =
-                      _countryCodes[languageCode]!;
-
-                  final languageName =
-                      _getLanguageName(
-                    languageCode,
-                    l10n,
-                  );
-
-                  return _LanguageTile(
-                    languageName: languageName,
-                    countryCode: countryCode,
-                    isSelected:
-                        _selectedLanguage == languageCode,
-                    onTap: () {
-                      _selectLanguage(languageCode);
-                    },
-                  );
-                },
-              ),
-            ),
-
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                32,
-                16,
-                32,
-                28,
-              ),
-              child: SizedBox(
-                width: double.infinity,
-                height: 64,
-                child: ElevatedButton(
-                  onPressed: _continue,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        const Color(0xFF3A064D),
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(32),
-                    ),
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    top: topSpacing,
+                    bottom: 24,
                   ),
-                  child: Text(
-                    l10n.continueButton,
-                    style: const TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  child: Column(
+                    crossAxisAlignment:
+                        CrossAxisAlignment.stretch,
+                    children: [
+                      // =====================================================
+                      // TITLE
+                      // =====================================================
+
+                      Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: horizontalPadding,
+                        ),
+                        child: Text(
+                          l10n.selectLanguage,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: titleSize,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF330044),
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(
+                        height: screenHeight < 600
+                            ? 18
+                            : 30,
+                      ),
+
+                      // =====================================================
+                      // LANGUAGE LIST
+                      // =====================================================
+
+                      Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: horizontalPadding,
+                        ),
+                        child: Column(
+                          children: List.generate(
+                            _languageCodes.length,
+                            (index) {
+                              final languageCode =
+                                  _languageCodes[index];
+
+                              final countryCode =
+                                  _countryCodes[
+                                      languageCode]!;
+
+                              final languageName =
+                                  _getLanguageName(
+                                languageCode,
+                                l10n,
+                              );
+
+                              return Padding(
+                                padding:
+                                    EdgeInsets.only(
+                                  bottom:
+                                      index ==
+                                              _languageCodes
+                                                      .length -
+                                                  1
+                                          ? 0
+                                          : 14,
+                                ),
+                                child: _LanguageTile(
+                                  languageName:
+                                      languageName,
+                                  countryCode:
+                                      countryCode,
+                                  isSelected:
+                                      _selectedLanguage ==
+                                          languageCode,
+                                  onTap: () {
+                                    _selectLanguage(
+                                      languageCode,
+                                    );
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+
+                      // =====================================================
+                      // CONTINUE BUTTON
+                      // =====================================================
+
+                      SizedBox(
+                        height: screenHeight < 600
+                            ? 20
+                            : 28,
+                      ),
+
+                      Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: horizontalPadding,
+                        ),
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: screenWidth < 360
+                              ? 56
+                              : 64,
+                          child: ElevatedButton(
+                            onPressed: _continue,
+                            style:
+                                ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  const Color(
+                                0xFF3A064D,
+                              ),
+                              foregroundColor:
+                                  Colors.white,
+                              elevation: 0,
+                              shape:
+                                  RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.circular(
+                                  32,
+                                ),
+                              ),
+                            ),
+                            child: Text(
+                              l10n.continueButton,
+                              style: TextStyle(
+                                fontSize:
+                                    screenWidth < 360
+                                        ? 15
+                                        : 17,
+                                fontWeight:
+                                    FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );
   }
 }
+
+// ============================================================================
+// LANGUAGE TILE
+// ============================================================================
 
 class _LanguageTile extends StatelessWidget {
   final String languageName;
@@ -232,98 +333,140 @@ class _LanguageTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: AnimatedContainer(
-          duration: const Duration(
-            milliseconds: 220,
-          ),
-          curve: Curves.easeOut,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
 
-          height: 76,
+        final horizontalPadding = width < 330
+            ? 12.0
+            : width < 400
+                ? 16.0
+                : 18.0;
 
-          padding: const EdgeInsets.symmetric(
-            horizontal: 18,
-          ),
+        final flagSize = width < 330 ? 38.0 : 44.0;
 
-          decoration: BoxDecoration(
-            color: isSelected
-                ? const Color(0xFFF5EFF7)
-                : const Color(0xFFF7F7F7),
+        final fontSize = width < 330 ? 15.0 : 17.0;
 
-            borderRadius:
-                BorderRadius.circular(14),
+        final radioSize = width < 330 ? 23.0 : 25.0;
 
-            border: Border.all(
-              color: isSelected
-                  ? const Color(0xFF6B1B7A)
-                  : Colors.transparent,
-              width: 1.5,
-            ),
-          ),
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(14),
+            child: AnimatedContainer(
+              duration: const Duration(
+                milliseconds: 220,
+              ),
+              curve: Curves.easeOut,
 
-          child: Row(
-            children: [
-              CountryFlag.fromCountryCode(
-                countryCode,
-                theme: const ImageTheme(
-                  width: 44,
-                  height: 44,
-                  shape: Circle(),
-                ),
+              // Responsive height.
+              constraints: const BoxConstraints(
+                minHeight: 70,
               ),
 
-              const SizedBox(width: 18),
-
-              Expanded(
-                child: Text(
-                  languageName,
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w400,
-                    color: Color(0xFF292929),
-                  ),
-                ),
+              padding: EdgeInsets.symmetric(
+                horizontal: horizontalPadding,
+                vertical: 12,
               ),
 
-              AnimatedContainer(
-                duration: const Duration(
-                  milliseconds: 220,
-                ),
-
-                width: 25,
-                height: 25,
-
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? const Color(0xFFF5EFF7)
+                    : const Color(0xFFF7F7F7),
+                borderRadius:
+                    BorderRadius.circular(14),
+                border: Border.all(
                   color: isSelected
                       ? const Color(0xFF6B1B7A)
                       : Colors.transparent,
-
-                  border: Border.all(
-                    color: isSelected
-                        ? const Color(0xFF6B1B7A)
-                        : const Color(0xFF999999),
-                    width: 1.8,
-                  ),
+                  width: 1.5,
                 ),
-
-                child: isSelected
-                    ? const Icon(
-                        Icons.check,
-                        color: Colors.white,
-                        size: 16,
-                      )
-                    : null,
               ),
-            ],
+
+              child: Row(
+                children: [
+                  // =========================================================
+                  // COUNTRY FLAG
+                  // =========================================================
+
+                  SizedBox(
+                    width: flagSize,
+                    height: flagSize,
+                    child:
+                        CountryFlag.fromCountryCode(
+                      countryCode,
+                      theme: ImageTheme(
+                        width: flagSize,
+                        height: flagSize,
+                        shape: const Circle(),
+                      ),
+                    ),
+                  ),
+
+                  SizedBox(
+                    width: width < 330 ? 12 : 18,
+                  ),
+
+                  // =========================================================
+                  // LANGUAGE NAME
+                  // =========================================================
+
+                  Expanded(
+                    child: Text(
+                      languageName,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: fontSize,
+                        fontWeight: FontWeight.w400,
+                        color: const Color(0xFF292929),
+                      ),
+                    ),
+                  ),
+
+                  SizedBox(
+                    width: width < 330 ? 10 : 14,
+                  ),
+
+                  // =========================================================
+                  // SELECTION CIRCLE
+                  // =========================================================
+
+                  AnimatedContainer(
+                    duration: const Duration(
+                      milliseconds: 220,
+                    ),
+                    width: radioSize,
+                    height: radioSize,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isSelected
+                          ? const Color(0xFF6B1B7A)
+                          : Colors.transparent,
+                      border: Border.all(
+                        color: isSelected
+                            ? const Color(0xFF6B1B7A)
+                            : const Color(0xFF999999),
+                        width: 1.8,
+                      ),
+                    ),
+                    child: isSelected
+                        ? Icon(
+                            Icons.check,
+                            color: Colors.white,
+                            size: width < 330
+                                ? 14
+                                : 16,
+                          )
+                        : null,
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
